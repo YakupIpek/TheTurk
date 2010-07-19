@@ -25,7 +25,7 @@ namespace ChessEngine.Moves
 
         public override void UnMakeMove(Board board)
         {
-            var rook = board[Coordinate.a1];
+            var rook = board[Coordinate.f1];
             piece.MoveTo(board, Coordinate.e1);
             rook.MoveTo(board, Coordinate.h1);
         }
