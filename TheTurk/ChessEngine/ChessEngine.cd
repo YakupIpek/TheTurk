@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ChessEngine.Board" Collapsed="true">
+    <Position X="2.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAIAAAAAAAAAA=</HashCode>
+      <FileName>ChessEngine\Board.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="ChessEngine.Coordinate">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Class Name="ChessEngine.Coordinate.Directions" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>ChessEngine\Coordinate.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>CABAAAAAAQAE+gAEAABAgAgAAAAIAAAABIFAHwAAAAA=</HashCode>
+      <FileName>ChessEngine\Coordinate.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

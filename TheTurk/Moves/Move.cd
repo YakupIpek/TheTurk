@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ChessEngine.Moves.Move">
+    <Position X="4.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAIAAAAAAAAQAAgQAAAAAAAAAgAgAAAAAAAAAAA=</HashCode>
+      <FileName>Moves\Move.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Moves.EnPassant">
+    <Position X="3.75" Y="8.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Moves\EnPassant.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Moves.ShortCastle">
+    <Position X="8.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAQAAgAAAAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>Moves\ShortCastle.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Moves.LongCastle">
+    <Position X="6" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAQAAgAAAAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>Moves\LongCastle.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Moves.Ordinary">
+    <Position X="2.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAAAAAAQAAgAAAgAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>Moves\Ordinary.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Moves.Promote">
+    <Position X="1.5" Y="8.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Enum Name="ChessEngine.Moves.Promote.PromotionType" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Move\Promote.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAQAAgAAAAAAAAAAgAAAFAAAAAAAAA=</HashCode>
+      <FileName>Moves\Promote.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
