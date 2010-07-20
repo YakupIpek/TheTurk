@@ -10,7 +10,8 @@ namespace ChessEngine.Pieces
 {
     public class King : Piece
     {
-        static int pieceValue = 1000000;
+        static readonly int pieceValue = 1000000;
+        public const char letter = 'K';
         public King(Coordinate from, Color color)
             : base(from, color)
         {
@@ -25,7 +26,7 @@ namespace ChessEngine.Pieces
         }
         public override char notationLetter
         {
-            get { return 'K'; }
+            get { return letter; }
         }
 
         public override int PieceValue
@@ -36,7 +37,7 @@ namespace ChessEngine.Pieces
         {
             get
             {
-                return Coordinate.allDirection;
+                return Coordinate.allDirectionDelta;
             }
         }
         public override List<Move> GenerateMoves(Board board)

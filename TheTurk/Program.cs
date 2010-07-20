@@ -11,10 +11,17 @@ namespace Main
     {
         static void Main(string[] args)
         {
-            var from = new Coordinate(2,1);
-            var queen = new  Pawn(from,Piece.Color.White);
+            
+            
             var board= new ChessEngine.Board();
-            var moves =queen.GenerateMoves(board);
+            board.SetUpBoard();
+            
+            
+            board[new Coordinate(2,5)] = null;
+            board.ShowBoard();
+            var square = new Coordinate(2,6);
+            var piece = board[square];
+            var moves =piece.GenerateMoves(board);
             foreach (var move in moves)
             {
                 Console.WriteLine(move.Notation());

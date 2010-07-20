@@ -29,7 +29,7 @@ namespace ChessEngine.Moves
         }
         public virtual string Notation()
         {
-            return piece.notationLetter.ToString();
+            return piece.notationLetter.ToString().Replace('P',' ');
         }
         
     }

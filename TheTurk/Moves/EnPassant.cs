@@ -20,7 +20,7 @@ namespace ChessEngine.Moves
 
         public override string Notation()
         {
-            return from.ToString().Substring(0) + "x" + to.ToString() + " (e.p)";
+            return from.ToString()[0]+ "x" + to.ToString() + " (e.p)";
         }
     }
 }

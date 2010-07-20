@@ -13,12 +13,13 @@ namespace ChessEngine.Moves
         protected Piece capturedPiece;
         protected Coordinate to;
 
-        public Ordinary(Board board, Piece piece,Coordinate to):base(piece)
+        public Ordinary(Board board, Piece piece, Coordinate to)
+            : base(piece)
         {
             this.to = to;
             this.capturedPiece = board[to];
         }
-    
+
         public override void MakeMove(Board board)
         {
             capturedPiece = board[to];
@@ -28,18 +29,19 @@ namespace ChessEngine.Moves
 
         public override void UnMakeMove(Board board)
         {
-            piece.MoveTo(board,from);
+            piece.MoveTo(board, from);
             if (capturedPiece != null)
             {
                 capturedPiece.PutMe(board);
             }
-            
+
 
         }
         public override string Notation()
         {
             string captured = capturedPiece == null ? "" : "x";
-            return (piece.notationLetter + captured+ to.ToString()).Trim();
+            if (piece.GetType() == typeof(Pawn) && captured=="x") return (from.ToString()[0] + captured + to);
+            return (piece.notationLetter + captured + to).Trim();
         }
     }
 }

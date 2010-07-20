@@ -11,6 +11,7 @@ namespace ChessEngine.Pieces
     public class Bishop : Piece
     {
         static readonly int pieceValue=325;
+        public const char letter = 'B';
         public Bishop(Coordinate from, Color color)
             : base(from, color)
         {
@@ -27,7 +28,7 @@ namespace ChessEngine.Pieces
 
         public override Coordinate[] pieceDirection
         {
-            get { return Coordinate.crossFourDirection; }
+            get { return Coordinate.crossFourDirectionDelta; }
         }
 
 

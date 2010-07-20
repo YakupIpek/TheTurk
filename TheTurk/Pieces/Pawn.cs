@@ -10,7 +10,8 @@ namespace ChessEngine.Pieces
 {
     public class Pawn : Piece
     {
-        static int piecevalue = 100;
+        static readonly int piecevalue = 100;
+        public const char letter = ' ';
         public Pawn(Coordinate from, Color color)
             : base(from, color)
         {
@@ -169,7 +170,7 @@ namespace ChessEngine.Pieces
 
         public override char notationLetter
         {
-            get { return ' '; }
+            get { return letter; }
         }
         public override int PieceValue
         {

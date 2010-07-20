@@ -45,6 +45,8 @@
   <ItemGroup>
     <Compile Include="ChessEngine\Board.cs" />
     <Compile Include="ChessEngine\Coordinate.cs" />
+    <Compile Include="ChessEngine\Exceptions.cs" />
+    <Compile Include="ChessEngine\PartialBoard.cs" />
     <Compile Include="Moves\EnPassant.cs" />
     <Compile Include="Moves\LongCastle.cs" />
     <Compile Include="Moves\Move.cs" />

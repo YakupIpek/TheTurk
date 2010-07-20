@@ -11,6 +11,7 @@ namespace ChessEngine.Pieces
     public class Queen : Piece
     {
         static readonly int pieceValue=900;
+        public const char letter = 'Q';
         public Queen(Coordinate from, Color color)
             : base(from, color)
         {
@@ -22,13 +23,13 @@ namespace ChessEngine.Pieces
         }
         public override char notationLetter
         {
-            get { return 'Q'; }
+            get { return letter; }
         }
         public override Coordinate[] pieceDirection
         {
             get
             {
-                return Coordinate.allDirection;
+                return Coordinate.allDirectionDelta;
             }
         }
         

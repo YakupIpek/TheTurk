@@ -14,29 +14,31 @@ namespace ChessEngine.Pieces
         public virtual bool sliding { get { return true; } }
         public enum Color
         {
-            White,Black
+            White, Black
         }
-        public Piece(Coordinate from,Color color)
+        public Piece(Coordinate from, Color color)
         {
             this.from = from;
-            this.color=color;
-            
+            this.color = color;
+
         }
         public virtual List<Move> GenerateMoves(Board board)
         {
-            List<Move> moves = new List<Move>();    
+            List<Move> moves = new List<Move>();
 
             foreach (var direction in this.pieceDirection)
             {
                 Coordinate destination = from;
+                Piece piece;
                 while ((destination = destination.To(direction)).IsOnboard())
                 {
+                    piece = board[destination];
+                    if (piece != null && this.color == piece.color) break;
 
-                    if (destination.IsEmpty(board) || this.color != board[destination].color)
-                    {
-                        moves.Add(new Ordinary(board, this, destination));
-                    }
-                    if (!sliding) break;
+                    moves.Add(new Ordinary(board, this, destination));
+
+                    if (!sliding||(piece != null && piece.color != this.color)) break;
+                    
                 }
 
             }
@@ -66,7 +68,7 @@ namespace ChessEngine.Pieces
         public abstract char notationLetter { get; }
         public abstract int PieceValue { get; }
         public abstract Coordinate[] pieceDirection { get; }
-        public Color color { get;private set; }
+        public Color color { get; private set; }
 
     }
 }

@@ -11,6 +11,7 @@ namespace ChessEngine.Pieces
     public class Knight : Piece
     {
         static readonly int pieceValue = 325;
+        public const char letter = 'N';
         static readonly Coordinate[] directions;
         static Knight()
         {
@@ -42,7 +43,7 @@ namespace ChessEngine.Pieces
         }
         public override char notationLetter
         {
-            get { return 'N'; }
+            get { return letter; }
         }
 
     }

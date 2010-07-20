@@ -6,3 +6,5 @@ C:\Users\NOD32\Documents\Visual Studio 2010\Projects\The Turk\TheTurk\obj\x86\De
 C:\Users\NOD32\Documents\Visual Studio 2010\Projects\The Turk\TheTurk\obj\x86\Debug\TheTurk.pdb
 C:\Users\NOD32\Documents\Visual Studio 2010\Projects\TheTurk\TheTurk\obj\x86\Debug\TheTurk.exe
 C:\Users\NOD32\Documents\Visual Studio 2010\Projects\TheTurk\TheTurk\obj\x86\Debug\TheTurk.pdb
+C:\Users\NOD32\Documents\Visual Studio 2010\Projects\TheTurk\TheTurk\bin\Debug\TheTurk.exe
+C:\Users\NOD32\Documents\Visual Studio 2010\Projects\TheTurk\TheTurk\bin\Debug\TheTurk.pdb

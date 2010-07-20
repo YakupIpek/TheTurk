@@ -13,20 +13,24 @@ namespace ChessEngine
         public int rank;
         public int file;
         const string fileLetters = "abcdefgh";
-        public static readonly Coordinate[] fourDirection;
-        public static readonly Coordinate[] crossFourDirection;
-        public static readonly Coordinate[] allDirection;
+        public static readonly Coordinate[] fourDirectionDelta;
+        public static readonly Coordinate[] crossFourDirectionDelta;
+        public static readonly Coordinate[] allDirectionDelta;
+        public static readonly Coordinate[] knightDelta;
         static Coordinate()
         {
 
 
-            fourDirection = new Coordinate[]{Coordinate.Directions.East,Coordinate.Directions.West,
+            fourDirectionDelta = new Coordinate[]{Coordinate.Directions.East,Coordinate.Directions.West,
                 Coordinate.Directions.South,Coordinate.Directions.North};
 
-            crossFourDirection = new Coordinate[] { Coordinate.Directions.SouthEast, Coordinate.Directions.SouthWest,
+            crossFourDirectionDelta = new Coordinate[] { Coordinate.Directions.SouthEast, Coordinate.Directions.SouthWest,
                 Coordinate.Directions.NorthWest, Coordinate.Directions.NorthEast };
 
-            allDirection = fourDirection.Concat(crossFourDirection).ToArray();
+            allDirectionDelta = fourDirectionDelta.Concat(crossFourDirectionDelta).ToArray();
+
+            
+            
         }
         public static class Directions
         {
@@ -34,6 +38,7 @@ namespace ChessEngine
                 East = new Coordinate(0, 1), NorthEast = new Coordinate(1, 1), NorthWest = new Coordinate(1, -1), SouthEast = new Coordinate(-1, 1),
                 SouthWest = new Coordinate(-1, -1);
         }
+
         public static readonly Coordinate
             a1 = new Coordinate(1, 1),
             c1 = new Coordinate(1, 3),
@@ -54,6 +59,7 @@ namespace ChessEngine
 
             this.rank = rank;
             this.file = file;
+
 
         }
         public override string ToString()
@@ -84,5 +90,21 @@ namespace ChessEngine
         {
             return rank == Square.rank && file == Square.file;
         }
+        public bool IsEdgeOfBoard()
+        {
+            return rank == 8 || rank == 1 || file == 8 || file == 1;
+        }
+        public static  Coordinate ToCoordinate(string notation)
+        {
+            Coordinate coordinate= new Coordinate();
+            coordinate.rank = int.Parse(notation[1].ToString());
+            for (int i = 0; i < fileLetters.Length; i++)
+            {
+                if (fileLetters[i] == notation[0])
+                    coordinate.file = i;
+            }
+            return coordinate;
+        }
+
     }
 }
