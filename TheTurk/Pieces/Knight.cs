@@ -1,21 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
-using ChessEngine.Pieces;
-using ChessEngine.Moves;
-
-namespace ChessEngine.Pieces
+﻿namespace ChessEngine.Pieces
 {
     public class Knight : Piece
     {
-        static readonly int pieceValue = 325;
+        public const int pieceValue = 325;
         public const char letter = 'N';
-        static readonly Coordinate[] directions;
+        public static readonly Coordinate[] Directions;
         static Knight()
         {
-            directions = new Coordinate[]{ new Coordinate(2,1),new Coordinate(2,-1),new Coordinate(-2,1),new Coordinate(-2,-1),
+            Directions = new Coordinate[]{ new Coordinate(2,1),new Coordinate(2,-1),new Coordinate(-2,1),new Coordinate(-2,-1),
             new Coordinate(1,-2),new Coordinate(-1,-2),new Coordinate(1,2),new Coordinate(-1,2)};
         }
         public Knight(Coordinate from, Color color)
@@ -23,14 +15,14 @@ namespace ChessEngine.Pieces
         {
 
         }
-        public override Coordinate[] pieceDirection
+        public override Coordinate[] PieceDirection
         {
             get
             {
-                return directions;
+                return Directions;
             }
         }
-        public override bool sliding
+        public override bool Sliding
         {
             get
             {
@@ -39,9 +31,9 @@ namespace ChessEngine.Pieces
         }
         public override int PieceValue
         {
-            get { return color == Color.White ? pieceValue : -pieceValue; }
+            get { return Color == Color.White ? pieceValue : -pieceValue; }
         }
-        public override char notationLetter
+        public override char NotationLetter
         {
             get { return letter; }
         }

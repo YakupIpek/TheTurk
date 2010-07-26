@@ -1,31 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine.Pieces;
-using ChessEngine.Moves;
+using System.Diagnostics;
 using ChessEngine;
+using ChessEngine.Test;
+
 namespace Main
 {
     class Program
     {
         static void Main(string[] args)
         {
-            
-            
-            var board= new ChessEngine.Board();
+            Board board=new Board();
             board.SetUpBoard();
-            
-            
-            board[new Coordinate(2,5)] = null;
-            board.ShowBoard();
-            var square = new Coordinate(2,6);
-            var piece = board[square];
-            var moves =piece.GenerateMoves(board);
-            foreach (var move in moves)
-            {
-                Console.WriteLine(move.Notation());
-            }
+            Stopwatch süre= new Stopwatch();
+            süre.Start();
+            MoveGeneration.MinMax(board,5);
+            süre.Stop();
+            Console.WriteLine(süre.ElapsedMilliseconds);
             Console.ReadKey();
         }
     }

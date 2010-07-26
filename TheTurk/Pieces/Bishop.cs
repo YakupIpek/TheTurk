@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
-using ChessEngine.Pieces;
-using ChessEngine.Moves;
-
-namespace ChessEngine.Pieces
+﻿namespace ChessEngine.Pieces
 {
     public class Bishop : Piece
     {
-        static readonly int pieceValue=325;
         public const char letter = 'B';
+        static readonly int pieceValue=325;
+
         public Bishop(Coordinate from, Color color)
             : base(from, color)
         {
@@ -19,14 +12,14 @@ namespace ChessEngine.Pieces
         }
         public override int PieceValue
         {
-            get { return color == Color.White ? pieceValue : -pieceValue; }
+            get { return Color == Color.White ? pieceValue : -pieceValue; }
         }
-        public override char notationLetter
+        public override char NotationLetter
         {
             get { return 'B'; }
         }
 
-        public override Coordinate[] pieceDirection
+        public override Coordinate[] PieceDirection
         {
             get { return Coordinate.crossFourDirectionDelta; }
         }

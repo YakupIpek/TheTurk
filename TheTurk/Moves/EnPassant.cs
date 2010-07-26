@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
-using ChessEngine.Pieces;
-using ChessEngine.Moves;
+﻿using ChessEngine.Pieces;
 
 namespace ChessEngine.Moves
 {
@@ -17,10 +11,22 @@ namespace ChessEngine.Moves
         {
             
         }
-
+        public override void MakeMove(Board board)
+        {
+            if (piece.Color == Color.White)
+            {
+                CapturedPiece= To.To(Coordinate.Directions.South).GetPiece(board);
+            }
+            else
+            {
+                CapturedPiece = To.To(Coordinate.Directions.North).GetPiece(board);
+            }
+            CapturedPiece.RemoveMe(board);
+            piece.MoveTo(board,To);
+        }
         public override string Notation()
         {
-            return from.ToString()[0]+ "x" + to.ToString() + " (e.p)";
+            return from.ToString()[0]+ "x" + To.ToString() + " (e.p)";
         }
     }
 }

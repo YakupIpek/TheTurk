@@ -33,13 +33,6 @@
     <Compartments>
       <Compartment Name="Public" Collapsed="true" />
     </Compartments>
-    <NestedTypes>
-      <Enum Name="ChessEngine.Pieces.Piece.Color" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>Pieces\Piece.cs</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-    </NestedTypes>
     <TypeIdentifier>
       <HashCode>ACAAgAIAAAAAAAAAAAEQAAAAMAAIAACAAAAgAAAAAAA=</HashCode>
       <FileName>Pieces\Piece.cs</FileName>

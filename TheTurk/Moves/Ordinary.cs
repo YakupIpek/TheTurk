@@ -1,47 +1,44 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
-using ChessEngine.Pieces;
-using ChessEngine.Moves;
+﻿using ChessEngine.Pieces;
 
 namespace ChessEngine.Moves
 {
     public class Ordinary : Move
     {
-        protected Piece capturedPiece;
-        protected Coordinate to;
-
         public Ordinary(Board board, Piece piece, Coordinate to)
             : base(piece)
         {
-            this.to = to;
-            this.capturedPiece = board[to];
+            this.To = to;
+            //this.CapturedPiece = board[to];
         }
+
+        public Piece CapturedPiece { get;protected set; }
+        public Coordinate To{ get; protected set;}
 
         public override void MakeMove(Board board)
         {
-            capturedPiece = board[to];
-            piece.MoveTo(board, to);
-
+            CapturedPiece = To.GetPiece(board);
+            piece.MoveTo(board, To);
         }
 
         public override void UnMakeMove(Board board)
         {
             piece.MoveTo(board, from);
-            if (capturedPiece != null)
+            if (CapturedPiece != null)
             {
-                capturedPiece.PutMe(board);
+                CapturedPiece.PutMe(board);
             }
 
 
         }
         public override string Notation()
         {
-            string captured = capturedPiece == null ? "" : "x";
-            if (piece.GetType() == typeof(Pawn) && captured=="x") return (from.ToString()[0] + captured + to);
-            return (piece.notationLetter + captured + to).Trim();
+            string captured = CapturedPiece == null ? "" : "x";
+            if (piece.GetType() == typeof(Pawn) && captured=="x") return (from.ToString()[0] + captured + To);
+            return (piece.NotationLetter + captured + To).Trim();
+        }
+        public override string ToString()
+        {
+            return Notation();
         }
     }
 }

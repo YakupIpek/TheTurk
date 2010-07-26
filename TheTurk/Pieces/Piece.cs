@@ -1,74 +1,82 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
-using ChessEngine.Pieces;
+﻿using System.Collections.Generic;
 using ChessEngine.Moves;
 
 namespace ChessEngine.Pieces
 {
+    public enum Color
+    {
+        White, Black
+    }
     public abstract class Piece
     {
-        public Coordinate from;
-        public virtual bool sliding { get { return true; } }
-        public enum Color
-        {
-            White, Black
-        }
         public Piece(Coordinate from, Color color)
         {
-            this.from = from;
-            this.color = color;
+            this.From = from;
+            this.Color = color;
 
         }
+
+        public Coordinate From { get; protected set; }
+        public virtual bool Sliding { get { return true; } }
+        public Color Color { get; private set; }
+        public Color OppenentColor
+        {
+            get { return  Color == Pieces.Color.White ? Pieces.Color.Black: Pieces.Color.White; }
+        }
+        public abstract char NotationLetter { get; }
+        public abstract int PieceValue { get; }
+        public abstract Coordinate[] PieceDirection { get; }
+
         public virtual List<Move> GenerateMoves(Board board)
         {
             List<Move> moves = new List<Move>();
 
-            foreach (var direction in this.pieceDirection)
+            foreach (var direction in this.PieceDirection)
             {
-                Coordinate destination = from;
+                Coordinate destination = From;
                 Piece piece;
                 while ((destination = destination.To(direction)).IsOnboard())
                 {
                     piece = board[destination];
-                    if (piece != null && this.color == piece.color) break;
+                    if (piece != null && this.Color == piece.Color) break;
 
                     moves.Add(new Ordinary(board, this, destination));
 
-                    if (!sliding||(piece != null && piece.color != this.color)) break;
+                    if (!Sliding||(piece != null && piece.Color != this.Color)) break;
                     
                 }
 
             }
             return moves;
         }
-        public virtual int Evaluation()
-        {
-            return 0;
-        }
+
+        /// <summary>
+        /// piece goes specified square
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="to"></param>
         public void MoveTo(Board board, Coordinate to)
         {
             RemoveMe(board);
             board[to] = this;
-            from = to;
+            From = to;
+        }
+        public virtual int Evaluation()
+        {
+            return 0;
         }
         /// <summary>
         /// Remove itself on board
         /// </summary>
         public void RemoveMe(Board board)
         {
-            board[from] = null;
+            board[From] = null;
         }
         public void PutMe(Board board)
         {
-            board[from] = this;
+            board[From] = this;
         }
-        public abstract char notationLetter { get; }
-        public abstract int PieceValue { get; }
-        public abstract Coordinate[] pieceDirection { get; }
-        public Color color { get; private set; }
+
 
     }
 }

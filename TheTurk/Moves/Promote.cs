@@ -1,33 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
+﻿using System.Collections.Generic;
 using ChessEngine.Pieces;
-using ChessEngine.Moves;
 
 namespace ChessEngine.Moves
 {
 
     public class Promote : Ordinary
     {
-        Piece PromotedPiece;
+        #region PromotionType enum
+
+        public enum PromotionType
+        {
+            Queen, Rook, Bishop, Knight
+        }
+
+        #endregion
+
+        readonly Piece PromotedPiece;
 
         public Promote(Board board, Piece piece, Coordinate to, PromotionType type)
             : base(board, piece, to)
         {
-            capturedPiece = to.GetPiece(board);
+            
 
-            var color = piece.color == Piece.Color.White ? Piece.Color.Black : Piece.Color.White;
+            var color = piece.Color;
             switch (type)
             {
-                case PromotionType.Queen: piece = new Queen(to, color);
+                case PromotionType.Queen: PromotedPiece = new Queen(to, piece.Color);
                     break;
-                case PromotionType.Rook: PromotedPiece = new Rook(to, color);
+                case PromotionType.Rook: PromotedPiece = new Rook(to, piece.Color);
                     break;
-                case PromotionType.Bishop: PromotedPiece = new Bishop(to, color);
+                case PromotionType.Bishop: PromotedPiece = new Bishop(to, piece.Color);
                     break;
-                case PromotionType.Knight: PromotedPiece = new Knight(to, color);
+                case PromotionType.Knight: PromotedPiece = new Knight(to, piece.Color);
                     break;
                 default:
                     break;
@@ -36,13 +40,9 @@ namespace ChessEngine.Moves
 
         }
 
-        public enum PromotionType
-        {
-            Queen, Rook, Bishop, Knight
-        }
         public static List<Move> AllPossiblePromotions(Board board, Piece piece, Coordinate square)
         {
-            List<Move> moves = new List<Move>();
+            var moves = new List<Move>();
             Move move = new Promote(board, piece, square, Promote.PromotionType.Queen);
             moves.Add(move);
             move = new Promote(board, piece, square, Promote.PromotionType.Rook);
@@ -56,21 +56,21 @@ namespace ChessEngine.Moves
         public override void MakeMove(Board board)
         {
             piece.RemoveMe(board);
-            capturedPiece = board[to];
-            board[to] = PromotedPiece;
+            CapturedPiece = To.GetPiece(board);
+            board[To] = PromotedPiece;
         }
         public override void UnMakeMove(Board board)
         {
             PromotedPiece.RemoveMe(board);
-            if (capturedPiece != null)
+            if (CapturedPiece != null)
             {
-                capturedPiece.PutMe(board);
+                CapturedPiece.PutMe(board);
             }
             piece.PutMe(board);
         }
         public override string Notation()
         {
-            string notation = "=" + PromotedPiece.notationLetter;
+            string notation = "=" + PromotedPiece.NotationLetter;
             return base.Notation() +notation;
         }
     }

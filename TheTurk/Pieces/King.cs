@@ -1,39 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
-using ChessEngine.Pieces;
+﻿using System.Collections.Generic;
 using ChessEngine.Moves;
 
 namespace ChessEngine.Pieces
 {
     public class King : Piece
     {
-        static readonly int pieceValue = 1000000;
         public const char letter = 'K';
+        static readonly int pieceValue = 1000000;
+
         public King(Coordinate from, Color color)
             : base(from, color)
         {
 
         }
-        public override bool sliding
+        public override bool Sliding
         {
             get
             {
                 return false;
             }
         }
-        public override char notationLetter
+        public override char NotationLetter
         {
             get { return letter; }
         }
 
         public override int PieceValue
         {
-            get { return color == Color.White ? pieceValue : -pieceValue; }
+            get { return Color == Color.White ? pieceValue : -pieceValue; }
         }
-        public override Coordinate[] pieceDirection
+        public override Coordinate[] PieceDirection
         {
             get
             {
@@ -42,8 +38,34 @@ namespace ChessEngine.Pieces
         }
         public override List<Move> GenerateMoves(Board board)
         {
-            return base.GenerateMoves(board);
-        }
+            var moves = base.GenerateMoves(board);
 
+            moves.AddRange(CreateCastleMoves(board));
+            return moves;
+        }
+        List<Move> CreateCastleMoves(Board board)
+        {
+            var moves = new List<Move>();
+            var castleSide = this.Color == Pieces.Color.White ? board.WhiteCastle : board.BlackCastle;
+            if (castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.ShortCastle)
+            {
+                if (ShortCastle.Available(board, this.Color))
+                {
+                    moves.Add(new ShortCastle(this));
+
+                }
+            }
+            if (castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.LongCastle)
+            {
+                if (LongCastle.Available(board, this.Color))
+                {
+                    moves.Add(new LongCastle(this));
+                }
+            }
+
+
+            return moves;
+        }
+ 
     }
 }

@@ -1,87 +1,109 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
-using ChessEngine.Pieces;
+﻿using System.Collections.Generic;
 using ChessEngine.Moves;
 
 namespace ChessEngine.Pieces
 {
     public class Pawn : Piece
     {
-        static readonly int piecevalue = 100;
         public const char letter = ' ';
+        static readonly int piecevalue = 100;
+
         public Pawn(Coordinate from, Color color)
             : base(from, color)
         {
 
         }
+
+        public override bool Sliding
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public override char NotationLetter
+        {
+            get { return letter; }
+        }
+        public override int PieceValue
+        {
+            get { return Color == Color.White ? piecevalue : -piecevalue; }
+        }
+
+        public override Coordinate[] PieceDirection
+        {
+            get { return null; }
+        }
+
         public override List<Move> GenerateMoves(Board board)
         {
             var moves = new List<Move>();
             Move move;
-            if (color == Piece.Color.White)
+            if (Color == Color.White)
             {
-                var upSquare = from.To(Coordinate.Directions.North);
-                if (upSquare.IsEmpty(board))
+                var upSquare = From.To(Coordinate.Directions.North);
+                if (upSquare.IsEmpty(board) && From.rank != 7)//Pawn can go up if it is empty square
                 {
                     move = new Ordinary(board, this, upSquare);
                     moves.Add(move);
                     var twoUpSquare = upSquare.To(Coordinate.Directions.North);
-                    if (from.rank == 2 && twoUpSquare.IsEmpty(board))
+                    if (From.rank == 2 && twoUpSquare.IsEmpty(board))//Check can jump 2 square when it is on rank 2
                     {
                         move = new Ordinary(board, this, twoUpSquare);
                         moves.Add(move);
                     }
+                }
 
-                    Coordinate crossSquare = from.To(Coordinate.Directions.NorthEast);
-                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.Black)
+                if (From.rank!=7)
+                {
+                    Coordinate crossSquare = From.To(Coordinate.Directions.NorthEast);
+                    //Check for capture
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
                     {
                         move = new Ordinary(board, this, crossSquare);
                         moves.Add(move);
                     }
-                    crossSquare = from.To(Coordinate.Directions.NorthWest);
-                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.Black)
+                    crossSquare = From.To(Coordinate.Directions.NorthWest);
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
                     {
                         move = new Ordinary(board, this, crossSquare);
                         moves.Add(move);
                     }
                 }
-
-                if (from.rank == 6)
+                if (From.rank == 5)//Check possibility of enpassant move
                 {
-                    var crossSquare = from.To(Coordinate.Directions.NorthEast);
-                    if (crossSquare.Equals(board.enPassantSquare))
+                    var crossSquare = From.To(Coordinate.Directions.NorthEast);
+                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
                     {
                         move = new EnPassant(board, this, crossSquare);
                         moves.Add(move);
                     }
                     else
                     {
-                        crossSquare = from.To(Coordinate.Directions.NorthWest);
-                        if (crossSquare.Equals(board.enPassantSquare))
+                        crossSquare = From.To(Coordinate.Directions.NorthWest);
+                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
                         {
                             move = new EnPassant(board, this, crossSquare);
                             moves.Add(move);
                         }
                     }
                 }
-                if (from.rank == 7)
+                if (From.rank == 7)//Check pawn promotions
                 {
-                    upSquare = from.To(Coordinate.Directions.North);
+                    upSquare = From.To(Coordinate.Directions.North);
                     if (upSquare.IsEmpty(board))
                     {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, upSquare));
 
                     }
-                    var crossSquare = from.To(Coordinate.Directions.NorthEast);
-                    if (!crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.Black)
+                    var crossSquare = From.To(Coordinate.Directions.NorthEast);
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
                     {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
                     }
-                    crossSquare = from.To(Coordinate.Directions.NorthWest);
-                    if (!crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.Black)
+                    crossSquare = From.To(Coordinate.Directions.NorthWest);
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
                     {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
                     }
@@ -90,65 +112,70 @@ namespace ChessEngine.Pieces
             }
             else // For black pawn
             {
-                var downSquare = from.To(Coordinate.Directions.South);
-                if (downSquare.IsEmpty(board))
+                var downSquare = From.To(Coordinate.Directions.South);
+                if (downSquare.IsEmpty(board) && From.rank != 2)
                 {
                     move = new Ordinary(board, this, downSquare);
                     moves.Add(move);
                     var twoDownSquare = downSquare.To(Coordinate.Directions.South);
 
-                    if (twoDownSquare.IsEmpty(board))
+                    if (From.rank == 7 && twoDownSquare.IsEmpty(board))
                     {
                         move = new Ordinary(board, this, twoDownSquare);
                         moves.Add(move);
                     }
+                }
 
-                }
-                var crossSquare = from.To(Coordinate.Directions.SouthEast);
-                if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.White)
+                if (From.rank!=2)
                 {
-                    move = new Ordinary(board, this, crossSquare);
-                    moves.Add(move);
+                    var crossSquare = From.To(Coordinate.Directions.SouthEast);
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) &&
+                        crossSquare.GetPiece(board).Color == Color.White)
+                    {
+                        move = new Ordinary(board, this, crossSquare);
+                        moves.Add(move);
+                    }
+                    crossSquare = From.To(Coordinate.Directions.SouthWest);
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) &&
+                        crossSquare.GetPiece(board).Color == Color.White)
+                    {
+                        move = new Ordinary(board, this, crossSquare);
+                        moves.Add(move);
+                    }
                 }
-                crossSquare = from.To(Coordinate.Directions.SouthWest);
-                if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.White)
+                if (From.rank == 4)
                 {
-                    move = new Ordinary(board, this, crossSquare);
-                    moves.Add(move);
-                }
-                if (from.rank == 3)
-                {
-                    crossSquare = from.To(Coordinate.Directions.SouthEast);
-                    if (crossSquare.Equals(board.enPassantSquare))
+                    var crossSquare = From.To(Coordinate.Directions.SouthEast);
+                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
                     {
                         move = new EnPassant(board, this, crossSquare);
                         moves.Add(move);
                     }
                     else
                     {
-                        crossSquare = from.To(Coordinate.Directions.SouthWest);
-                        if (crossSquare.Equals(board.enPassantSquare))
+                        crossSquare = From.To(Coordinate.Directions.SouthWest);
+                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
                         {
                             move = new EnPassant(board, this, crossSquare);
                             moves.Add(move);
                         }
                     }
                 }
-                if (from.rank == 2)
+                if (From.rank == 2)
                 {
-                    downSquare = from.To(Coordinate.Directions.South);
+                    downSquare = From.To(Coordinate.Directions.South);
                     if (downSquare.IsEmpty(board))
                     {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, downSquare));
 
                     }
-                    crossSquare = from.To(Coordinate.Directions.SouthEast);
-                    if (!crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.White)
+                    var crossSquare = From.To(Coordinate.Directions.SouthEast);
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.White)
                     {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
                     }
-                    crossSquare = from.To(Coordinate.Directions.SouthWest);
-                    if (!crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).color == Color.White)
+                    crossSquare = From.To(Coordinate.Directions.SouthWest);
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.White)
                     {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
                     }
@@ -159,27 +186,6 @@ namespace ChessEngine.Pieces
 
 
             return moves;
-        }
-        public override bool sliding
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        public override char notationLetter
-        {
-            get { return letter; }
-        }
-        public override int PieceValue
-        {
-            get { return color == Color.White ? piecevalue : -piecevalue; }
-        }
-
-        public override Coordinate[] pieceDirection
-        {
-            get { return null; }
         }
     }
 }

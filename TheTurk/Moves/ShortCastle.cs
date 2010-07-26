@@ -13,25 +13,62 @@ namespace ChessEngine.Moves
         public ShortCastle(Piece piece)
             : base(piece)
         {
-            
+
         }
         public override void MakeMove(Board board)
         {
-            var rook = board[Coordinate.h1];
-            piece.MoveTo(board, Coordinate.g1);
-            rook.MoveTo(board, Coordinate.f1);
+            if (Color.White == piece.Color)
+            {
+                var rook = board[Coordinate.h1];
+                piece.MoveTo(board, Coordinate.g1);
+                rook.MoveTo(board, Coordinate.f1);
+            }
+            else
+            {
+                var rook = board[Coordinate.h8];
+                piece.MoveTo(board, Coordinate.g8);
+                rook.MoveTo(board, Coordinate.f8);
+            }
 
         }
 
         public override void UnMakeMove(Board board)
         {
-            var rook = board[Coordinate.f1];
-            piece.MoveTo(board, Coordinate.e1);
-            rook.MoveTo(board, Coordinate.h1);
+            if (Color.White == piece.Color)
+            {
+                var rook = board[Coordinate.f1];
+                piece.MoveTo(board, Coordinate.e1);
+                rook.MoveTo(board, Coordinate.h1);
+            }
+            else
+            {
+                var rook = board[Coordinate.f8];
+                piece.MoveTo(board, Coordinate.e8);
+                rook.MoveTo(board, Coordinate.h8);
+            }
         }
         public override string Notation()
         {
             return "0-0";
+        }
+        public static bool Available(Board board, Color side)
+        {
+            if (side == Color.White)
+            {
+                return Coordinate.f1.IsEmpty(board) && Coordinate.g1.IsEmpty(board) &&
+                       !Coordinate.e1.IsAttackedSquare(board, Color.Black) &&
+                       !Coordinate.f1.IsAttackedSquare(board, Color.Black) &&
+                       !Coordinate.g1.IsAttackedSquare(board, Color.Black);
+            }
+
+            return Coordinate.f8.IsEmpty(board) && Coordinate.g8.IsEmpty(board) &&
+                       !Coordinate.e8.IsAttackedSquare(board, Color.White) &&
+                       !Coordinate.f8.IsAttackedSquare(board, Color.White) &&
+                       !Coordinate.g8.IsAttackedSquare(board, Color.White);
+        }
+        public override string ToString()
+        {
+            return Notation();
         }
     }
 }
