@@ -1,8 +1,10 @@
-﻿namespace ChessEngine.Pieces
+﻿using ChessEngine.Main;
+
+namespace ChessEngine.Pieces
 {
     public class Rook : Piece
     {
-        public const char letter = 'R';
+        public const char Letter = 'R';
         static readonly int pieceValue=500;
 
         public Rook(Coordinate from, Color color)
@@ -16,7 +18,7 @@
         }
         public override char NotationLetter
         {
-            get { return letter; }
+            get { return Letter; }
         }
         public override Coordinate[] PieceDirection
         {

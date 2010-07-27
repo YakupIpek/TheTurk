@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ChessEngine.Main;
 using ChessEngine.Moves;
 
 namespace ChessEngine.Pieces
@@ -74,7 +75,7 @@ namespace ChessEngine.Pieces
                 if (From.rank == 5)//Check possibility of enpassant move
                 {
                     var crossSquare = From.To(Coordinate.Directions.NorthEast);
-                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
+                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
                     {
                         move = new EnPassant(board, this, crossSquare);
                         moves.Add(move);
@@ -82,7 +83,7 @@ namespace ChessEngine.Pieces
                     else
                     {
                         crossSquare = From.To(Coordinate.Directions.NorthWest);
-                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
+                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
                         {
                             move = new EnPassant(board, this, crossSquare);
                             moves.Add(move);
@@ -146,7 +147,7 @@ namespace ChessEngine.Pieces
                 if (From.rank == 4)
                 {
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
-                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
+                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
                     {
                         move = new EnPassant(board, this, crossSquare);
                         moves.Add(move);
@@ -154,7 +155,7 @@ namespace ChessEngine.Pieces
                     else
                     {
                         crossSquare = From.To(Coordinate.Directions.SouthWest);
-                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.enPassantSquare))
+                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
                         {
                             move = new EnPassant(board, this, crossSquare);
                             moves.Add(move);

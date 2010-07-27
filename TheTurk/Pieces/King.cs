@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using ChessEngine.Main;
 using ChessEngine.Moves;
 
 namespace ChessEngine.Pieces
 {
     public class King : Piece
     {
-        public const char letter = 'K';
+        public const char Letter = 'K';
         static readonly int pieceValue = 1000000;
 
         public King(Coordinate from, Color color)
@@ -22,7 +23,7 @@ namespace ChessEngine.Pieces
         }
         public override char NotationLetter
         {
-            get { return letter; }
+            get { return Letter; }
         }
 
         public override int PieceValue

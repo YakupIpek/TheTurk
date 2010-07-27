@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ChessEngine.ChessEngine
+namespace ChessEngine.Main
 {
 
     public class OutOfBoardException : Exception

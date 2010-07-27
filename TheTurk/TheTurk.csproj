@@ -45,10 +45,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ChessEngine\Board.cs" />
-    <Compile Include="ChessEngine\Coordinate.cs" />
-    <Compile Include="ChessEngine\Exceptions.cs" />
-    <Compile Include="ChessEngine\PartialBoard.cs" />
+    <Compile Include="Main\Board.cs" />
+    <Compile Include="Main\Coordinate.cs" />
+    <Compile Include="Main\Exceptions.cs" />
+    <Compile Include="Main\PartialBoard.cs" />
     <Compile Include="form.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -73,7 +73,7 @@
     <Compile Include="Test\MoveGeneration.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ChessEngine\ChessEngine.cd" />
+    <None Include="Main\ChessEngine.cd" />
     <None Include="Moves\Move.cd" />
     <None Include="Pieces\Pieces.cd" />
   </ItemGroup>

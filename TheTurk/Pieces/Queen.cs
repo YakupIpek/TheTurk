@@ -1,8 +1,10 @@
-﻿namespace ChessEngine.Pieces
+﻿using ChessEngine.Main;
+
+namespace ChessEngine.Pieces
 {
     public class Queen : Piece
     {
-        public const char letter = 'Q';
+        public const char Letter = 'Q';
         static readonly int pieceValue=900;
 
         public Queen(Coordinate from, Color color)
@@ -16,7 +18,7 @@
         }
         public override char NotationLetter
         {
-            get { return letter; }
+            get { return Letter; }
         }
         public override Coordinate[] PieceDirection
         {

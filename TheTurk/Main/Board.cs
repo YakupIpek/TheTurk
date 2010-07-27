@@ -4,7 +4,7 @@ using System.Linq;
 using ChessEngine.Moves;
 using ChessEngine.Pieces;
 
-namespace ChessEngine
+namespace ChessEngine.Main
 {
     public partial class Board
     {
@@ -19,13 +19,13 @@ namespace ChessEngine
             WhiteCastle = Castle.NoneCastle;
             BlackCastle = Castle.NoneCastle;
             Side = Color.White;
-            enPassantSquare = new Coordinate(0, 0);//means deactive
+            EnPassantSquare = new Coordinate(0, 0);//means deactive
             BoardStateHistory = new Stack<State>();
         }
 
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
-        public Coordinate enPassantSquare { get; private set; }
+        public Coordinate EnPassantSquare { get; private set; }
         public Castle WhiteCastle { get; private set; }
         public Castle BlackCastle { get; private set; }
         public string Fen
@@ -52,7 +52,7 @@ namespace ChessEngine
                 else if (castles.Contains("q")) BlackCastle = Castle.LongCastle;
                 else BlackCastle = Castle.NoneCastle;
 
-                enPassantSquare = splitted[3] == "-" ? new Coordinate(0, 0) : Coordinate.NotationToSquare(splitted[3]);
+                EnPassantSquare = splitted[3] == "-" ? new Coordinate(0, 0) : Coordinate.NotationToSquare(splitted[3]);
 
                 if (splitted.Length > 4)
                     fiftyMovesRule = Convert.ToInt32(splitted[4]);
@@ -71,17 +71,17 @@ namespace ChessEngine
                     Color color = char.IsUpper(letter) ? Color.White : Color.Black;
                     switch (char.ToUpper(letter))
                     {
-                        case Queen.letter: this[square] = new Queen(square, color);
+                        case Queen.Letter: this[square] = new Queen(square, color);
                             break;
-                        case Rook.letter: this[square] = new Rook(square, color);
+                        case Rook.Letter: this[square] = new Rook(square, color);
                             break;
-                        case Bishop.letter: this[square] = new Bishop(square, color);
+                        case Bishop.Letter: this[square] = new Bishop(square, color);
                             break;
-                        case Knight.letter: this[square] = new Knight(square, color);
+                        case Knight.Letter: this[square] = new Knight(square, color);
                             break;
                         case 'P': this[square] = new Pawn(square, color);
                             break;
-                        case King.letter:
+                        case King.Letter:
                             {
                                 var king = new King(square, color);
                                 this[square] = king;
@@ -128,24 +128,24 @@ namespace ChessEngine
 
         public void MakeMove(Move move)
         {
-            Piece piece = move.piece;
+            Piece movingPiece= move.piece;
 
-            BoardStateHistory.Push(new State(enPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule));
+            BoardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule));
 
             if (Side == Color.Black) totalMoves++;
 
-            if (piece is Pawn && Math.Abs((piece.From.rank - ((Ordinary)move).To.rank)) == 2)
+            if (movingPiece is Pawn && Math.Abs((movingPiece.From.rank - ((Ordinary)move).To.rank)) == 2)
             {
-                if (piece.Color == Color.White)
-                    enPassantSquare = piece.From.To(Coordinate.Directions.North);
+                if (movingPiece.Color == Color.White)
+                    EnPassantSquare = movingPiece.From.To(Coordinate.Directions.North);
                 else
-                    enPassantSquare = piece.From.To(Coordinate.Directions.South);
+                    EnPassantSquare = movingPiece.From.To(Coordinate.Directions.South);
             }
             else
-                enPassantSquare = new Coordinate(-1, -1);
+                EnPassantSquare = new Coordinate(-1, -1);
 
 
-            if (piece is Pawn || (move is Ordinary) && (move as Ordinary).CapturedPiece != null)
+            if (movingPiece is Pawn || (move is Ordinary) && (move as Ordinary).CapturedPiece != null)
                 fiftyMovesRule = 0;
             else
                 fiftyMovesRule++;
@@ -154,9 +154,9 @@ namespace ChessEngine
             move.MakeMove(this);
 
 
-            if (piece is King)
+            if (movingPiece is King)
             {
-                if (piece.Color == Color.White)
+                if (movingPiece.Color == Color.White)
                 {
                     WhiteCastle = Castle.NoneCastle;
                 }
@@ -166,74 +166,76 @@ namespace ChessEngine
                 }
 
             }
-            else if (piece is Rook)
+            Piece piece; 
+            if (WhiteCastle != Castle.NoneCastle)
             {
-                if (Side == Color.White && WhiteCastle != Castle.NoneCastle)
+                piece = Coordinate.a1.GetPiece(this);
+                if (!(piece is Rook && piece.Color == Color.White))
                 {
-                    if (Coordinate.a1.GetPiece(this) == null)
+                    if (WhiteCastle == Castle.BothCastle)
                     {
-                        if (WhiteCastle == Castle.BothCastle)
-                        {
-                            WhiteCastle = Castle.ShortCastle;
-                        }
-                        else if (WhiteCastle == Castle.LongCastle)
-                        {
-                            WhiteCastle = Castle.NoneCastle;
-                        }
-
+                        WhiteCastle = Castle.ShortCastle;
                     }
-                    else if (Coordinate.h1.GetPiece(this) == null)
+                    else if (WhiteCastle == Castle.LongCastle)
                     {
-                        if (WhiteCastle == Castle.BothCastle)
-                        {
-                            WhiteCastle = Castle.LongCastle;
-                        }
-                        else if (WhiteCastle == Castle.ShortCastle)
-                        {
-                            WhiteCastle = Castle.NoneCastle;
-                        }
-
+                        WhiteCastle = Castle.NoneCastle;
                     }
 
                 }
-                else if (Side == Color.Black && BlackCastle != Castle.NoneCastle)
+                piece = Coordinate.h1.GetPiece(this);
+                if ( !(piece is Rook && piece.Color==Color.White))
                 {
-                    if (Coordinate.a8.GetPiece(this) == null)
+                    if (WhiteCastle == Castle.BothCastle)
                     {
-                        if (BlackCastle == Castle.BothCastle)
-                        {
-                            BlackCastle = Castle.ShortCastle;
-                        }
-                        else if (BlackCastle == Castle.ShortCastle)
-                        {
-                            BlackCastle = Castle.NoneCastle;
-                        }
-
+                        WhiteCastle = Castle.LongCastle;
                     }
-                    else
+                    else if (WhiteCastle == Castle.ShortCastle)
                     {
-                        if (Coordinate.h8.GetPiece(this) == null)
-                        {
-                            if (BlackCastle == Castle.BothCastle)
-                            {
-                                BlackCastle = Castle.ShortCastle;
-                            }
-                            else if (BlackCastle == Castle.ShortCastle)
-                            {
-                                BlackCastle = Castle.NoneCastle;
-                            }
-                        }
+                        WhiteCastle = Castle.NoneCastle;
+                    }
+
+                }
+
+            }
+            
+            if (BlackCastle != Castle.NoneCastle)
+            {
+                piece = Coordinate.a8.GetPiece(this); 
+                if (!(piece is Rook && piece.Color==Color.Black))
+                {
+                    if (BlackCastle == Castle.BothCastle)
+                    {
+                        BlackCastle = Castle.ShortCastle;
+                    }
+                    else if (BlackCastle == Castle.LongCastle)
+                    {
+                        BlackCastle = Castle.NoneCastle;
+                    }
+
+                }
+                piece = Coordinate.h8.GetPiece(this);
+                if (!(piece is Rook && piece.Color == Color.Black))
+                {
+                    if (BlackCastle == Castle.BothCastle)
+                    {
+                        BlackCastle = Castle.LongCastle;
+                    }
+                    else if (BlackCastle == Castle.ShortCastle)
+                    {
+                        BlackCastle = Castle.NoneCastle;
                     }
                 }
 
             }
+
+
             ToggleSide();
 
         }
         public void TakeBackMove(Move move)
         {
             var state = BoardStateHistory.Pop();
-            enPassantSquare = state.enPassantSquare;
+            EnPassantSquare = state.enPassantSquare;
             WhiteCastle = state.whiteCastle;
             BlackCastle = state.blackCastle;
             fiftyMovesRule = state.fiftyMovesRule;
@@ -296,7 +298,7 @@ namespace ChessEngine
 
 
 
-                            var result = king.From.IsAttackedSquare(this,king.OppenentColor);
+                            var result = king.From.IsAttackedSquare(this, king.OppenentColor);
                             TakeBackMove(x);
                             //Console.Clear();
                             //ShowBoard();

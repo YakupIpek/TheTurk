@@ -1,9 +1,11 @@
-﻿namespace ChessEngine.Pieces
+﻿using ChessEngine.Main;
+
+namespace ChessEngine.Pieces
 {
     public class Bishop : Piece
     {
-        public const char letter = 'B';
-        static readonly int pieceValue=325;
+        public const char Letter = 'B';
+        const int pieceValue=325;
 
         public Bishop(Coordinate from, Color color)
             : base(from, color)
@@ -16,7 +18,7 @@
         }
         public override char NotationLetter
         {
-            get { return 'B'; }
+            get { return Letter; }
         }
 
         public override Coordinate[] PieceDirection

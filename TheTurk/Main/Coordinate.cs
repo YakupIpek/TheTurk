@@ -2,7 +2,7 @@
 using System.Linq;
 using ChessEngine.Pieces;
 
-namespace ChessEngine
+namespace ChessEngine.Main
 {
     public enum Direction : int
     {

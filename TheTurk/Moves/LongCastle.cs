@@ -1,4 +1,5 @@
-﻿using ChessEngine.Pieces;
+﻿using ChessEngine.Main;
+using ChessEngine.Pieces;
 
 namespace ChessEngine.Moves
 {
@@ -14,13 +15,13 @@ namespace ChessEngine.Moves
         {
             if (Color.White == piece.Color)
             {
-                var rook = board[Coordinate.a1];
+                var rook = Coordinate.a1.GetPiece(board);
                 piece.MoveTo(board, Coordinate.c1);
                 rook.MoveTo(board, Coordinate.d1);
             }
             else
             {
-                var rook = board[Coordinate.a8];
+                var rook = Coordinate.a8.GetPiece(board);
                 piece.MoveTo(board, Coordinate.c8);
                 rook.MoveTo(board, Coordinate.d8);
             }
@@ -30,13 +31,13 @@ namespace ChessEngine.Moves
         {
             if (piece.Color == Color.White)
             {
-                var rook = board[Coordinate.d1];
+                var rook = Coordinate.d1.GetPiece(board);
                 piece.MoveTo(board, Coordinate.e1);
                 rook.MoveTo(board, Coordinate.a1);
             }
             else
             {
-                var rook = board[Coordinate.d8];
+                var rook = Coordinate.d8.GetPiece(board);
                 piece.MoveTo(board, Coordinate.e8);
                 rook.MoveTo(board, Coordinate.a8);
             }

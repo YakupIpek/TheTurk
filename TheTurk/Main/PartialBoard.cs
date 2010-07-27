@@ -1,4 +1,4 @@
-﻿namespace ChessEngine
+﻿namespace ChessEngine.Main
 {
     public partial class Board
     {

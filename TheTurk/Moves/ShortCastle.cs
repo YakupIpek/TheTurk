@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ChessEngine;
+﻿using ChessEngine.Main;
 using ChessEngine.Pieces;
-using ChessEngine.Moves;
 
 namespace ChessEngine.Moves
 {
@@ -19,7 +14,7 @@ namespace ChessEngine.Moves
         {
             if (Color.White == piece.Color)
             {
-                var rook = board[Coordinate.h1];
+                var rook = Coordinate.h1.GetPiece(board);
                 piece.MoveTo(board, Coordinate.g1);
                 rook.MoveTo(board, Coordinate.f1);
             }
@@ -31,18 +26,17 @@ namespace ChessEngine.Moves
             }
 
         }
-
         public override void UnMakeMove(Board board)
         {
             if (Color.White == piece.Color)
             {
-                var rook = board[Coordinate.f1];
+                var rook = Coordinate.f1.GetPiece(board);
                 piece.MoveTo(board, Coordinate.e1);
                 rook.MoveTo(board, Coordinate.h1);
             }
             else
             {
-                var rook = board[Coordinate.f8];
+                var rook = Coordinate.f8.GetPiece(board);
                 piece.MoveTo(board, Coordinate.e8);
                 rook.MoveTo(board, Coordinate.h8);
             }
