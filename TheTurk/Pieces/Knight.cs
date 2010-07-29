@@ -1,10 +1,12 @@
-﻿using ChessEngine.Main;
+﻿using System.Collections.Generic;
+using ChessEngine.Main;
+using ChessEngine.Moves;
 
 namespace ChessEngine.Pieces
 {
     public class Knight : Piece
     {
-        public const int pieceValue = 325;
+        const int pieceValue = 325;
         public const char Letter = 'N';
         public static readonly Coordinate[] Directions;
         static Knight()
@@ -39,6 +41,20 @@ namespace ChessEngine.Pieces
         {
             get { return Letter; }
         }
+        //public override System.Collections.Generic.List<Moves.Move> GenerateMoves(Board board)
+        //{
+        //    if (!board.IsInCheck())
+        //    {
+        //        RemoveMe(board);
+        //        if (!board.IsInCheck())
+        //        {
+        //            PutMe(board);
+        //            return new List<Move>();
+        //        }
+        //        PutMe(board);
+        //    }
 
+        //    return base.GenerateMoves(board);
+        //}
     }
 }

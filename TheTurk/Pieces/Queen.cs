@@ -5,7 +5,7 @@ namespace ChessEngine.Pieces
     public class Queen : Piece
     {
         public const char Letter = 'Q';
-        static readonly int pieceValue=900;
+        const int pieceValue=900;
 
         public Queen(Coordinate from, Color color)
             : base(from, color)

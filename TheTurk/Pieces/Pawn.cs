@@ -6,8 +6,8 @@ namespace ChessEngine.Pieces
 {
     public class Pawn : Piece
     {
-        public const char letter = ' ';
-        static readonly int piecevalue = 100;
+        public const char Letter = ' ';
+        const int Piecevalue = 100;
 
         public Pawn(Coordinate from, Color color)
             : base(from, color)
@@ -25,18 +25,17 @@ namespace ChessEngine.Pieces
 
         public override char NotationLetter
         {
-            get { return letter; }
+            get { return Letter; }
         }
         public override int PieceValue
         {
-            get { return Color == Color.White ? piecevalue : -piecevalue; }
+            get { return Color == Color.White ? Piecevalue : -Piecevalue; }
         }
 
         public override Coordinate[] PieceDirection
         {
             get { return null; }
         }
-
         public override List<Move> GenerateMoves(Board board)
         {
             var moves = new List<Move>();

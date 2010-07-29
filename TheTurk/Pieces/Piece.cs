@@ -6,7 +6,7 @@ namespace ChessEngine.Pieces
 {
     public enum Color
     {
-        White, Black
+        White=1, Black=-1
     }
     public abstract class Piece
     {

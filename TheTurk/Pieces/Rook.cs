@@ -5,7 +5,7 @@ namespace ChessEngine.Pieces
     public class Rook : Piece
     {
         public const char Letter = 'R';
-        static readonly int pieceValue=500;
+        const int pieceValue=500;
 
         public Rook(Coordinate from, Color color)
             : base(from, color) 

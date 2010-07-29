@@ -7,7 +7,7 @@ namespace ChessEngine.Pieces
     public class King : Piece
     {
         public const char Letter = 'K';
-        static readonly int pieceValue = 1000000;
+        const int pieceValue = 1000000;
 
         public King(Coordinate from, Color color)
             : base(from, color)

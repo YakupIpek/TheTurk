@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ChessEngine.Moves;
@@ -6,10 +7,10 @@ using ChessEngine.Pieces;
 
 namespace ChessEngine.Main
 {
-    public partial class Board
+    public partial class Board : IEnumerable
     {
         Stack<State> BoardStateHistory;
-        Color Side;
+
         Piece[,] board;
         private int fiftyMovesRule, totalMoves;
 
@@ -21,8 +22,9 @@ namespace ChessEngine.Main
             Side = Color.White;
             EnPassantSquare = new Coordinate(0, 0);//means deactive
             BoardStateHistory = new Stack<State>();
+            SetUpBoard();
         }
-
+        public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
         public Coordinate EnPassantSquare { get; private set; }
@@ -128,7 +130,7 @@ namespace ChessEngine.Main
 
         public void MakeMove(Move move)
         {
-            Piece movingPiece= move.piece;
+            Piece movingPiece = move.piece;
 
             BoardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule));
 
@@ -166,7 +168,7 @@ namespace ChessEngine.Main
                 }
 
             }
-            Piece piece; 
+            Piece piece;
             if (WhiteCastle != Castle.NoneCastle)
             {
                 piece = Coordinate.a1.GetPiece(this);
@@ -183,7 +185,7 @@ namespace ChessEngine.Main
 
                 }
                 piece = Coordinate.h1.GetPiece(this);
-                if ( !(piece is Rook && piece.Color==Color.White))
+                if (!(piece is Rook && piece.Color == Color.White))
                 {
                     if (WhiteCastle == Castle.BothCastle)
                     {
@@ -197,11 +199,11 @@ namespace ChessEngine.Main
                 }
 
             }
-            
+
             if (BlackCastle != Castle.NoneCastle)
             {
-                piece = Coordinate.a8.GetPiece(this); 
-                if (!(piece is Rook && piece.Color==Color.Black))
+                piece = Coordinate.a8.GetPiece(this);
+                if (!(piece is Rook && piece.Color == Color.Black))
                 {
                     if (BlackCastle == Castle.BothCastle)
                     {
@@ -246,7 +248,45 @@ namespace ChessEngine.Main
             ToggleSide();
 
         }
+        public List<Move> GenerateMoves()
+        {
+            var moves = new List<Move>();
+            King king = Side == Color.White ? WhiteKing : BlackKing;
+            foreach (var piece in board)
+            {
+                if (piece != null && piece.Color == Side)
+                {
+                    var query = piece.GenerateMoves(this).Where(x =>
+                        {
+                            MakeMove(x);
+                            //Console.Clear();
+                            //ShowBoard();
+                            //Thread.Sleep(1000);
 
+
+
+
+                            var result = king.From.IsAttackedSquare(this, king.OppenentColor);
+                            TakeBackMove(x);
+                            //Console.Clear();
+                            //ShowBoard();
+                            //Thread.Sleep(1000);
+                            return !result;
+                        }).ToList();
+                    moves.AddRange(query);
+
+                }
+
+            }
+            return moves;
+        }
+
+        public bool IsInCheck()
+        {
+            var king = Side == Color.White ? WhiteKing : BlackKing;
+            return king.From.IsAttackedSquare(this, king.OppenentColor);
+
+        }
         public void SetUpBoard()
         {
             Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -280,42 +320,26 @@ namespace ChessEngine.Main
             }
             Console.WriteLine("----------------");
         }
-        public List<Move> GenerateMoves()
-        {
-            var moves = new List<Move>();
-            King king = Side == Color.White ? WhiteKing : BlackKing;
-            foreach (var piece in board)
-            {
-                if (piece != null && piece.Color == Side)
-                {
-                    var query = piece.GenerateMoves(this).Where(x =>
-                        {
-                            MakeMove(x);
-                            //Console.Clear();
-                            //ShowBoard();
-                            //Thread.Sleep(1000);
-
-
-
-
-                            var result = king.From.IsAttackedSquare(this, king.OppenentColor);
-                            TakeBackMove(x);
-                            //Console.Clear();
-                            //ShowBoard();
-                            //Thread.Sleep(1000);
-                            return !result;
-                        }).ToList();
-                    moves.AddRange(query);
-
-                }
-
-            }
-            return moves;
-        }
         void ToggleSide()
         {
             Side = Side == Color.White ? Color.Black : Color.White;
         }
 
+        public IEnumerator GetEnumerator()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    var piece = board[i, j]; 
+                    if (piece!=null)
+                    {
+                        yield return piece ;
+                    }
+                    
+                }
+            }
+            
+        }
     }
 }
