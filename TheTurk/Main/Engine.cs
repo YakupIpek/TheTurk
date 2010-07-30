@@ -1,51 +1,67 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using ChessEngine.Moves;
 
 namespace ChessEngine.Main
 {
-    public delegate void VariationWriter(Engine.Result result);
     public class Engine
     {
-        
-        const int MateValue = 320000;
-        private List<Move> PrincipalVariation;
-        private Stack<Move> Line;
-        private VariationWriter WriteLines;
+        private Stopwatch ElapsedTime;
         public readonly Board Board;
+        public readonly IProtocol Protocol;
         public class Result
         {
+            public int Ply;
             public int Score;
+            public long ElapsedTime;
+            public int NodesCount;
             public List<Move> BestLine;
-            public Result(int score, List<Move> bestLine)
+            public Result(int ply, int score, long elapsedTime, int nodesCount, List<Move> bestLine)
             {
+                Ply = ply;
                 Score = score;
+                ElapsedTime = elapsedTime / 10L;
+                NodesCount = nodesCount;
                 BestLine = bestLine;
             }
         }
-        public Engine(Board board,VariationWriter writer)
+        public Engine(Board board, IProtocol protocol)
         {
-            Line = new Stack<Move>();
             Board = board;
-            WriteLines = writer;
+            this.Protocol = protocol;
+            ElapsedTime = new Stopwatch();
         }
         public Result Search(int maxDepth)
         {
-            int alpha = -int.MaxValue, beta = int.MaxValue, ply = maxDepth;
-            var pv=new List<Move>();
-            var score = AlphaBeta(alpha, beta, 5,pv);
-            WriteLines(new Result(score, pv));
-            return new Result(score, pv);
+            int alpha = -int.MaxValue, beta = int.MaxValue;
+            int nodesCount = 0;
+            var pv = new List<Move>();
+            ElapsedTime.Reset();
+            ElapsedTime.Start();
+
+            var score = AlphaBeta(alpha, beta, 5, pv, ref nodesCount);
+
+            ElapsedTime.Stop();
+
+            var result = new Result(maxDepth, score, ElapsedTime.ElapsedMilliseconds, nodesCount, pv);
+            Protocol.WriteOutput(result);
+            return result;
         }
-        int AlphaBeta(int alpha, int beta, int ply,List<Move> pv)
+        int AlphaBeta(int alpha, int beta, int ply, List<Move> pv, ref int nodeCount)
         {
-            var localpv=new List<Move>();
-            if (ply <= 0) return Evaluation.Evaluate(Board);
+            nodeCount++;
+
             var moves = Board.GenerateMoves();
+            if (moves.Count == 0) return (Board.IsCheckMateOrStaleMate() + ply) * (int)Board.Side;
+            if (ply <= 0) return Evaluation.Evaluate(Board);
+
+            var localpv = new List<Move>();
             foreach (var move in moves)
             {
                 Board.MakeMove(move);
 
-                int score = -AlphaBeta(-beta, -alpha, ply - 1,localpv);
+                int score = -AlphaBeta(-beta, -alpha, ply - 1, localpv, ref nodeCount);
 
                 Board.TakeBackMove(move);
 
@@ -60,6 +76,11 @@ namespace ChessEngine.Main
                         pv.Add(move);
                     else
                         pv[0] = move;
+                    
+                    //pv.Clear();
+                    //pv.Add(move);
+                    //pv.AddRange(localpv);
+
                     for (int i = 0; i < localpv.Count; i++)
                     {
                         if (pv.Count - 2 < i)

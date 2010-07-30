@@ -43,7 +43,8 @@ namespace ChessEngine.Moves
         }
         public override string IONotation()
         {
-            return base.IONotation()+Coordinate.g1.ToString();
+            Coordinate to = piece.Color == Color.White ? Coordinate.g1 : Coordinate.g8;
+            return base.IONotation() + to.ToString();
         }
         public override string Notation()
         {

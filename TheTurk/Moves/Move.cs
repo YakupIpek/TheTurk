@@ -28,7 +28,7 @@ namespace ChessEngine.Moves
         }
         public virtual string Notation()
         {
-            return piece.NotationLetter.ToString().Replace('P', ' ');
+            return piece.NotationLetter.ToString().Trim();
         }
 
     }

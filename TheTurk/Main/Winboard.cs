@@ -4,13 +4,13 @@ using System.Threading;
 
 namespace ChessEngine.Main
 {
-    class Winboard
+    class Winboard : IProtocol
     {
         bool force = false;
         private readonly Engine engine;
         public Winboard()
         {
-            engine = new Engine(new Board(),SendOutput);
+            engine = new Engine(new Board(), this);
         }
         public void Start()
         {
@@ -26,7 +26,6 @@ namespace ChessEngine.Main
         }
         void Comminication(string input)
         {
-
             string command = input.Split(' ').First();
             string messageBody = input.Substring(command.Length).Trim();
             switch (command)
@@ -58,8 +57,11 @@ namespace ChessEngine.Main
                         if (!force)
                         {
                             var result = engine.Search(4);
-                            Console.WriteLine("move " + result.BestLine[0].IONotation());
-                            engine.Board.MakeMove(result.BestLine[0]);
+                            if (result.BestLine.Count > 0)
+                            {
+                                Console.WriteLine("move " + result.BestLine[0].IONotation());
+                                engine.Board.MakeMove(result.BestLine[0]);
+                            }
                         }
                         break;
                     }
@@ -67,19 +69,22 @@ namespace ChessEngine.Main
                     {
                         force = false;
                         var result = engine.Search(4);
-                        Console.WriteLine("move " + result.BestLine[0].IONotation());
-                        engine.Board.MakeMove(result.BestLine[0]);
+                        if (result.BestLine.Count > 0)
+                        {
+                            Console.WriteLine("move " + result.BestLine[0].IONotation());
+                            engine.Board.MakeMove(result.BestLine[0]);
+                        }
                         break;
                     }
                 case "fen":
                     {
-                        engine.Board.Fen = "7k/8/8/8/1p6/P7/8/7K b - - 0 1";break;
+                        engine.Board.Fen = "rn4kr/4p1bp/2pp4/1p3P1Q/2P1P3/6R1/PBp3PP/RN4K1 w - - 0 24 "; break;
                     }
                 case "score":
                     {
-                        var score =Evaluation.Evaluate(engine.Board);
+                        var score = Evaluation.Evaluate(engine.Board);
                         engine.Board.ShowBoard();
-                        Console.WriteLine("score : "+score);
+                        Console.WriteLine("score : " + score);
                         break;
                     }
                 case "show":
@@ -88,6 +93,8 @@ namespace ChessEngine.Main
                         break;
                     }
             }
+
+
         }
         void ReceivedMove(string moveNotation)
         {
@@ -97,19 +104,25 @@ namespace ChessEngine.Main
                 if (move.IONotation() == moveNotation)
                 {
                     engine.Board.MakeMove(move);
-                    break;
+                    return;
                 }
             }
-        }
-        void SendOutput(Engine.Result result)
-        {
-            Console.Write(result.Score + " ");
-            foreach (var move in result.BestLine)
-            {
-                Console.Write(move.Notation() + " ");
+            Console.WriteLine("illegal move : {0}", moveNotation);
 
+        }
+        public void WriteOutput(Engine.Result result)
+        {
+            if (result.BestLine.Count > 0)
+            {
+                Console.Write("{0} {1} {2} {3} ", result.Ply, result.Score, result.ElapsedTime, result.NodesCount);
+
+                foreach (var move in result.BestLine)
+                {
+                    Console.Write(move.Notation() + " ");
+                }
+                Console.WriteLine();
             }
-            Console.WriteLine();
+
         }
     }
 }

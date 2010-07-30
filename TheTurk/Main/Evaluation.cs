@@ -12,10 +12,7 @@ namespace ChessEngine.Main
             foreach (Piece piece in board)
             {
                 score += piece.PieceValue;
-
             }
-
-            
             return (int)board.Side*score;
         }
     }

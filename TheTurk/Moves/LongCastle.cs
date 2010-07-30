@@ -44,7 +44,8 @@ namespace ChessEngine.Moves
         }
         public override string IONotation()
         {
-            return base.IONotation()+Coordinate.c1.ToString();
+            Coordinate to = piece.Color == Color.White ? Coordinate.c1 : Coordinate.c8;
+            return base.IONotation()+to.ToString();
         }
         public override string Notation()
         {

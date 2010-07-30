@@ -9,6 +9,7 @@ namespace ChessEngine.Main
 {
     public partial class Board : IEnumerable
     {
+        private const int CheckMateValue = 90000000, StaleMateValue = 0;
         Stack<State> BoardStateHistory;
 
         Piece[,] board;
@@ -286,6 +287,16 @@ namespace ChessEngine.Main
             var king = Side == Color.White ? WhiteKing : BlackKing;
             return king.From.IsAttackedSquare(this, king.OppenentColor);
 
+        }
+        /// <summary>
+        /// Determine player side is in checkmate or stalemate
+        /// </summary>
+        /// <returns>returns Checkmate or stalemate value</returns>
+        public int IsCheckMateOrStaleMate()
+        {
+            var king = Side == Color.White ? WhiteKing : BlackKing;
+            bool result=king.From.IsAttackedSquare(this, king.OppenentColor);
+            return result == true ? CheckMateValue : StaleMateValue;
         }
         public void SetUpBoard()
         {
