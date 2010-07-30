@@ -292,11 +292,11 @@ namespace ChessEngine.Main
         /// Determine player side is in checkmate or stalemate
         /// </summary>
         /// <returns>returns Checkmate or stalemate value</returns>
-        public int IsCheckMateOrStaleMate()
+        public int IsCheckMateOrStaleMate(int ply)
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
-            bool result=king.From.IsAttackedSquare(this, king.OppenentColor);
-            return result == true ? CheckMateValue : StaleMateValue;
+            bool result = king.From.IsAttackedSquare(this, king.OppenentColor);
+            return result == true ? CheckMateValue + ply : StaleMateValue;
         }
         public void SetUpBoard()
         {
@@ -342,15 +342,15 @@ namespace ChessEngine.Main
             {
                 for (int j = 0; j < 8; j++)
                 {
-                    var piece = board[i, j]; 
-                    if (piece!=null)
+                    var piece = board[i, j];
+                    if (piece != null)
                     {
-                        yield return piece ;
+                        yield return piece;
                     }
-                    
+
                 }
             }
-            
+
         }
     }
 }

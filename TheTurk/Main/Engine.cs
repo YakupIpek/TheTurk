@@ -40,7 +40,7 @@ namespace ChessEngine.Main
             ElapsedTime.Reset();
             ElapsedTime.Start();
 
-            var score = AlphaBeta(alpha, beta, 5, pv, ref nodesCount);
+            var score = AlphaBeta(alpha, beta, maxDepth, pv, ref nodesCount);
 
             ElapsedTime.Stop();
 
@@ -53,7 +53,7 @@ namespace ChessEngine.Main
             nodeCount++;
 
             var moves = Board.GenerateMoves();
-            if (moves.Count == 0) return (Board.IsCheckMateOrStaleMate() + ply) * (int)Board.Side;
+            if (moves.Count == 0) return (Board.IsCheckMateOrStaleMate(ply)) * (int)Board.Side;
             if (ply <= 0) return Evaluation.Evaluate(Board);
 
             var localpv = new List<Move>();
@@ -72,22 +72,11 @@ namespace ChessEngine.Main
                 if (score > alpha)
                 {
                     alpha = score;
-                    if (pv.Count == 0)
-                        pv.Add(move);
-                    else
-                        pv[0] = move;
-                    
-                    //pv.Clear();
-                    //pv.Add(move);
-                    //pv.AddRange(localpv);
 
-                    for (int i = 0; i < localpv.Count; i++)
-                    {
-                        if (pv.Count - 2 < i)
-                            pv.Insert(i + 1, localpv[i]);
-                        else
-                            pv[i + 1] = localpv[i];
-                    }
+                    pv.Clear();
+                    pv.Add(move);
+                    pv.AddRange(localpv);
+                    localpv.Clear();
                 }
             }
             return alpha;
