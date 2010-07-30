@@ -77,7 +77,10 @@ namespace ChessEngine.Pieces
         {
             board[From] = this;
         }
-
+        public override string ToString()
+        {
+            return GetType().Name;
+        }
 
     }
 }

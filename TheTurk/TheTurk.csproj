@@ -57,6 +57,7 @@
     <Compile Include="form.Designer.cs">
       <DependentUpon>form.cs</DependentUpon>
     </Compile>
+    <Compile Include="Main\Winboard.cs" />
     <Compile Include="Moves\EnPassant.cs" />
     <Compile Include="Moves\LongCastle.cs" />
     <Compile Include="Moves\Move.cs" />

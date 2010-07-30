@@ -21,7 +21,7 @@ namespace ChessEngine.Moves
         public Promote(Board board, Piece piece, Coordinate to, PromotionType type)
             : base(board, piece, to)
         {
-            
+
 
             var color = piece.Color;
             switch (type)
@@ -72,7 +72,11 @@ namespace ChessEngine.Moves
         public override string Notation()
         {
             string notation = "=" + PromotedPiece.NotationLetter;
-            return base.Notation() +notation;
+            return base.Notation() + notation;
+        }
+        public override string IONotation()
+        {
+            return base.IONotation() + char.ToLower(PromotedPiece.NotationLetter);
         }
     }
 }

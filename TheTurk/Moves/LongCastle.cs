@@ -42,7 +42,10 @@ namespace ChessEngine.Moves
                 rook.MoveTo(board, Coordinate.a8);
             }
         }
-
+        public override string IONotation()
+        {
+            return base.IONotation()+Coordinate.c1.ToString();
+        }
         public override string Notation()
         {
             return "0-0-0";

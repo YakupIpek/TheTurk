@@ -1,15 +1,13 @@
-﻿using System;
-using System.Diagnostics;
-using ChessEngine;
-using ChessEngine.Main;
-using ChessEngine.Test;
-using System.Linq;
+﻿using ChessEngine.Main;
+
 namespace Main
 {
     class Program
     {
         static void Main(string[] args)
         {
+            var winboard=new Winboard();
+            winboard.Start();
         }
     }
 }

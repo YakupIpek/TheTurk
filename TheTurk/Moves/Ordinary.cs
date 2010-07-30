@@ -12,8 +12,8 @@ namespace ChessEngine.Moves
             //this.CapturedPiece = board[to];
         }
 
-        public Piece CapturedPiece { get;protected set; }
-        public Coordinate To{ get; protected set;}
+        public Piece CapturedPiece { get; protected set; }
+        public Coordinate To { get; protected set; }
 
         public override void MakeMove(Board board)
         {
@@ -31,10 +31,14 @@ namespace ChessEngine.Moves
 
 
         }
+        public override string IONotation()
+        {
+            return base.IONotation() + To.ToString();
+        }
         public override string Notation()
         {
             string captured = CapturedPiece == null ? "" : "x";
-            if (piece.GetType() == typeof(Pawn) && captured=="x") return (from.ToString()[0] + captured + To);
+            if (piece.GetType() == typeof(Pawn) && captured == "x") return (from.ToString()[0] + captured + To);
             return (piece.NotationLetter + captured + To).Trim();
         }
         public override string ToString()
