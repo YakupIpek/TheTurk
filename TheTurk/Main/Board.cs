@@ -9,9 +9,10 @@ namespace ChessEngine.Main
 {
     public partial class Board : IEnumerable
     {
-        private const int CheckMateValue = 90000000, StaleMateValue = 0;
+        #region Fields
+        private const int CheckMateValue = short.MaxValue,
+            StaleMateValue = 0;
         Stack<State> BoardStateHistory;
-
         Piece[,] board;
         private int fiftyMovesRule, totalMoves;
 
@@ -117,7 +118,7 @@ namespace ChessEngine.Main
 
             }
         }
-
+        #endregion
         /// <summary>
         /// Return piece on specified square
         /// </summary>
@@ -296,7 +297,7 @@ namespace ChessEngine.Main
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
             bool result = king.From.IsAttackedSquare(this, king.OppenentColor);
-            return result == true ? CheckMateValue + ply : StaleMateValue;
+            return result == true ? (CheckMateValue + ply) : StaleMateValue;
         }
         public void SetUpBoard()
         {
@@ -335,7 +336,6 @@ namespace ChessEngine.Main
         {
             Side = Side == Color.White ? Color.Black : Color.White;
         }
-
         public IEnumerator GetEnumerator()
         {
             for (int i = 0; i < 8; i++)

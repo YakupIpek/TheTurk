@@ -53,7 +53,7 @@ namespace ChessEngine.Main
             nodeCount++;
 
             var moves = Board.GenerateMoves();
-            if (moves.Count == 0) return (Board.IsCheckMateOrStaleMate(ply)) * (int)Board.Side;
+            if (moves.Count == 0) return -Board.IsCheckMateOrStaleMate(ply);
             if (ply <= 0) return Evaluation.Evaluate(Board);
 
             var localpv = new List<Move>();
