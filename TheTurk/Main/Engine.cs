@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using ChessEngine.Moves;
-
+using System.Linq;
 namespace ChessEngine.Main
 {
     public class Engine
@@ -54,7 +54,7 @@ namespace ChessEngine.Main
 
             var moves = Board.GenerateMoves();
             if (moves.Count == 0) return -Board.IsCheckMateOrStaleMate(ply);
-            if (ply <= 0) return Evaluation.Evaluate(Board);
+            if (ply <= 0) return QuiescenceSearch(alpha,beta,ref nodeCount);
 
             var localpv = new List<Move>();
             foreach (var move in moves)
@@ -80,6 +80,53 @@ namespace ChessEngine.Main
                 }
             }
             return alpha;
+        }
+        int QuiescenceSearch(int alpha, int beta, ref int nodeCount)
+        {
+            nodeCount++;
+
+
+
+            int eval = Evaluation.Evaluate(Board);
+
+            if (eval >= beta)
+                return beta;
+
+
+            if (eval > alpha)
+            {
+
+                alpha = eval;
+            }
+
+            var moves = MVVLVASorting(Board.GenerateMoves());
+
+            foreach (var capture in moves)
+            {
+                Board.MakeMove(capture);
+
+                eval = -QuiescenceSearch(-beta, -alpha,ref nodeCount);
+
+                Board.TakeBackMove(capture);
+
+
+
+                if (eval >= beta) // The move is too good
+                    return beta;
+
+                if (eval > alpha)// Best move so far
+                {
+                    alpha = eval;
+                }
+            }
+
+
+            return alpha;
+        }
+        List<Move> MVVLVASorting(List<Move> moves)
+        {
+            return moves.OfType<Ordinary>().Where(move => move.CapturedPiece != null).
+                OrderByDescending(move => Math.Abs(move.CapturedPiece.PieceValue) - Math.Abs(move.piece.PieceValue)).ToList<Move>();
         }
     }
 }

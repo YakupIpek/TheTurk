@@ -22,6 +22,7 @@ namespace ChessEngine.Main
             while (true)
             {
                 string input = Console.ReadLine();
+                Comminication(input);
             }
         }
         void Comminication(string input)
@@ -67,7 +68,7 @@ namespace ChessEngine.Main
                         ReceivedMove(messageBody);
                         if (force)//Make move after received a move
                         {
-                            var result = engine.Search(4);
+                            var result = engine.Search(1);
                             if (result.BestLine.Count > 0)
                             {
                                 Console.WriteLine("move " + result.BestLine.First().IONotation());
@@ -80,7 +81,7 @@ namespace ChessEngine.Main
                 case "go":
                     {
                         force = true;
-                        var result = engine.Search(4);
+                        var result = engine.Search(1);
                         if (result.BestLine.Count > 0)
                         {
                             Console.WriteLine("move " + result.BestLine.First().IONotation());
