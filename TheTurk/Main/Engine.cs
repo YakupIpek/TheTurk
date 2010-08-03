@@ -7,6 +7,7 @@ namespace ChessEngine.Main
 {
     public class Engine
     {
+        private List<Move> previousPV;
         private Stopwatch ElapsedTime;
         public readonly Board Board;
         public readonly IProtocol Protocol;
@@ -36,32 +37,46 @@ namespace ChessEngine.Main
         {
             int alpha = -int.MaxValue, beta = int.MaxValue;
             int nodesCount = 0;
+            int depth = 0;
+            Result result = null;
             var pv = new List<Move>();
-            ElapsedTime.Reset();
-            ElapsedTime.Start();
+            for (int ply = 1; ply <= maxDepth; )
+            {
+                ElapsedTime.Reset();
+                ElapsedTime.Start();
 
-            var score = AlphaBeta(alpha, beta, maxDepth, pv, ref nodesCount);
 
-            ElapsedTime.Stop();
+                var score = AlphaBeta(alpha, beta, ply, depth, pv, ref nodesCount);
+                ElapsedTime.Stop();
 
-            var result = new Result(maxDepth, score, ElapsedTime.ElapsedMilliseconds, nodesCount, pv);
-            Protocol.WriteOutput(result);
+                result = new Result(ply, score, ElapsedTime.ElapsedMilliseconds, nodesCount, pv);
+
+                previousPV = new List<Move>();
+                previousPV.AddRange(pv);
+
+                Protocol.WriteOutput(result);
+
+                if (Math.Abs(score) == Board.CheckMateValue) break;
+                ply++;
+            }
+
             return result;
         }
-        int AlphaBeta(int alpha, int beta, int ply, List<Move> pv, ref int nodeCount)
+        int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, ref int nodeCount)
         {
             nodeCount++;
 
             var moves = Board.GenerateMoves();
             if (moves.Count == 0) return -Board.IsCheckMateOrStaleMate(ply);
-            if (ply <= 0) return QuiescenceSearch(alpha,beta,ref nodeCount);
+            if (ply <= 0) return QuiescenceSearch(alpha, beta, ref nodeCount);
 
             var localpv = new List<Move>();
+            moves = SortMoves(moves, depth);
             foreach (var move in moves)
             {
                 Board.MakeMove(move);
 
-                int score = -AlphaBeta(-beta, -alpha, ply - 1, localpv, ref nodeCount);
+                int score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, ref nodeCount);
 
                 Board.TakeBackMove(move);
 
@@ -72,7 +87,7 @@ namespace ChessEngine.Main
                 if (score > alpha)
                 {
                     alpha = score;
-
+                    //collect principal variation
                     pv.Clear();
                     pv.Add(move);
                     pv.AddRange(localpv);
@@ -105,7 +120,7 @@ namespace ChessEngine.Main
             {
                 Board.MakeMove(capture);
 
-                eval = -QuiescenceSearch(-beta, -alpha,ref nodeCount);
+                eval = -QuiescenceSearch(-beta, -alpha, ref nodeCount);
 
                 Board.TakeBackMove(capture);
 
@@ -127,6 +142,22 @@ namespace ChessEngine.Main
         {
             return moves.OfType<Ordinary>().Where(move => move.CapturedPiece != null).
                 OrderByDescending(move => Math.Abs(move.CapturedPiece.PieceValue) - Math.Abs(move.piece.PieceValue)).ToList<Move>();
+        }
+        List<Move> SortMoves(List<Move> moves, int depth)
+        {
+            //Puts previous iteration's best move to beginning
+            moves = moves.OrderByDescending(x => x.MovePriority()).ToList();
+            if (previousPV != null && previousPV.Count > depth)
+            {
+                var move = moves.Find(x => x.Equals(previousPV[depth]));
+                if (move != null)
+                {
+                    moves.Remove(move);
+                    moves.Insert(0, move);
+                }
+            }
+            return moves;
+
         }
     }
 }

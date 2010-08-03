@@ -10,7 +10,8 @@ namespace ChessEngine.Main
     public partial class Board : IEnumerable
     {
         #region Fields
-        private const int CheckMateValue = short.MaxValue,
+
+        public const int CheckMateValue = short.MaxValue,
             StaleMateValue = 0;
         Stack<State> BoardStateHistory;
         Piece[,] board;

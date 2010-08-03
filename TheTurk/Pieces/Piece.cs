@@ -82,5 +82,10 @@ namespace ChessEngine.Pieces
             return GetType().Name;
         }
 
+        public bool Equals(Piece piece)
+        {
+            return GetType() == piece.GetType();
+        }
+
     }
 }

@@ -69,6 +69,10 @@ namespace ChessEngine.Moves
             }
             piece.PutMe(board);
         }
+        public override int MovePriority()
+        {
+            return PromotedPiece.PieceValue;
+        }
         public override string Notation()
         {
             string notation = "=" + PromotedPiece.NotationLetter;
@@ -77,6 +81,10 @@ namespace ChessEngine.Moves
         public override string IONotation()
         {
             return base.IONotation() + char.ToLower(PromotedPiece.NotationLetter);
+        }
+        public override bool Equals(Move move)
+        {
+            return base.Equals(move)&& (move as Promote).PromotedPiece.Equals(PromotedPiece);
         }
     }
 }

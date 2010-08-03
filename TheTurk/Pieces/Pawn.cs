@@ -7,7 +7,7 @@ namespace ChessEngine.Pieces
     public class Pawn : Piece
     {
         public const char Letter = ' ';
-        const int Piecevalue = 100;
+        public const int Piecevalue = 100;
 
         public Pawn(Coordinate from, Color color)
             : base(from, color)

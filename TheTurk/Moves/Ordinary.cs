@@ -1,4 +1,5 @@
-﻿using ChessEngine.Main;
+﻿using System;
+using ChessEngine.Main;
 using ChessEngine.Pieces;
 
 namespace ChessEngine.Moves
@@ -20,7 +21,6 @@ namespace ChessEngine.Moves
             CapturedPiece = To.GetPiece(board);
             piece.MoveTo(board, To);
         }
-
         public override void UnMakeMove(Board board)
         {
             piece.MoveTo(board, from);
@@ -30,6 +30,14 @@ namespace ChessEngine.Moves
             }
 
 
+        }
+        public override int MovePriority()
+        {
+            if (CapturedPiece!=null)
+            {
+                return Math.Abs(CapturedPiece.PieceValue - piece.PieceValue);
+            }
+            return 0;
         }
         public override string IONotation()
         {
@@ -44,6 +52,10 @@ namespace ChessEngine.Moves
         public override string ToString()
         {
             return Notation();
+        }
+        public override bool Equals(Move move)
+        {
+            return base.Equals(move)&&To.Equals((move as Ordinary).To);
         }
     }
 }

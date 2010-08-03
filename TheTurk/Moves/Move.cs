@@ -18,9 +18,8 @@ namespace ChessEngine.Moves
         }
 
         public abstract void MakeMove(Board board);
-
         public abstract void UnMakeMove(Board board);
-
+        public abstract int MovePriority();
         public virtual string IONotation()
         {
 
@@ -29,6 +28,10 @@ namespace ChessEngine.Moves
         public virtual string Notation()
         {
             return piece.NotationLetter.ToString().Trim();
+        }
+        public virtual bool Equals(Move move)
+        {
+            return null != move && move.GetType() == GetType() && move.from.Equals(from);
         }
 
     }

@@ -42,6 +42,10 @@ namespace ChessEngine.Moves
                 rook.MoveTo(board, Coordinate.a8);
             }
         }
+        public override int MovePriority()
+        {
+            return 2*Pawn.Piecevalue;
+        }
         public override string IONotation()
         {
             Coordinate to = piece.Color == Color.White ? Coordinate.c1 : Coordinate.c8;
