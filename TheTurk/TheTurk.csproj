@@ -83,12 +83,6 @@
     <Compile Include="Main\Exceptions.cs" />
     <Compile Include="Main\IProtocol.cs" />
     <Compile Include="Main\PartialBoard.cs" />
-    <Compile Include="form.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="form.Designer.cs">
-      <DependentUpon>form.cs</DependentUpon>
-    </Compile>
     <Compile Include="Main\Winboard.cs" />
     <Compile Include="Moves\EnPassant.cs" />
     <Compile Include="Moves\LongCastle.cs" />
@@ -112,11 +106,6 @@
     <None Include="Moves\Move.cd" />
     <None Include="Pieces\Pieces.cd" />
     <None Include="Properties\app.manifest" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="form.resx">
-      <DependentUpon>form.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">
