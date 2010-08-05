@@ -8,7 +8,21 @@ namespace ChessEngine.Pieces
     {
         public const char Letter = ' ';
         public const int Piecevalue = 100;
+        public static readonly int[,] pieceSquareTable;
+        static Pawn()
+        {
+            pieceSquareTable = new int[,]{    
+                                            {  0,   0,   0,   0,   0,   0,   0,   0},
+                                            { -6,  -4,   1,   1,   1,   1,  -4,  -6},
+                                            { -6,  -4,   1,   2,   2,   1,  -4,  -6},
+                                            { -6,  -4,   2,   8,   8,   2,  -4,  -6},
+                                            { -6,  -4,   5,  10,  10,   5,  -4,  -6},
+                                            { -4,  -4,   1,   5,   5,   1,  -4,  -4},
+                                            { -6,  -4,   1, -24, -24,   1,  -4,  -6},
+                                            {  0,   0,   0,   0,   0,   0,   0,   0}
+                                       };
 
+        }
         public Pawn(Coordinate from, Color color)
             : base(from, color)
         {
@@ -55,7 +69,7 @@ namespace ChessEngine.Pieces
                     }
                 }
 
-                if (From.rank!=7)
+                if (From.rank != 7)
                 {
                     Coordinate crossSquare = From.To(Coordinate.Directions.NorthEast);
                     //Check for capture
@@ -126,7 +140,7 @@ namespace ChessEngine.Pieces
                     }
                 }
 
-                if (From.rank!=2)
+                if (From.rank != 2)
                 {
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) &&
@@ -186,6 +200,10 @@ namespace ChessEngine.Pieces
 
 
             return moves;
+        }
+        public override int[,] PieceSquareTable
+        {
+            get { return pieceSquareTable; }
         }
     }
 }

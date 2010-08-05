@@ -5,8 +5,21 @@ namespace ChessEngine.Pieces
     public class Bishop : Piece
     {
         public const char Letter = 'B';
-        const int pieceValue=325;
-
+        const int pieceValue = 325;
+        private static readonly int[,] pieceSquareTable;
+        static Bishop()
+        {
+            pieceSquareTable = new int[,]{
+                                         {-4,  -4,  -4,  -4,  -4,  -4,  -4,  -4},
+                                         {-4,   0,   0,   0,   0,   0,   0,  -4},
+                                         {-4,   0,   2,   4,   4,   2,   0,  -4},
+                                         {-4,   0,   4,   6,   6,   4,   0,  -4},
+                                         {-4,   0,   4,   6,   6,   4,   0,  -4},
+                                         {-4,   1,   2,   4,   4,   2,   1,  -4},
+                                         {-4,   2,   1,   1,   1,   1,   2,  -4},
+                                         {-4,  -4, -12,  -4,  -4, -12,  -4,  -4}
+                                        };
+        }
         public Bishop(Coordinate from, Color color)
             : base(from, color)
         {
@@ -25,8 +38,9 @@ namespace ChessEngine.Pieces
         {
             get { return Coordinate.crossFourDirectionDelta; }
         }
-
-
-
+        public override int[,] PieceSquareTable
+        {
+            get { return pieceSquareTable; }
+        }
     }
 }

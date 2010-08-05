@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using ChessEngine.Moves;
 using System.Linq;
+using ChessEngine.Pieces;
+
 namespace ChessEngine.Main
 {
     public class Engine
@@ -35,8 +37,9 @@ namespace ChessEngine.Main
         }
         public Result Search(int maxDepth)
         {
-            int alpha = -int.MaxValue, beta = int.MaxValue;
-            int nodesCount = 0;
+            int infinity = int.MaxValue;
+            int alpha = -infinity, beta = infinity;
+
             int depth = 0;
             Result result = null;
             var pv = new List<Move>();
@@ -45,9 +48,20 @@ namespace ChessEngine.Main
                 ElapsedTime.Reset();
                 ElapsedTime.Start();
 
-
+                int nodesCount = 0;
                 var score = AlphaBeta(alpha, beta, ply, depth, pv, ref nodesCount);
                 ElapsedTime.Stop();
+
+                if (score <= alpha || score >= beta)
+                {
+                    //Aspiration window failed so make full window search again.
+                    alpha = -infinity;
+                    beta = infinity;
+                    continue;
+                }
+
+                alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
+                beta = score + Pawn.Piecevalue / 4;
 
                 result = new Result(ply, score, ElapsedTime.ElapsedMilliseconds, nodesCount, pv);
 

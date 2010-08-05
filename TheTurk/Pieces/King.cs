@@ -8,7 +8,20 @@ namespace ChessEngine.Pieces
     {
         public const char Letter = 'K';
         const int pieceValue = 1000000;
-
+        private static readonly int[,] pieceSquareTable;
+        static King()
+        {
+            pieceSquareTable = new int[,] {
+                                            {-40, -40, -40, -40, -40, -40, -40, -40},
+                                            {-40, -40, -40, -40, -40, -40, -40, -40},
+                                            {-40, -40, -40, -40, -40, -40, -40, -40},
+                                            {-40, -40, -40, -40, -40, -40, -40, -40},
+                                            {-40, -40, -40, -40, -40, -40, -40, -40},
+                                            {-40, -40, -40, -40, -40, -40, -40, -40},
+                                            {-15, -15, -20, -20, -20, -20, -15, -15},
+                                            {  0,  20,  30, -30,   0, -20,  30,  20}
+                                          };
+        }
         public King(Coordinate from, Color color)
             : base(from, color)
         {
@@ -67,6 +80,9 @@ namespace ChessEngine.Pieces
 
             return moves;
         }
- 
+        public override int[,] PieceSquareTable
+        {
+            get { return pieceSquareTable; }
+        }
     }
 }

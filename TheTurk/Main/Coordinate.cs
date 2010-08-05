@@ -208,7 +208,7 @@ namespace ChessEngine.Main
                     }
                 }
             }
-            King opponentking = enemyColor == Color.White ? board.WhiteKing :board.BlackKing;
+            King opponentking = enemyColor == Color.White ? board.WhiteKing : board.BlackKing;
 
             if (this.IsNeighboreSquare(opponentking.From)) //Check for oppenent king
             {
@@ -218,7 +218,7 @@ namespace ChessEngine.Main
             {
 
                 piece = this.To(Coordinate.Directions.NorthEast).GetPiece(board);
-                if (piece != null && piece is Pawn && piece.Color ==enemyColor)
+                if (piece != null && piece is Pawn && piece.Color == enemyColor)
                 {
                     return true;
                 }
@@ -231,18 +231,26 @@ namespace ChessEngine.Main
             else // Black Pawns
             {
                 piece = this.To(Coordinate.Directions.SouthEast).GetPiece(board);
-                if (piece != null && piece is Pawn && piece.Color ==enemyColor)
+                if (piece != null && piece is Pawn && piece.Color == enemyColor)
                 {
                     return true;
                 }
                 piece = this.To(Coordinate.Directions.SouthWest).GetPiece(board);
-                if (piece != null && piece is Pawn && piece.Color ==enemyColor)
+                if (piece != null && piece is Pawn && piece.Color == enemyColor)
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+        /// <summary>
+        /// Determine white square's mirror by black
+        /// </summary>
+        /// <returns>return black mirror square for white square</returns>
+        public Coordinate GetMirror()
+        {
+            return new Coordinate(9 - rank, file);
         }
         public override string ToString()
         {

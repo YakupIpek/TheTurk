@@ -11,7 +11,7 @@ namespace ChessEngine.Main
             var score = 0;
             foreach (Piece piece in board)
             {
-                score += piece.PieceValue;
+                score += piece.Evaluation();
             }
             return (int)board.Side*score;
         }

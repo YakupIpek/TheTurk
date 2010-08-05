@@ -5,10 +5,25 @@ namespace ChessEngine.Pieces
     public class Rook : Piece
     {
         public const char Letter = 'R';
-        const int pieceValue=500;
-
+        const int pieceValue = 500;
+        private static readonly int[,] pieceSquareTable;
+        
+        static Rook()
+        {
+            pieceSquareTable = new int[,]
+                                         {
+                                          { 5,   5,   5,   5,   5,   5,   5,   5},
+                                          {20,  20,  20,  20,  20,  20,  20,  20},
+                                          {-5,   0,   0,   0,   0,   0,   0,  -5},
+                                          {-5,   0,   0,   0,   0,   0,   0,  -5},
+                                          {-5,   0,   0,   0,   0,   0,   0,  -5},
+                                          {-5,   0,   0,   0,   0,   0,   0,  -5},
+                                          {-5,   0,   0,   0,   0,   0,   0,  -5},
+                                          { 0,   0,   0,   2,   2,   0,   0,   0}
+                                          };
+        }
         public Rook(Coordinate from, Color color)
-            : base(from, color) 
+            : base(from, color)
         {
 
         }
@@ -26,6 +41,10 @@ namespace ChessEngine.Pieces
             {
                 return Coordinate.fourDirectionDelta;
             }
+        }
+        public override int[,] PieceSquareTable
+        {
+            get { return pieceSquareTable; }
         }
     }
 }

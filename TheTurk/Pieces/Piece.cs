@@ -27,7 +27,7 @@ namespace ChessEngine.Pieces
         public abstract char NotationLetter { get; }
         public abstract int PieceValue { get; }
         public abstract Coordinate[] PieceDirection { get; }
-
+        public abstract int[,] PieceSquareTable { get; }
         public virtual List<Move> GenerateMoves(Board board)
         {
             List<Move> moves = new List<Move>();
@@ -50,7 +50,18 @@ namespace ChessEngine.Pieces
             }
             return moves;
         }
-
+        public virtual int PieceSquareValue()
+        {
+            if (Color == Color.White)
+            {
+                var mirrorSquare = From.GetMirror();
+                return PieceSquareTable[mirrorSquare.rank - 1, mirrorSquare.file - 1];
+            }
+            else
+            {
+                return -PieceSquareTable[From.rank - 1, From.file - 1];
+            }
+        }
         /// <summary>
         /// piece goes specified square
         /// </summary>
@@ -64,7 +75,9 @@ namespace ChessEngine.Pieces
         }
         public virtual int Evaluation()
         {
-            return 0;
+            int evaluation = PieceValue;
+            evaluation += PieceSquareValue();
+            return evaluation;
         }
         /// <summary>
         /// Remove itself on board
@@ -80,11 +93,6 @@ namespace ChessEngine.Pieces
         public override string ToString()
         {
             return GetType().Name;
-        }
-
-        public bool Equals(Piece piece)
-        {
-            return GetType() == piece.GetType();
         }
 
     }

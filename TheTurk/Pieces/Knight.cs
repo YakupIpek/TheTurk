@@ -9,11 +9,28 @@ namespace ChessEngine.Pieces
         const int pieceValue = 325;
         public const char Letter = 'N';
         public static readonly Coordinate[] Directions;
+        private static readonly int[,] pieceSquareTable;
         static Knight()
         {
-            Directions = new Coordinate[]{ new Coordinate(2,1),new Coordinate(2,-1),new Coordinate(-2,1),new Coordinate(-2,-1),
-            new Coordinate(1,-2),new Coordinate(-1,-2),new Coordinate(1,2),new Coordinate(-1,2)};
+            Directions = new Coordinate[]
+                             {
+                                 new Coordinate(2, 1), new Coordinate(2, -1), new Coordinate(-2, 1),
+                                 new Coordinate(-2, -1),
+                                 new Coordinate(1, -2), new Coordinate(-1, -2), new Coordinate(1, 2),
+                                 new Coordinate(-1, 2)
+                             };
+            pieceSquareTable = new int[,]{
+                                           {-8,  -8,  -8,  -8,  -8,  -8,  -8,  -8},
+                                           {-8,   0,   0,   0,   0,   0,   0,  -8},
+                                           {-8,   0,   4,   4,   4,   4,   0,  -8},
+                                           {-8,   0,   4,   8,   8,   4,   0,  -8},
+                                           {-8,   0,   4,   8,   8,   4,   0,  -8},
+                                           {-8,   0,   4,   4,   4,   4,   0,  -8},
+                                           {-8,   0,   1,   2,   2,   1,   0,  -8},
+                                           {-8, -12,  -8,  -8,  -8,  -8, -12,  -8},
+                                         };
         }
+
         public Knight(Coordinate from, Color color)
             : base(from, color)
         {
@@ -41,20 +58,9 @@ namespace ChessEngine.Pieces
         {
             get { return Letter; }
         }
-        //public override System.Collections.Generic.List<Moves.Move> GenerateMoves(Board board)
-        //{
-        //    if (!board.IsInCheck())
-        //    {
-        //        RemoveMe(board);
-        //        if (!board.IsInCheck())
-        //        {
-        //            PutMe(board);
-        //            return new List<Move>();
-        //        }
-        //        PutMe(board);
-        //    }
-
-        //    return base.GenerateMoves(board);
-        //}
+        public override int[,] PieceSquareTable
+        {
+            get { return pieceSquareTable; }
+        }
     }
 }
