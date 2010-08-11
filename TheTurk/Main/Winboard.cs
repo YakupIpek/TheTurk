@@ -1,123 +1,179 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 using ChessEngine.Moves;
-
 namespace ChessEngine.Main
 {
     class Winboard : IProtocol
     {
-        bool force = true;
+        private object lockObject;
+        private XElement XLogger;
+        private StringBuilder Logger;
+        private ChessClock timer;
+        private bool force;
         private readonly Engine engine;
         private Stack<Move> GameHistory;
         public Winboard()
         {
-            GameHistory=new Stack<Move>();
+            GameHistory = new Stack<Move>();
             engine = new Engine(new Board(), this);
+            timer = new ChessClock(0, 0, 10);
+            force = true;
+            Logger = new StringBuilder();
+            XLogger = new XElement("root");
+            lockObject = new object();
         }
+        /// <summary>
+        /// Protocol starts to listen interface and respond
+        /// </summary>
         public void Start()
         {
+            Action<string> com = Comminication;
             while (true)
             {
                 string input = Console.ReadLine();
-                Comminication(input);
+                Logger.AppendLine(input);
+                XLogger.Add(new XElement("incoming", input));
+                com.BeginInvoke(input, null, null);
+                //Comminication(input);
             }
         }
-        void Comminication(string input)
+        /// <summary>
+        /// Process incoming commands
+        /// </summary>
+        /// <param name="input">Incoming string from interface</param>
+        private void Comminication(string input)
         {
-            string command = input.Split(' ').First();
-            string messageBody = input.Substring(command.Length).Trim();
-            switch (command)
-            {
-                case "protover":
-                    {
-                        if (messageBody == "2")
-                        {
-                            Console.WriteLine("feature  setboard=1 usermove=1 reuse=1 myname=\"The Turk\" name=1");
-                        }
+            if (input == "?") engine.exit = true;
 
-                        break;
-                    }
-                case "force":
-                    {
-                        force = force == true ? false : true;
-                        break;
-                    }
-                case "new":
-                    {
-                        engine.Board.SetUpBoard();
-                        GameHistory.Clear();
-                        force = true;
-                        break;
-                    }
-                case "setboard":
-                    {
-                        engine.Board.Fen = messageBody;
-                        GameHistory.Clear();
-                        break;
-                    }
-                case "quit":
-                    {
-                        Environment.Exit(Environment.ExitCode);
-                        break;
-                    }
-                case "usermove":
-                    {
-                        ReceivedMove(messageBody);
-                        if (force)//Make move after received a move
+            lock (lockObject)
+            {
+                string command = input.Split(' ').First();
+                string messageBody = input.Substring(command.Length).Trim();
+                switch (command)
+                {
+                    case "protover":
                         {
-                            var result = engine.Search(5);
-                            if (result.BestLine.Count > 0)
+                            if (messageBody == "2")
                             {
-                                Console.WriteLine("move " + result.BestLine.First().IONotation());
+                                WriteLine(@"feature  setboard=1 usermove=1 colors=0 reuse=1 time=1 myname=""The Turk"" name=1 done=1");
+                            }
+                            break;
+                        }
+                    case "force":
+                        {
+                            force = force ? false : true;
+                            break;
+                        }
+                    case "new":
+                        {
+                            engine.Board.SetUpBoard();
+                            GameHistory.Clear();
+                            force = true;
+                            break;
+                        }
+                    case "setboard":
+                        {
+                            engine.Board.Fen = messageBody;
+                            GameHistory.Clear();
+                            break;
+                        }
+                    case "quit":
+                        {
+                            Environment.Exit(Environment.ExitCode);
+                            break;
+                        }
+                    case "usermove":
+                        {
+                            ReceivedMove(messageBody);
+                            if (force) //Make move after received a move
+                            {
+                                var result = engine.Search(timer.timeForPerMove);
+                                WriteLine("move " + result.BestLine.First().IONotation());
                                 engine.Board.MakeMove(result.BestLine.First());
                                 GameHistory.Push(result.BestLine.First());
                             }
+                            break;
                         }
-                        break;
-                    }
-                case "go":
-                    {
-                        force = true;
-                        var result = engine.Search(5);
-                        if (result.BestLine.Count > 0)
+                    case "go":
                         {
-                            Console.WriteLine("move " + result.BestLine.First().IONotation());
+                            force = true;
+                            var result = engine.Search(timer.timeForPerMove);
+                            WriteLine("move " + result.BestLine.First().IONotation());
                             engine.Board.MakeMove(result.BestLine.First());
                             GameHistory.Push(result.BestLine.First());
+                            break;
                         }
-                        break;
-                    }
-                case "undo":
-                    {
-                        engine.Board.TakeBackMove(GameHistory.Pop());
-                        break;
-                    }
-                case "fen"://just for testing purposes
-                    {
-                        engine.Board.Fen = "rn4kr/4p1bp/2pp4/1p3P1Q/2P1P3/6R1/PBp3PP/RN4K1 w - - 0 24 "; 
-                        GameHistory.Clear();
-                        break;
-                    }
-                case "score"://just for testing purposes
-                    {
-                        var score = Evaluation.Evaluate(engine.Board);
-                        engine.Board.ShowBoard();
-                        Console.WriteLine("score : " + score);
-                        break;
-                    }
-                case "show"://just for testing purposes
-                    {   
-                        engine.Board.ShowBoard();
-                        break;
-                    }
+                    case "undo":
+                        {
+                            engine.Board.TakeBackMove(GameHistory.Pop());
+                            break;
+                        }
+                    case "level":
+                        {
+                            timer = new ChessClock(messageBody);
+                            break;
+                        }
+                    case "st":
+                        {
+                            timer = new ChessClock("0 0 " + messageBody);
+                            break;
+                        }
+                    case "fen": //just for testing purposes
+                        {
+                            engine.Board.Fen = "rn4kr/4p1bp/2pp4/1p3P1Q/2P1P3/6R1/PBp3PP/RN4K1 w - - 0 24 ";
+                            GameHistory.Clear();
+                            break;
+                        }
+                    case "score": //just for testing purposes
+                        {
+                            var score = Evaluation.Evaluate(engine.Board);
+                            engine.Board.ShowBoard();
+                            Console.WriteLine("score : " + score);
+                            break;
+                        }
+                    case "show": //just for testing purposes
+                        {
+                            engine.Board.ShowBoard();
+                            break;
+                        }
+                    case "exportlog"://just for testing purposes
+                        {
+                            TextWriter txtfile = new StreamWriter("TheTurkLog");
+                            txtfile.Write(Logger);
+                            txtfile.Flush();
+                            txtfile.Close();
+                            Process.Start("notepad.exe", "TheTurkLog");
+                            break;
+                        }
+                    case "xmllog"://just for testing purposes
+                        {
+                            XLogger.Save("xmllog.xml");
+                            Process.Start("xmllog.xml");
+                            break;
+                        }
+                    case "play"://just for testing purposes
+                        {
+                            var elements = XDocument.Load("xmllog.xml").Root.Elements();
+                            foreach (var element in elements)
+                            {
+                                if (element.Value == "xmllog" || element.Value == "quit" || element.Value == "play")
+                                    continue;
+                                Console.WriteLine("command " + element.Value);
+                                Comminication(element.Value);
+                            }
+                            break;
+                        }
+                }
             }
 
-
         }
-        void ReceivedMove(string moveNotation)
+        private void ReceivedMove(string moveNotation)
         {
             var moves = engine.Board.GenerateMoves();
             foreach (var move in moves)
@@ -129,14 +185,13 @@ namespace ChessEngine.Main
                     return;
                 }
             }
-            Console.WriteLine("illegal move : {0}", moveNotation);
-
+            WriteLine("illegal move : " + moveNotation);
         }
         public void WriteOutput(Engine.Result result)
         {
             if (result.BestLine.Count > 0)
             {
-                Console.Write("{0} {1} {2} {3} ", result.Ply, result.Score, result.ElapsedTime, result.NodesCount);
+                Console.Write("{0} {1} {2} {3} ", result.Ply, result.Score, result.ElapsedTime / 10L, result.NodesCount);
 
                 foreach (var move in result.BestLine)
                 {
@@ -144,7 +199,11 @@ namespace ChessEngine.Main
                 }
                 Console.WriteLine();
             }
-
+        }
+        private void WriteLine(string line)
+        {
+            Logger.AppendLine(line);
+            Console.WriteLine(line);
         }
     }
 }

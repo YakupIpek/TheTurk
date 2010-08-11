@@ -77,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main\Board.cs" />
+    <Compile Include="Main\ChessClock.cs" />
     <Compile Include="Main\Coordinate.cs" />
     <Compile Include="Main\Engine.cs" />
     <Compile Include="Main\Evaluation.cs" />

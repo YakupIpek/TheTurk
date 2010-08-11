@@ -9,24 +9,13 @@ namespace ChessEngine.Main
 {
     public partial class Board : IEnumerable
     {
-        #region Fields
+        #region Fields and Properties
 
         public const int CheckMateValue = short.MaxValue,
             StaleMateValue = 0;
         Stack<State> BoardStateHistory;
         Piece[,] board;
         private int fiftyMovesRule, totalMoves;
-
-        public Board()
-        {
-            board = new Piece[8, 8];
-            WhiteCastle = Castle.NoneCastle;
-            BlackCastle = Castle.NoneCastle;
-            Side = Color.White;
-            EnPassantSquare = new Coordinate(0, 0);//means deactive
-            BoardStateHistory = new Stack<State>();
-            SetUpBoard();
-        }
         public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
@@ -38,6 +27,7 @@ namespace ChessEngine.Main
             set
             {
                 board = new Piece[8, 8];
+                BoardStateHistory.Clear();
                 var splitted = value.Trim().Split(' ');
                 var ranks = splitted[0].Split('/').Reverse().ToArray();
                 var allLetters = from rank in ranks
@@ -118,6 +108,16 @@ namespace ChessEngine.Main
                 }
 
             }
+        }
+        public Board()
+        {
+            board = new Piece[8, 8];
+            WhiteCastle = Castle.NoneCastle;
+            BlackCastle = Castle.NoneCastle;
+            Side = Color.White;
+            EnPassantSquare = new Coordinate(0, 0);//means deactive
+            BoardStateHistory = new Stack<State>();
+            SetUpBoard();
         }
         #endregion
         /// <summary>
@@ -333,7 +333,7 @@ namespace ChessEngine.Main
             }
             Console.WriteLine("----------------");
         }
-        void ToggleSide()
+        public void ToggleSide()
         {
             Side = Side == Color.White ? Color.Black : Color.White;
         }

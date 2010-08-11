@@ -9,10 +9,18 @@ namespace ChessEngine.Main
 {
     public class Engine
     {
+        private int iterationPly;
+        public bool exit;
+        private long timeLimit;
         private List<Move> previousPV;
-        private Stopwatch ElapsedTime;
+        private Stopwatch elapsedTime;
         public readonly Board Board;
         public readonly IProtocol Protocol;
+
+        private enum NullMove
+        {
+            Enabled, Disabled
+        }
         public class Result
         {
             public int Ply;
@@ -29,28 +37,37 @@ namespace ChessEngine.Main
                 BestLine = bestLine;
             }
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="board"></param>
+        /// <param name="protocol">Protocol will be used to write output of bestline</param>
         public Engine(Board board, IProtocol protocol)
         {
+            exit = false;
             Board = board;
             this.Protocol = protocol;
-            ElapsedTime = new Stopwatch();
+            elapsedTime = new Stopwatch();
         }
-        public Result Search(int maxDepth)
+        /// <summary>
+        /// Calculates best line in given depth
+        /// </summary>
+        /// <param name="maxDepth"></param>
+        /// <param name="timeLimit">Time limit in millisecond</param>
+        /// <returns></returns>
+        public Result Search(long timeLimit)
         {
+            this.timeLimit = timeLimit;
             int infinity = int.MaxValue;
-            int alpha = -infinity, beta = infinity;
-
-            int depth = 0;
-            Result result = null;
+            int alpha = -infinity, beta = infinity, depth = 0, nodesCount = 0;
+            Result previousResult = null;
+            elapsedTime.Restart();
+            Result result;
             var pv = new List<Move>();
-            for (int ply = 1; ply <= maxDepth; )
+            exit = false;
+            for (iterationPly = 1; ; )
             {
-                ElapsedTime.Reset();
-                ElapsedTime.Start();
-
-                int nodesCount = 0;
-                var score = AlphaBeta(alpha, beta, ply, depth, pv, ref nodesCount);
-                ElapsedTime.Stop();
+                var score = AlphaBeta(alpha, beta, iterationPly, depth, pv, NullMove.Disabled, ref nodesCount);
 
                 if (score <= alpha || score >= beta)
                 {
@@ -60,37 +77,62 @@ namespace ChessEngine.Main
                     continue;
                 }
 
+                if ((!HaveTime() || exit)&& iterationPly>1) //time control and stop mode
+                {
+                    return previousResult;
+                }
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
-                result = new Result(ply, score, ElapsedTime.ElapsedMilliseconds, nodesCount, pv);
-
+                result = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, pv);
+                previousResult = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, pv.ConvertAll(x => x));
                 previousPV = new List<Move>();
                 previousPV.AddRange(pv);
 
-                Protocol.WriteOutput(result);
+                if (result.BestLine.Count > 0)
+                    Protocol.WriteOutput(result);
 
-                if (Math.Abs(score) == Board.CheckMateValue) break;
-                ply++;
+                if (Math.Abs(score) == Board.CheckMateValue || exit) break;
+                iterationPly++;
+                nodesCount = 0;
             }
-
             return result;
         }
-        int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, ref int nodeCount)
+        /// <summary>
+        /// AlphaBeta algorithm.Calculates best line in given depth
+        /// </summary>
+        /// <param name="alpha">Lowest value</param>
+        /// <param name="beta">highest value</param>
+        /// <param name="ply"></param>
+        /// <param name="depth"></param>
+        /// <param name="pv">Holds principal variation</param>
+        /// <param name="nullmove"></param>
+        /// <param name="nodeCount">Holds value of calculated moves</param>
+        /// <returns>Returning value is the score of best line</returns>
+        int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, NullMove nullmove, ref int nodeCount)
         {
+            if ((!HaveTime()||exit)&& iterationPly>1) return 0;
             nodeCount++;
 
             var moves = Board.GenerateMoves();
             if (moves.Count == 0) return -Board.IsCheckMateOrStaleMate(ply);
             if (ply <= 0) return QuiescenceSearch(alpha, beta, ref nodeCount);
-
             var localpv = new List<Move>();
+
+            if (nullmove == NullMove.Enabled && !Board.IsInCheck())
+            {
+                int R = 2;
+                Board.ToggleSide();
+                int score = -AlphaBeta(-beta, -beta + 1, ply - 1 - R, depth + 1, localpv, NullMove.Disabled, ref nodeCount);
+                Board.ToggleSide();
+                if (score >= beta) return score;
+            }
             moves = SortMoves(moves, depth);
             foreach (var move in moves)
             {
                 Board.MakeMove(move);
 
-                int score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, ref nodeCount);
+                int score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
 
                 Board.TakeBackMove(move);
 
@@ -110,6 +152,13 @@ namespace ChessEngine.Main
             }
             return alpha;
         }
+        /// <summary>
+        /// Look for capture variations for horizon effect
+        /// </summary>
+        /// <param name="alpha"></param>
+        /// <param name="beta"></param>
+        /// <param name="nodeCount"></param>
+        /// <returns></returns>
         int QuiescenceSearch(int alpha, int beta, ref int nodeCount)
         {
             nodeCount++;
@@ -152,11 +201,22 @@ namespace ChessEngine.Main
 
             return alpha;
         }
+        /// <summary>
+        /// Filter uncapture moves and sort captured moves
+        /// </summary>
+        /// <param name="moves"></param>
+        /// <returns></returns>
         List<Move> MVVLVASorting(List<Move> moves)
         {
             return moves.OfType<Ordinary>().Where(move => move.CapturedPiece != null).
                 OrderByDescending(move => Math.Abs(move.CapturedPiece.PieceValue) - Math.Abs(move.piece.PieceValue)).ToList<Move>();
         }
+        /// <summary>
+        /// Sort moves best to worst
+        /// </summary>
+        /// <param name="moves"></param>
+        /// <param name="depth"></param>
+        /// <returns></returns>
         List<Move> SortMoves(List<Move> moves, int depth)
         {
             //Puts previous iteration's best move to beginning
@@ -172,6 +232,10 @@ namespace ChessEngine.Main
             }
             return moves;
 
+        }
+        bool HaveTime()
+        {
+            return timeLimit > elapsedTime.ElapsedMilliseconds;
         }
     }
 }
