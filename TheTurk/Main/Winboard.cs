@@ -179,7 +179,6 @@ namespace ChessEngine.Main
             {
                 //commandQueue was empty so enter again 
                 signal.WaitOne();//wait signal
-                Console.WriteLine("signalled");
                 ProcessQueue();
             }
             catch (Exception)

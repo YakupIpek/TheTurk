@@ -5,14 +5,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheTurk", "TheTurk\TheTurk.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTheTurk", "TestTheTurk\TestTheTurk.csproj", "{19D05635-47DE-48A3-93E2-C96384B39786}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2EFB5ED7-CE6C-43B5-9835-2EB7B46F5213}"
-	ProjectSection(SolutionItems) = preProject
-		Local.testsettings = Local.testsettings
-		Performance1.psess = Performance1.psess
-		TheTurk1.vsmdi = TheTurk1.vsmdi
-		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = TheTurk1.vsmdi
