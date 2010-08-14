@@ -12,9 +12,6 @@ namespace ChessEngine.Moves
         {
             this.piece = piece;
             this.from = piece.From;
-                
-            
-
         }
 
         public abstract void MakeMove(Board board);

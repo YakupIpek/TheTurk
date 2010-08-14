@@ -77,17 +77,20 @@ namespace ChessEngine.Main
                     continue;
                 }
 
-                if ((!HaveTime() || exit)&& iterationPly>1) //time control and stop mode
+                if ((!HaveTime() || exit) && iterationPly > 1) //time control and stop mode
                 {
                     return previousResult;
                 }
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
-                result = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, pv);
-                previousResult = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, pv.ConvertAll(x => x));
+                //Save principal variation for next iteration
                 previousPV = new List<Move>();
                 previousPV.AddRange(pv);
+                result = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, pv);
+                previousResult = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, previousPV);
+
+
 
                 if (result.BestLine.Count > 0)
                     Protocol.WriteOutput(result);
@@ -111,7 +114,8 @@ namespace ChessEngine.Main
         /// <returns>Returning value is the score of best line</returns>
         int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, NullMove nullmove, ref int nodeCount)
         {
-            if ((!HaveTime()||exit)&& iterationPly>1) return 0;
+            //if time out or exit requested after 1st iteration,so leave thinking.
+            if ((!HaveTime() || exit) && iterationPly > 1) return 0;
             nodeCount++;
 
             var moves = Board.GenerateMoves();

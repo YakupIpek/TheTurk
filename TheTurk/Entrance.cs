@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Xml.Linq;
 using ChessEngine.Main;
 
 namespace ChessEngine
