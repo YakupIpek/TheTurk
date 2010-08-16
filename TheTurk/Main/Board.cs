@@ -133,7 +133,7 @@ namespace ChessEngine.Main
 
         public void MakeMove(Move move)
         {
-            Piece movingPiece = move.piece;
+            Piece movingPiece = move.Piece;
 
             BoardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule));
 

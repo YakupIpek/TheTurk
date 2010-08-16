@@ -56,7 +56,7 @@ namespace ChessEngine.Moves
         }
         public override void MakeMove(Board board)
         {
-            piece.RemoveMe(board);
+            Piece.RemoveMe(board);
             CapturedPiece = To.GetPiece(board);
             board[To] = PromotedPiece;
         }
@@ -67,7 +67,7 @@ namespace ChessEngine.Moves
             {
                 CapturedPiece.PutMe(board);
             }
-            piece.PutMe(board);
+            Piece.PutMe(board);
         }
         public override int MovePriority()
         {

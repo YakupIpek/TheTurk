@@ -6,24 +6,23 @@ namespace ChessEngine.Moves
 {
     public class Ordinary : Move
     {
+        public Piece CapturedPiece { get; protected set; }
+
         public Ordinary(Board board, Piece piece, Coordinate to)
             : base(piece)
         {
-            this.To = to;
-            //this.CapturedPiece = board[to];
+            To = to;
+            CapturedPiece = To.GetPiece(board);
         }
-
-        public Piece CapturedPiece { get; protected set; }
-        public Coordinate To { get; protected set; }
 
         public override void MakeMove(Board board)
         {
-            CapturedPiece = To.GetPiece(board);
-            piece.MoveTo(board, To);
+
+            Piece.MoveTo(board, To);
         }
         public override void UnMakeMove(Board board)
         {
-            piece.MoveTo(board, from);
+            Piece.MoveTo(board, From);
             if (CapturedPiece != null)
             {
                 CapturedPiece.PutMe(board);
@@ -33,9 +32,9 @@ namespace ChessEngine.Moves
         }
         public override int MovePriority()
         {
-            if (CapturedPiece!=null)
+            if (CapturedPiece != null)
             {
-                return Math.Abs(CapturedPiece.PieceValue - piece.PieceValue);
+                return Math.Abs(CapturedPiece.PieceValue - Piece.PieceValue) + Math.Abs(CapturedPiece.PieceValue / 10);
             }
             return 0;
         }
@@ -46,8 +45,8 @@ namespace ChessEngine.Moves
         public override string Notation()
         {
             string captured = CapturedPiece == null ? "" : "x";
-            if (piece.GetType() == typeof(Pawn) && captured == "x") return (from.ToString()[0] + captured + To);
-            return (piece.NotationLetter + captured + To).Trim();
+            if (Piece.GetType() == typeof(Pawn) && captured == "x") return (From.ToString()[0] + captured + To);
+            return (Piece.NotationLetter + captured + To).Trim();
         }
         public override string ToString()
         {
@@ -55,7 +54,7 @@ namespace ChessEngine.Moves
         }
         public override bool Equals(Move move)
         {
-            return base.Equals(move)&&To.Equals((move as Ordinary).To);
+            return base.Equals(move) && To.Equals((move as Ordinary).To);
         }
     }
 }

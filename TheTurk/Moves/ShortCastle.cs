@@ -8,46 +8,46 @@ namespace ChessEngine.Moves
         public ShortCastle(Piece piece)
             : base(piece)
         {
-
+            To = piece.Color == Color.White ? Coordinate.e1 : Coordinate.e8;
         }
         public override void MakeMove(Board board)
         {
-            if (Color.White == piece.Color)
+            if (Color.White == Piece.Color)
             {
                 var rook = Coordinate.h1.GetPiece(board);
-                piece.MoveTo(board, Coordinate.g1);
+                Piece.MoveTo(board, Coordinate.g1);
                 rook.MoveTo(board, Coordinate.f1);
             }
             else
             {
                 var rook = board[Coordinate.h8];
-                piece.MoveTo(board, Coordinate.g8);
+                Piece.MoveTo(board, Coordinate.g8);
                 rook.MoveTo(board, Coordinate.f8);
             }
 
         }
         public override void UnMakeMove(Board board)
         {
-            if (Color.White == piece.Color)
+            if (Color.White == Piece.Color)
             {
                 var rook = Coordinate.f1.GetPiece(board);
-                piece.MoveTo(board, Coordinate.e1);
+                Piece.MoveTo(board, Coordinate.e1);
                 rook.MoveTo(board, Coordinate.h1);
             }
             else
             {
                 var rook = Coordinate.f8.GetPiece(board);
-                piece.MoveTo(board, Coordinate.e8);
+                Piece.MoveTo(board, Coordinate.e8);
                 rook.MoveTo(board, Coordinate.h8);
             }
         }
         public override int MovePriority()
         {
-            return 2*Pawn.Piecevalue;
+            return 2 * Pawn.Piecevalue;
         }
         public override string IONotation()
         {
-            Coordinate to = piece.Color == Color.White ? Coordinate.g1 : Coordinate.g8;
+            Coordinate to = Piece.Color == Color.White ? Coordinate.g1 : Coordinate.g8;
             return base.IONotation() + to.ToString();
         }
         public override string Notation()

@@ -14,7 +14,7 @@ namespace ChessEngine.Moves
         }
         public override void MakeMove(Board board)
         {
-            if (piece.Color == Color.White)
+            if (Piece.Color == Color.White)
             {
                 CapturedPiece= To.To(Coordinate.Directions.South).GetPiece(board);
             }
@@ -23,11 +23,11 @@ namespace ChessEngine.Moves
                 CapturedPiece = To.To(Coordinate.Directions.North).GetPiece(board);
             }
             CapturedPiece.RemoveMe(board);
-            piece.MoveTo(board,To);
+            Piece.MoveTo(board,To);
         }
         public override string Notation()
         {
-            return from.ToString()[0]+ "x" + To.ToString() + " (e.p)";
+            return From.ToString()[0]+ "x" + To.ToString() + " (e.p)";
         }
     }
 }

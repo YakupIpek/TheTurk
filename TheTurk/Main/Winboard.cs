@@ -44,7 +44,7 @@ namespace ChessEngine.Main
                 XLogger.Add(new XElement("incoming", input));
                 if (input == "?")
                 {
-                    engine.exit = true;
+                    engine.Exit = true;
                     commandQueue.Clear();
                     continue;
                 }
@@ -181,11 +181,7 @@ namespace ChessEngine.Main
                 signal.WaitOne();//wait signal
                 ProcessQueue();
             }
-            catch (Exception)
-            {
 
-                throw new Exception();
-            }
         }
         private void ReceivedMove(string moveNotation)
         {

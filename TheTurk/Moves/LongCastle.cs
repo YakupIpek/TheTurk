@@ -8,37 +8,37 @@ namespace ChessEngine.Moves
         public LongCastle(Piece piece)
             : base(piece)
         {
-
+            To = piece.Color == Color.White ? Coordinate.c1 : Coordinate.c8;
         }
 
         public override void MakeMove(Board board)
         {
-            if (Color.White == piece.Color)
+            if (Color.White == Piece.Color)
             {
                 var rook = Coordinate.a1.GetPiece(board);
-                piece.MoveTo(board, Coordinate.c1);
+                Piece.MoveTo(board, Coordinate.c1);
                 rook.MoveTo(board, Coordinate.d1);
             }
             else
             {
                 var rook = Coordinate.a8.GetPiece(board);
-                piece.MoveTo(board, Coordinate.c8);
+                Piece.MoveTo(board, Coordinate.c8);
                 rook.MoveTo(board, Coordinate.d8);
             }
         }
 
         public override void UnMakeMove(Board board)
         {
-            if (piece.Color == Color.White)
+            if (Piece.Color == Color.White)
             {
                 var rook = Coordinate.d1.GetPiece(board);
-                piece.MoveTo(board, Coordinate.e1);
+                Piece.MoveTo(board, Coordinate.e1);
                 rook.MoveTo(board, Coordinate.a1);
             }
             else
             {
                 var rook = Coordinate.d8.GetPiece(board);
-                piece.MoveTo(board, Coordinate.e8);
+                Piece.MoveTo(board, Coordinate.e8);
                 rook.MoveTo(board, Coordinate.a8);
             }
         }
@@ -48,7 +48,7 @@ namespace ChessEngine.Moves
         }
         public override string IONotation()
         {
-            Coordinate to = piece.Color == Color.White ? Coordinate.c1 : Coordinate.c8;
+            Coordinate to = Piece.Color == Color.White ? Coordinate.c1 : Coordinate.c8;
             return base.IONotation()+to.ToString();
         }
         public override string Notation()

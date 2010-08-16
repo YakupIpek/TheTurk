@@ -83,7 +83,9 @@
     <Compile Include="Main\Engine.cs" />
     <Compile Include="Main\Evaluation.cs" />
     <Compile Include="Main\Exceptions.cs" />
+    <Compile Include="Main\HistoryMoves.cs" />
     <Compile Include="Main\IProtocol.cs" />
+    <Compile Include="Main\KillerMoves.cs" />
     <Compile Include="Main\PartialBoard.cs" />
     <Compile Include="Main\Winboard.cs" />
     <Compile Include="Moves\EnPassant.cs" />

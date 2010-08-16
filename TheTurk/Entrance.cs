@@ -15,7 +15,6 @@ namespace ChessEngine
                 var winboard = new Winboard();
                 winboard.Start();
             }
-
         }
     }
 }

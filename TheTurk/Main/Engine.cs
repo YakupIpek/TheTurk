@@ -9,11 +9,13 @@ namespace ChessEngine.Main
 {
     public class Engine
     {
+        private KillerMoves killerMoves;
+        private HistoryMoves historyMoves;
         private int iterationPly;
-        public bool exit;
         private long timeLimit;
         private List<Move> previousPV;
         private Stopwatch elapsedTime;
+        public bool Exit { get; set; }
         public readonly Board Board;
         public readonly IProtocol Protocol;
 
@@ -44,10 +46,12 @@ namespace ChessEngine.Main
         /// <param name="protocol">Protocol will be used to write output of bestline</param>
         public Engine(Board board, IProtocol protocol)
         {
-            exit = false;
+            Exit = false;
             Board = board;
-            this.Protocol = protocol;
+            Protocol = protocol;
             elapsedTime = new Stopwatch();
+            historyMoves = new HistoryMoves();
+            killerMoves=new KillerMoves();
         }
         /// <summary>
         /// Calculates best line in given depth
@@ -64,7 +68,9 @@ namespace ChessEngine.Main
             elapsedTime.Restart();
             Result result;
             var pv = new List<Move>();
-            exit = false;
+            Exit = false;
+            historyMoves=new HistoryMoves();
+            killerMoves= new KillerMoves();
             for (iterationPly = 1; ; )
             {
                 var score = AlphaBeta(alpha, beta, iterationPly, depth, pv, NullMove.Disabled, ref nodesCount);
@@ -77,7 +83,7 @@ namespace ChessEngine.Main
                     continue;
                 }
 
-                if ((!HaveTime() || exit) && iterationPly > 1) //time control and stop mode
+                if ((!HaveTime() || Exit) && iterationPly > 1) //time control and stop mode
                 {
                     return previousResult;
                 }
@@ -90,12 +96,10 @@ namespace ChessEngine.Main
                 result = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, pv);
                 previousResult = new Result(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, previousPV);
 
-
-
                 if (result.BestLine.Count > 0)
                     Protocol.WriteOutput(result);
 
-                if (Math.Abs(score) == Board.CheckMateValue || exit) break;
+                if (Math.Abs(score) == Board.CheckMateValue || Exit) break;
                 iterationPly++;
                 nodesCount = 0;
             }
@@ -115,14 +119,14 @@ namespace ChessEngine.Main
         int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, NullMove nullmove, ref int nodeCount)
         {
             //if time out or exit requested after 1st iteration,so leave thinking.
-            if ((!HaveTime() || exit) && iterationPly > 1) return 0;
+            if ((!HaveTime() || Exit) && iterationPly > 1) return 0;
             nodeCount++;
 
             var moves = Board.GenerateMoves();
             if (moves.Count == 0) return -Board.IsCheckMateOrStaleMate(ply);
             if (ply <= 0) return QuiescenceSearch(alpha, beta, ref nodeCount);
             var localpv = new List<Move>();
-
+            #region Null Move Prunning
             if (nullmove == NullMove.Enabled && !Board.IsInCheck())
             {
                 int R = 2;
@@ -131,27 +135,45 @@ namespace ChessEngine.Main
                 Board.ToggleSide();
                 if (score >= beta) return score;
             }
+            #endregion
             moves = SortMoves(moves, depth);
             foreach (var move in moves)
             {
                 Board.MakeMove(move);
+                int score;
+                #region Late Move Reduction
 
-                int score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                if (!Board.IsInCheck())
+                {
+                    score = -AlphaBeta(-alpha - 1, -alpha, ply - 2, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                }
+                else score = alpha + 1;
+                #endregion
+
+                if (score > alpha)
+                {
+
+                    score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                }
+
 
                 Board.TakeBackMove(move);
 
                 if (score >= beta)
                 {
-                    return beta;
+                    killerMoves.Add(move,depth);
+
+                    return beta;//beta cut-off
                 }
                 if (score > alpha)
                 {
+                    historyMoves.AddMove(move);
                     alpha = score;
-                    //collect principal variation
+                    #region Collect principal variation
                     pv.Clear();
                     pv.Add(move);
                     pv.AddRange(localpv);
-                    localpv.Clear();
+                    #endregion
                 }
             }
             return alpha;
@@ -210,10 +232,10 @@ namespace ChessEngine.Main
         /// </summary>
         /// <param name="moves"></param>
         /// <returns></returns>
-        List<Move> MVVLVASorting(List<Move> moves)
+        List<Move> MVVLVASorting(IEnumerable<Move> moves)
         {
             return moves.OfType<Ordinary>().Where(move => move.CapturedPiece != null).
-                OrderByDescending(move => Math.Abs(move.CapturedPiece.PieceValue) - Math.Abs(move.piece.PieceValue)).ToList<Move>();
+                OrderByDescending(move => move.MovePriority()).ToList<Move>();
         }
         /// <summary>
         /// Sort moves best to worst
@@ -224,17 +246,17 @@ namespace ChessEngine.Main
         List<Move> SortMoves(List<Move> moves, int depth)
         {
             //Puts previous iteration's best move to beginning
-            moves = moves.OrderByDescending(x => x.MovePriority()).ToList();
-            if (previousPV != null && previousPV.Count > depth)
-            {
-                var move = moves.Find(x => x.Equals(previousPV[depth]));
-                if (move != null)
-                {
-                    moves.Remove(move);
-                    moves.Insert(0, move);
-                }
-            }
-            return moves;
+            var previousBestMove = previousPV != null && previousPV.Count > depth ? previousPV[depth] : null;
+            var killer = killerMoves.BestMoves[depth];
+            var bestHistoryMove = Board.Side == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
+
+            var sortedMoves = moves.
+                OrderByDescending(move => move.Equals(previousBestMove)).
+                OrderByDescending(move => move.Equals(bestHistoryMove)).
+                OrderByDescending(move=>move.Equals(killer)).
+                OrderByDescending(move => move.MovePriority()).ToList();
+
+            return sortedMoves;
 
         }
         bool HaveTime()
