@@ -12,8 +12,8 @@ namespace ChessEngine.Pieces
     {
         protected Piece(Coordinate from, Color color)
         {
-            this.From = from;
-            this.Color = color;
+            From = from;
+            Color = color;
 
         }
         public Coordinate From { get; protected set; }
@@ -105,5 +105,6 @@ namespace ChessEngine.Pieces
         {
             return GetType().Name;
         }
+        public abstract int ToInt { get;  }
     }
 }

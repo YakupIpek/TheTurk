@@ -262,24 +262,12 @@ namespace ChessEngine.Main
                     var query = piece.GenerateMoves(this).Where(x =>
                         {
                             MakeMove(x);
-                            //Console.Clear();
-                            //ShowBoard();
-                            //Thread.Sleep(1000);
-
-
-
-
                             var result = king.From.IsAttackedSquare(this, king.OppenentColor);
                             TakeBackMove(x);
-                            //Console.Clear();
-                            //ShowBoard();
-                            //Thread.Sleep(1000);
                             return !result;
-                        }).ToList();
+                        });
                     moves.AddRange(query);
-
                 }
-
             }
             return moves;
         }

@@ -6,6 +6,7 @@ namespace ChessEngine.Pieces
 {
     public class King : Piece
     {
+        private const int king = 5;
         public const char Letter = 'K';
         const int pieceValue = 1000000;
         private static readonly int[,] pieceSquareTable;
@@ -83,6 +84,11 @@ namespace ChessEngine.Pieces
         public override int[,] PieceSquareTable
         {
             get { return pieceSquareTable; }
+        }
+
+        public override int ToInt
+        {
+            get { return king; }
         }
     }
 }

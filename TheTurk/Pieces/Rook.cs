@@ -4,10 +4,11 @@ namespace ChessEngine.Pieces
 {
     public class Rook : Piece
     {
+        private const int rook = 3;
         public const char Letter = 'R';
         const int pieceValue = 500;
         private static readonly int[,] pieceSquareTable;
-        
+
         static Rook()
         {
             pieceSquareTable = new int[,]
@@ -45,6 +46,11 @@ namespace ChessEngine.Pieces
         public override int[,] PieceSquareTable
         {
             get { return pieceSquareTable; }
+        }
+
+        public override int ToInt
+        {
+            get { return rook; }
         }
     }
 }

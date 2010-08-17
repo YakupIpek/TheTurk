@@ -1,18 +1,19 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using ChessEngine.Moves;
 namespace ChessEngine.Main
 {
     class Winboard : IProtocol
     {
-        private EventWaitHandle signal;
-        private Queue<string> commandQueue;
+        private BlockingCollection<string> commandConsumer;
         private XElement XLogger;
         private StringBuilder Logger;
         private ChessClock timer;
@@ -21,8 +22,7 @@ namespace ChessEngine.Main
         private Stack<Move> GameHistory;
         public Winboard()
         {
-            signal = new AutoResetEvent(false);
-            commandQueue = new Queue<string>();
+            commandConsumer = new BlockingCollection<string>();
             GameHistory = new Stack<Move>();
             engine = new Engine(new Board(), this);
             timer = new ChessClock(0, 0, 10);
@@ -36,7 +36,7 @@ namespace ChessEngine.Main
         public void Start()
         {
             Action<string> com = Comminication;
-            new Thread(ProcessQueue).Start();
+            Task.Factory.StartNew(ProcessQueue);//start new thread for consume commands
             while (true)
             {
                 string input = Console.ReadLine();
@@ -45,12 +45,11 @@ namespace ChessEngine.Main
                 if (input == "?")
                 {
                     engine.Exit = true;
-                    commandQueue.Clear();
+                    commandConsumer.Clear();
                     continue;
                 }
 
-                commandQueue.Enqueue(input);
-                signal.Set();
+                commandConsumer.Add(input);
             }
         }
         /// <summary>
@@ -168,18 +167,9 @@ namespace ChessEngine.Main
         }
         public void ProcessQueue()
         {
-            try
+            while (true)
             {
-                while (true)
-                {
-                    Comminication(commandQueue.Dequeue());
-                }
-            }
-            catch (InvalidOperationException)
-            {
-                //commandQueue was empty so enter again 
-                signal.WaitOne();//wait signal
-                ProcessQueue();
+                Comminication(commandConsumer.Take());
             }
 
         }

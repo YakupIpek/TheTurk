@@ -51,7 +51,7 @@ namespace ChessEngine.Main
             Protocol = protocol;
             elapsedTime = new Stopwatch();
             historyMoves = new HistoryMoves();
-            killerMoves=new KillerMoves();
+            killerMoves = new KillerMoves();
         }
         /// <summary>
         /// Calculates best line in given depth
@@ -69,8 +69,8 @@ namespace ChessEngine.Main
             Result result;
             var pv = new List<Move>();
             Exit = false;
-            historyMoves=new HistoryMoves();
-            killerMoves= new KillerMoves();
+            historyMoves = new HistoryMoves();
+            killerMoves = new KillerMoves();
             for (iterationPly = 1; ; )
             {
                 var score = AlphaBeta(alpha, beta, iterationPly, depth, pv, NullMove.Disabled, ref nodesCount);
@@ -126,6 +126,7 @@ namespace ChessEngine.Main
             if (moves.Count == 0) return -Board.IsCheckMateOrStaleMate(ply);
             if (ply <= 0) return QuiescenceSearch(alpha, beta, ref nodeCount);
             var localpv = new List<Move>();
+            var pvSearch = false;
             #region Null Move Prunning
             if (nullmove == NullMove.Enabled && !Board.IsInCheck())
             {
@@ -136,8 +137,8 @@ namespace ChessEngine.Main
                 if (score >= beta) return score;
             }
             #endregion
-            moves = SortMoves(moves, depth);
-            foreach (var move in moves)
+            var sortedMoves = SortMoves(moves, depth);
+            foreach (var move in sortedMoves)
             {
                 Board.MakeMove(move);
                 int score;
@@ -152,8 +153,19 @@ namespace ChessEngine.Main
 
                 if (score > alpha)
                 {
+                    if (pvSearch)
+                    {
+                        score = -AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                        if (score > alpha && score < beta)
+                        {
+                            score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                        }
+                    }
+                    else
+                    {
+                        score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                    }
 
-                    score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
                 }
 
 
@@ -161,13 +173,14 @@ namespace ChessEngine.Main
 
                 if (score >= beta)
                 {
-                    killerMoves.Add(move,depth);
+                    killerMoves.Add(move, depth);
 
                     return beta;//beta cut-off
                 }
                 if (score > alpha)
                 {
                     historyMoves.AddMove(move);
+                    pvSearch = true;
                     alpha = score;
                     #region Collect principal variation
                     pv.Clear();
@@ -232,10 +245,10 @@ namespace ChessEngine.Main
         /// </summary>
         /// <param name="moves"></param>
         /// <returns></returns>
-        List<Move> MVVLVASorting(IEnumerable<Move> moves)
+        IEnumerable<Move> MVVLVASorting(IEnumerable<Move> moves)
         {
             return moves.OfType<Ordinary>().Where(move => move.CapturedPiece != null).
-                OrderByDescending(move => move.MovePriority()).ToList<Move>();
+                OrderByDescending(move => move.MovePriority());
         }
         /// <summary>
         /// Sort moves best to worst
@@ -243,7 +256,7 @@ namespace ChessEngine.Main
         /// <param name="moves"></param>
         /// <param name="depth"></param>
         /// <returns></returns>
-        List<Move> SortMoves(List<Move> moves, int depth)
+        IEnumerable<Move> SortMoves(IEnumerable<Move> moves, int depth)
         {
             //Puts previous iteration's best move to beginning
             var previousBestMove = previousPV != null && previousPV.Count > depth ? previousPV[depth] : null;
@@ -253,8 +266,8 @@ namespace ChessEngine.Main
             var sortedMoves = moves.
                 OrderByDescending(move => move.Equals(previousBestMove)).
                 OrderByDescending(move => move.Equals(bestHistoryMove)).
-                OrderByDescending(move=>move.Equals(killer)).
-                OrderByDescending(move => move.MovePriority()).ToList();
+                OrderByDescending(move => move.Equals(killer)).
+                OrderByDescending(move => move.MovePriority());
 
             return sortedMoves;
 

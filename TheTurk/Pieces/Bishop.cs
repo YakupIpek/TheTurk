@@ -4,6 +4,7 @@ namespace ChessEngine.Pieces
 {
     public class Bishop : Piece
     {
+        private const int bishop = 2;
         public const char Letter = 'B';
         const int pieceValue = 325;
         private static readonly int[,] pieceSquareTable;
@@ -41,6 +42,11 @@ namespace ChessEngine.Pieces
         public override int[,] PieceSquareTable
         {
             get { return pieceSquareTable; }
+        }
+
+        public override int ToInt
+        {
+            get { return bishop; }
         }
     }
 }
