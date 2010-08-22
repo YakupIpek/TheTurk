@@ -15,18 +15,19 @@
 
         class State
         {
-            public State(Coordinate enPassant, Castle whiteCastle, Castle blackCastle, int fiftyMovesRule)
+            public Coordinate EnPassantSquare { get; private set; }
+            public Castle WhiteCastle { get; private set; }
+            public Castle BlackCastle { get; private set; }
+            public int FiftyMovesRule { get; private set; }
+            public long ZobristKey { get; private set; }
+            public State(Coordinate enPassant, Castle whiteCastle, Castle blackCastle, int fiftyMovesRule,long zobristKey)
             {
-                this.enPassantSquare = enPassant;
-                this.whiteCastle = whiteCastle;
-                this.blackCastle = blackCastle;
-                this.fiftyMovesRule = fiftyMovesRule;
+                EnPassantSquare = enPassant;
+                WhiteCastle = whiteCastle;
+                BlackCastle = blackCastle;
+                FiftyMovesRule = fiftyMovesRule;
+                ZobristKey = zobristKey;
             }
-
-            public Coordinate enPassantSquare { get; private set; }
-            public Castle whiteCastle { get; private set; }
-            public Castle blackCastle { get; private set; }
-            public int fiftyMovesRule { get; private set; }
         }
 
         #endregion

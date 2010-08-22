@@ -14,10 +14,7 @@ namespace ChessEngine.Main
         public static void Clear<T>(this BlockingCollection<T> blockingCollection)
         {
             T item;
-            while (blockingCollection.TryTake(out item))
-            {
-                
-            }
+            while (blockingCollection.TryTake(out item)) ;
         }
     }
 }

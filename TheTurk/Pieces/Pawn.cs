@@ -58,19 +58,19 @@ namespace ChessEngine.Pieces
             if (Color == Color.White)
             {
                 var upSquare = From.To(Coordinate.Directions.North);
-                if (upSquare.IsEmpty(board) && From.rank != 7)//Pawn can go up if it is empty square
+                if (upSquare.IsEmpty(board) && From.Rank != 7)//Pawn can go up if it is empty square
                 {
                     move = new Ordinary(board, this, upSquare);
                     moves.Add(move);
                     var twoUpSquare = upSquare.To(Coordinate.Directions.North);
-                    if (From.rank == 2 && twoUpSquare.IsEmpty(board))//Check can jump 2 square when it is on rank 2
+                    if (From.Rank == 2 && twoUpSquare.IsEmpty(board))//Check can jump 2 square when it is on rank 2
                     {
                         move = new Ordinary(board, this, twoUpSquare);
                         moves.Add(move);
                     }
                 }
 
-                if (From.rank != 7)
+                if (From.Rank != 7)
                 {
                     Coordinate crossSquare = From.To(Coordinate.Directions.NorthEast);
                     //Check for capture
@@ -86,7 +86,7 @@ namespace ChessEngine.Pieces
                         moves.Add(move);
                     }
                 }
-                if (From.rank == 5)//Check possibility of enpassant move
+                if (From.Rank == 5)//Check possibility of enpassant move
                 {
                     var crossSquare = From.To(Coordinate.Directions.NorthEast);
                     if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
@@ -104,7 +104,7 @@ namespace ChessEngine.Pieces
                         }
                     }
                 }
-                if (From.rank == 7)//Check pawn promotions
+                if (From.Rank == 7)//Check pawn promotions
                 {
                     upSquare = From.To(Coordinate.Directions.North);
                     if (upSquare.IsEmpty(board))
@@ -128,20 +128,20 @@ namespace ChessEngine.Pieces
             else // For black pawn
             {
                 var downSquare = From.To(Coordinate.Directions.South);
-                if (downSquare.IsEmpty(board) && From.rank != 2)
+                if (downSquare.IsEmpty(board) && From.Rank != 2)
                 {
                     move = new Ordinary(board, this, downSquare);
                     moves.Add(move);
                     var twoDownSquare = downSquare.To(Coordinate.Directions.South);
 
-                    if (From.rank == 7 && twoDownSquare.IsEmpty(board))
+                    if (From.Rank == 7 && twoDownSquare.IsEmpty(board))
                     {
                         move = new Ordinary(board, this, twoDownSquare);
                         moves.Add(move);
                     }
                 }
 
-                if (From.rank != 2)
+                if (From.Rank != 2)
                 {
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) &&
@@ -158,7 +158,7 @@ namespace ChessEngine.Pieces
                         moves.Add(move);
                     }
                 }
-                if (From.rank == 4)
+                if (From.Rank == 4)
                 {
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
                     if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
@@ -176,7 +176,7 @@ namespace ChessEngine.Pieces
                         }
                     }
                 }
-                if (From.rank == 2)
+                if (From.Rank == 2)
                 {
                     downSquare = From.To(Coordinate.Directions.South);
                     if (downSquare.IsEmpty(board))

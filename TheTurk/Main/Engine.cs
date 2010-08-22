@@ -99,7 +99,7 @@ namespace ChessEngine.Main
                 if (result.BestLine.Count > 0)
                     Protocol.WriteOutput(result);
 
-                if (Math.Abs(score) == Board.CheckMateValue || Exit) break;
+                if (Math.Abs(score) == Board.CheckMateValue || Exit || iterationPly>30) break;
                 iterationPly++;
                 nodesCount = 0;
             }
@@ -142,31 +142,36 @@ namespace ChessEngine.Main
             {
                 Board.MakeMove(move);
                 int score;
-                #region Late Move Reduction
-
-                if (!Board.IsInCheck())
+                if (Board.threeFoldRepetetion.IsThreeFoldRepetetion) score = Board.Draw;
+                else
                 {
-                    score = -AlphaBeta(-alpha - 1, -alpha, ply - 2, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
-                }
-                else score = alpha + 1;
-                #endregion
+                    #region Late Move Reduction
 
-                if (score > alpha)
-                {
-                    if (pvSearch)
+                    if (!Board.IsInCheck())
                     {
-                        score = -AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
-                        if (score > alpha && score < beta)
+                        score = -AlphaBeta(-alpha - 1, -alpha, ply - 2, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                    }
+                    else score = alpha + 1;
+                    #endregion
+                    if (score > alpha)
+                    {
+                        if (pvSearch)
+                        {
+                            score = -AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+
+                            if (score > alpha && score < beta)
+                            {
+                                score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
+                            }
+                        }
+                        else
                         {
                             score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
                         }
-                    }
-                    else
-                    {
-                        score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, NullMove.Enabled, ref nodeCount);
-                    }
 
+                    }
                 }
+
 
 
                 Board.TakeBackMove(move);

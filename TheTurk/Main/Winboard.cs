@@ -42,13 +42,12 @@ namespace ChessEngine.Main
                 string input = Console.ReadLine();
                 Logger.AppendLine(input);
                 XLogger.Add(new XElement("incoming", input));
-                if (input == "?")
+                if (input == "?") //if it is stop command, immediately stop engine without put it into queue
                 {
                     engine.Exit = true;
                     commandConsumer.Clear();
                     continue;
                 }
-
                 commandConsumer.Add(input);
             }
         }

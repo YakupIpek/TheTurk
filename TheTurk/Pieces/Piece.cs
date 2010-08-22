@@ -58,11 +58,11 @@ namespace ChessEngine.Pieces
             if (Color == Color.White)
             {
                 var mirrorSquare = From.GetMirror();
-                return PieceSquareTable[mirrorSquare.rank - 1, mirrorSquare.file - 1];
+                return PieceSquareTable[mirrorSquare.Rank - 1, mirrorSquare.File - 1];
             }
             else
             {
-                return -PieceSquareTable[From.rank - 1, From.file - 1];
+                return -PieceSquareTable[From.Rank - 1, From.File - 1];
             }
         }
         /// <summary>

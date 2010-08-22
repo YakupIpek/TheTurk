@@ -4,10 +4,6 @@ using ChessEngine.Pieces;
 
 namespace ChessEngine.Main
 {
-    public enum Direction : int
-    {
-        North, South, East, West, NorthEast, NorthWest, SouthEast, SouthWest
-    }
     /// <summary>
     /// Defines Square coordinates as rank and file
     /// </summary>
@@ -38,9 +34,10 @@ namespace ChessEngine.Main
             g8 = new Coordinate(8, 7),
             h8 = new Coordinate(8, 8);
 
-        public int file;
-        public int rank;
-
+        private int file;
+        public int File { get { return file; } }
+        private int rank;
+        public int Rank { get { return rank; } }
         static Coordinate()
         {
 
@@ -104,7 +101,7 @@ namespace ChessEngine.Main
             
 #endif
 
-            return board[this] == null;
+            return GetPiece(board) == null;
         }
         /// <summary>
         /// Get piece which sit on this square

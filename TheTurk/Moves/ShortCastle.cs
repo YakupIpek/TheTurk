@@ -8,7 +8,7 @@ namespace ChessEngine.Moves
         public ShortCastle(Piece piece)
             : base(piece)
         {
-            To = piece.Color == Color.White ? Coordinate.e1 : Coordinate.e8;
+            To = piece.Color == Color.White ? Coordinate.g1 : Coordinate.g8;
         }
         public override void MakeMove(Board board)
         {

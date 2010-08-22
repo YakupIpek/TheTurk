@@ -88,8 +88,9 @@
     <Compile Include="Main\IProtocol.cs" />
     <Compile Include="Main\KillerMoves.cs" />
     <Compile Include="Main\PartialBoard.cs" />
+    <Compile Include="Main\ThreeFoldRepetition.cs" />
     <Compile Include="Main\Winboard.cs" />
-    <Content Include="Main\ZobristKey.cs" />
+    <Compile Include="Main\ZobristKey.cs" />
     <Compile Include="Moves\EnPassant.cs" />
     <Compile Include="Moves\LongCastle.cs" />
     <Compile Include="Moves\Move.cs" />

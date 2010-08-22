@@ -12,9 +12,13 @@ namespace ChessEngine.Main
         #region Fields and Properties
 
         public const int CheckMateValue = short.MaxValue,
-            StaleMateValue = 0;
-        Stack<State> BoardStateHistory;
-        Piece[,] board;
+                         StaleMateValue = 0,
+                         Draw = 0;
+
+        public readonly ThreeFoldRepetition threeFoldRepetetion;
+        private Zobrist zobrist;
+        private Stack<State> boardStateHistory;
+        private Piece[,] board;
         private int fiftyMovesRule, totalMoves;
         public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
@@ -27,7 +31,7 @@ namespace ChessEngine.Main
             set
             {
                 board = new Piece[8, 8];
-                BoardStateHistory.Clear();
+                boardStateHistory.Clear();
                 var splitted = value.Trim().Split(' ');
                 var ranks = splitted[0].Split('/').Reverse().ToArray();
                 var allLetters = from rank in ranks
@@ -97,11 +101,10 @@ namespace ChessEngine.Main
                             }
                             break;
                     }
-                    if (square.file == 8)
+                    if (square.File == 8)
                     {
-                        if (square.rank == 8 && square.file == 8) break;
-                        square.file = 1;
-                        square.rank += 1;
+                        if (square.Rank == 8 && square.File == 8) break;
+                        square = new Coordinate(square.Rank + 1, 1);
                         continue;
                     }
                     square = square.To(Coordinate.Directions.East);
@@ -116,8 +119,10 @@ namespace ChessEngine.Main
             BlackCastle = Castle.NoneCastle;
             Side = Color.White;
             EnPassantSquare = new Coordinate(0, 0);//means deactive
-            BoardStateHistory = new Stack<State>();
+            boardStateHistory = new Stack<State>();
             SetUpBoard();
+            zobrist=new Zobrist(this);
+            threeFoldRepetetion = new ThreeFoldRepetition();
         }
         #endregion
         /// <summary>
@@ -127,19 +132,19 @@ namespace ChessEngine.Main
         /// <returns>Piece on that square</returns>
         public Piece this[Coordinate square]
         {
-            get { return board[square.rank - 1, square.file - 1]; }
-            set { board[square.rank - 1, square.file - 1] = value; }
+            get { return board[square.Rank - 1, square.File - 1]; }
+            set { board[square.Rank - 1, square.File - 1] = value; }
         }
 
         public void MakeMove(Move move)
         {
             Piece movingPiece = move.Piece;
 
-            BoardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule));
+            boardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule,zobrist.ZobristKey));
 
             if (Side == Color.Black) totalMoves++;
 
-            if (movingPiece is Pawn && Math.Abs((movingPiece.From.rank - ((Ordinary)move).To.rank)) == 2)
+            if (movingPiece is Pawn && Math.Abs((movingPiece.From.Rank - ((Ordinary)move).To.Rank)) == 2)
             {
                 if (movingPiece.Color == Color.White)
                     EnPassantSquare = movingPiece.From.To(Coordinate.Directions.North);
@@ -147,7 +152,7 @@ namespace ChessEngine.Main
                     EnPassantSquare = movingPiece.From.To(Coordinate.Directions.South);
             }
             else
-                EnPassantSquare = new Coordinate(-1, -1);
+                EnPassantSquare = new Coordinate(0, 0);
 
 
             if (movingPiece is Pawn || (move is Ordinary) && (move as Ordinary).CapturedPiece != null)
@@ -157,7 +162,6 @@ namespace ChessEngine.Main
 
 
             move.MakeMove(this);
-
 
             if (movingPiece is King)
             {
@@ -230,21 +234,24 @@ namespace ChessEngine.Main
                         BlackCastle = Castle.NoneCastle;
                     }
                 }
-
             }
 
-
             ToggleSide();
-
+            zobrist.ZobristUpdate(move);
+            threeFoldRepetetion.Add(zobrist.ZobristKey);
         }
         public void TakeBackMove(Move move)
         {
-            var state = BoardStateHistory.Pop();
-            EnPassantSquare = state.enPassantSquare;
-            WhiteCastle = state.whiteCastle;
-            BlackCastle = state.blackCastle;
-            fiftyMovesRule = state.fiftyMovesRule;
+            var state = boardStateHistory.Pop();
+            EnPassantSquare = state.EnPassantSquare;
+            WhiteCastle = state.WhiteCastle;
+            BlackCastle = state.BlackCastle;
+            fiftyMovesRule = state.FiftyMovesRule;
+            zobrist.ZobristKey = state.ZobristKey;
+            threeFoldRepetetion.Remove();
+
             move.UnMakeMove(this);
+
             if (Side == Color.Black)
                 totalMoves--;
 
@@ -266,12 +273,12 @@ namespace ChessEngine.Main
                             TakeBackMove(x);
                             return !result;
                         });
+
                     moves.AddRange(query);
                 }
             }
             return moves;
         }
-
         public bool IsInCheck()
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
@@ -312,12 +319,10 @@ namespace ChessEngine.Main
                     {
                         Console.Write(" -");
                     }
-
-                    square.file++;
+                    square = new Coordinate(square.Rank, square.File + 1);
                 }
                 Console.WriteLine();
-                square.rank--;
-                square.file = 1;
+                square = new Coordinate(square.Rank - 1, 1);
             }
             Console.WriteLine("----------------");
         }
