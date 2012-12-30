@@ -44,12 +44,12 @@ namespace ChessEngine.Moves
         }
         public override int MovePriority()
         {
-            return 2*Pawn.Piecevalue;
+            return 2 * Pawn.Piecevalue;
         }
         public override string IONotation()
         {
             Coordinate to = Piece.Color == Color.White ? Coordinate.c1 : Coordinate.c8;
-            return base.IONotation()+to.ToString();
+            return base.IONotation() + to.ToString();
         }
         public override string Notation()
         {
@@ -59,18 +59,19 @@ namespace ChessEngine.Moves
         {
             if (side == Color.White)
             {
-                return Coordinate.d1.IsEmpty(board) && Coordinate.c1.IsEmpty(board) &&
+                return Coordinate.d1.IsEmpty(board) &&
+                    Coordinate.c1.IsEmpty(board) &&
                     Coordinate.b1.IsEmpty(board) &&
                     !Coordinate.e1.IsAttackedSquare(board, Color.Black) &&
                     !Coordinate.d1.IsAttackedSquare(board, Color.Black) &&
                     !Coordinate.c1.IsAttackedSquare(board, Color.Black);
             }
             return Coordinate.d8.IsEmpty(board) &&
-                Coordinate.c8.IsEmpty(board) &&
-                Coordinate.b8.IsEmpty(board) &&
-                !Coordinate.e8.IsAttackedSquare(board,Color.White)&&
-                !Coordinate.d8.IsAttackedSquare(board, Color.White) &&
-                !Coordinate.c8.IsAttackedSquare(board, Color.White);
+                   Coordinate.c8.IsEmpty(board) &&
+                   Coordinate.b8.IsEmpty(board) &&
+                   !Coordinate.e8.IsAttackedSquare(board, Color.White) &&
+                   !Coordinate.d8.IsAttackedSquare(board, Color.White) &&
+                   !Coordinate.c8.IsAttackedSquare(board, Color.White);
 
         }
 

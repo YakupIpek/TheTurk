@@ -21,9 +21,6 @@ namespace ChessEngine.Moves
         public Promote(Board board, Piece piece, Coordinate to, PromotionType type)
             : base(board, piece, to)
         {
-
-
-            var color = piece.Color;
             switch (type)
             {
                 case PromotionType.Queen: PromotedPiece = new Queen(to, piece.Color);
@@ -43,16 +40,14 @@ namespace ChessEngine.Moves
 
         public static List<Move> AllPossiblePromotions(Board board, Piece piece, Coordinate square)
         {
-            var moves = new List<Move>();
-            Move move = new Promote(board, piece, square, Promote.PromotionType.Queen);
-            moves.Add(move);
-            move = new Promote(board, piece, square, Promote.PromotionType.Rook);
-            moves.Add(move);
-            move = new Promote(board, piece, square, Promote.PromotionType.Bishop);
-            moves.Add(move);
-            move = new Promote(board, piece, square, Promote.PromotionType.Knight);
-            moves.Add(move);
-            return moves;
+            return new List<Move> 
+            { 
+                new Promote(board, piece, square, Promote.PromotionType.Queen),
+                new Promote(board, piece, square, Promote.PromotionType.Rook),
+                new Promote(board, piece, square, Promote.PromotionType.Bishop),
+                new Promote(board, piece, square, Promote.PromotionType.Knight)
+            };
+
         }
         public override void MakeMove(Board board)
         {

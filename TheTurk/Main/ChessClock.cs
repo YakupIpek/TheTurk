@@ -5,7 +5,8 @@ namespace ChessEngine.Main
 {
     public class ChessClock
     {
-        public long timeForPerMove { get; private set; }
+        public long timeForPerMove;
+
         public ChessClock(int moveNumber, int minute, int incrementPerMove)
         {
             if (moveNumber == 0) moveNumber = 40;

@@ -1,19 +1,14 @@
 ﻿using System;
 using ChessEngine.Pieces;
+using System.Linq;
 
 namespace ChessEngine.Main
 {
-    class Evaluation
+    public class Evaluation
     {
         public static int Evaluate(Board board)
         {
-
-            var score = 0;
-            foreach (Piece piece in board)
-            {
-                score += piece.Evaluation();
-            }
-            return (int)board.Side*score;
+            return (int)board.Side * board.Pieces().Sum(p => p.Evaluation());
         }
     }
 }

@@ -7,7 +7,7 @@ using ChessEngine.Pieces;
 
 namespace ChessEngine.Main
 {
-    public partial class Board : IEnumerable
+    public partial class Board
     {
         #region Fields and Properties
 
@@ -18,8 +18,9 @@ namespace ChessEngine.Main
         public readonly ThreeFoldRepetition threeFoldRepetetion;
         private Zobrist zobrist;
         private Stack<State> boardStateHistory;
-        private Piece[,] board;
+        private Piece[,] pieces;
         private int fiftyMovesRule, totalMoves;
+
         public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
@@ -30,7 +31,7 @@ namespace ChessEngine.Main
         {
             set
             {
-                board = new Piece[8, 8];
+                pieces = new Piece[8, 8];
                 boardStateHistory.Clear();
                 var splitted = value.Trim().Split(' ');
                 var ranks = splitted[0].Split('/').Reverse().ToArray();
@@ -112,18 +113,20 @@ namespace ChessEngine.Main
 
             }
         }
+
         public Board()
         {
-            board = new Piece[8, 8];
+            pieces = new Piece[8, 8];
             WhiteCastle = Castle.NoneCastle;
             BlackCastle = Castle.NoneCastle;
             Side = Color.White;
             EnPassantSquare = new Coordinate(0, 0);//means deactive
             boardStateHistory = new Stack<State>();
             SetUpBoard();
-            zobrist=new Zobrist(this);
+            zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
         }
+
         #endregion
         /// <summary>
         /// Return piece on specified square
@@ -132,15 +135,15 @@ namespace ChessEngine.Main
         /// <returns>Piece on that square</returns>
         public Piece this[Coordinate square]
         {
-            get { return board[square.Rank - 1, square.File - 1]; }
-            set { board[square.Rank - 1, square.File - 1] = value; }
+            get { return pieces[square.Rank - 1, square.File - 1]; }
+            set { pieces[square.Rank - 1, square.File - 1] = value; }
         }
 
         public void MakeMove(Move move)
         {
             Piece movingPiece = move.Piece;
 
-            boardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule,zobrist.ZobristKey));
+            boardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule, zobrist.ZobristKey));
 
             if (Side == Color.Black) totalMoves++;
 
@@ -240,6 +243,7 @@ namespace ChessEngine.Main
             zobrist.ZobristUpdate(move);
             threeFoldRepetetion.Add(zobrist.ZobristKey);
         }
+
         public void TakeBackMove(Move move)
         {
             var state = boardStateHistory.Pop();
@@ -258,47 +262,47 @@ namespace ChessEngine.Main
             ToggleSide();
 
         }
-        public List<Move> GenerateMoves()
-        {
-            var moves = new List<Move>();
-            King king = Side == Color.White ? WhiteKing : BlackKing;
-            foreach (var piece in board)
-            {
-                if (piece != null && piece.Color == Side)
-                {
-                    var query = piece.GenerateMoves(this).Where(x =>
-                        {
-                            MakeMove(x);
-                            var result = king.From.IsAttackedSquare(this, king.OppenentColor);
-                            TakeBackMove(x);
-                            return !result;
-                        });
 
-                    moves.AddRange(query);
-                }
-            }
+        public IEnumerable<Move> GenerateMoves()
+        {
+            King king = Side == Color.White ? WhiteKing : BlackKing;
+
+            var moves = pieces.Cast<Piece>().Where(p => p!= null && p.Color == Side)
+                                .SelectMany(p => p.GenerateMoves(this)).Where(x =>
+                         {
+                             MakeMove(x);
+                             var result = king.From.IsAttackedSquare(this, king.OppenentColor);
+                             TakeBackMove(x);
+                             return !result;
+                         });
+
+
             return moves;
         }
+
         public bool IsInCheck()
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
             return king.From.IsAttackedSquare(this, king.OppenentColor);
 
         }
+
         /// <summary>
         /// Determine player side is in checkmate or stalemate
         /// </summary>
         /// <returns>returns Checkmate or stalemate value</returns>
-        public int IsCheckMateOrStaleMate(int ply)
+        public int GetCheckMateOrStaleMateScore(int ply)
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
             bool result = king.From.IsAttackedSquare(this, king.OppenentColor);
             return result == true ? (CheckMateValue + ply) : StaleMateValue;
         }
+
         public void SetUpBoard()
         {
             Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         }
+
         public void ShowBoard()
         {
             Coordinate square = new Coordinate(8, 1);
@@ -326,25 +330,15 @@ namespace ChessEngine.Main
             }
             Console.WriteLine("----------------");
         }
+
         public void ToggleSide()
         {
             Side = Side == Color.White ? Color.Black : Color.White;
         }
-        public IEnumerator GetEnumerator()
+        
+        public IEnumerable<Piece> Pieces()
         {
-            for (int i = 0; i < 8; i++)
-            {
-                for (int j = 0; j < 8; j++)
-                {
-                    var piece = board[i, j];
-                    if (piece != null)
-                    {
-                        yield return piece;
-                    }
-
-                }
-            }
-
+            return pieces.Cast<Piece>().Where(p => p != null);
         }
     }
 }

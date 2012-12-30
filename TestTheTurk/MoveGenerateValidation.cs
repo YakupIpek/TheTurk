@@ -57,7 +57,7 @@ namespace TestTheTurk
         {
             int nodes = 0;
             if (ply == 0) return 1;
-            List<Move> moves = board.GenerateMoves();
+            var moves = board.GenerateMoves();
             foreach (Move move in moves)
             {
                 board.MakeMove(move);

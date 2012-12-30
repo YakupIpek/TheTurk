@@ -93,14 +93,6 @@ namespace ChessEngine.Main
         /// <returns></returns>
         public bool IsEmpty(Board board)
         {
-#if(DEBUG)
-            if (!IsOnboard())
-            {
-                throw new OutOfBoardException();
-            }
-            
-#endif
-
             return GetPiece(board) == null;
         }
         /// <summary>

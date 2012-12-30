@@ -123,7 +123,7 @@ namespace ChessEngine.Main
             nodeCount++;
 
             var moves = Board.GenerateMoves();
-            if (moves.Count == 0) return -Board.IsCheckMateOrStaleMate(ply);
+            if (!moves.Any()) return -Board.GetCheckMateOrStaleMateScore(ply);
             if (ply <= 0) return QuiescenceSearch(alpha, beta, ref nodeCount);
             var localpv = new List<Move>();
             var pvSearch = false;
