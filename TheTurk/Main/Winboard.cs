@@ -14,8 +14,6 @@ namespace ChessEngine.Main
     class Winboard : IProtocol
     {
         private BlockingCollection<string> commandConsumer;
-        private XElement XLogger;
-        private StringBuilder Logger;
         private ChessClock timer;
         private bool force;
         private readonly Engine engine;
@@ -27,21 +25,17 @@ namespace ChessEngine.Main
             engine = new Engine(new Board(), this);
             timer = new ChessClock(0, 0, 10);
             force = true;
-            Logger = new StringBuilder();
-            XLogger = new XElement("root");
         }
         /// <summary>
         /// Protocol starts to listen interface and respond
         /// </summary>
         public void Start()
         {
-            Action<string> com = Comminication;
+            Action<string> com = Comunication;
             Task.Factory.StartNew(ProcessQueue);//start new thread for consume commands
             while (true)
             {
                 string input = Console.ReadLine();
-                Logger.AppendLine(input);
-                XLogger.Add(new XElement("incoming", input));
                 if (input == "?") //if it is stop command, immediately stop engine without put it into queue
                 {
                     engine.Exit = true;
@@ -55,7 +49,7 @@ namespace ChessEngine.Main
         /// Process incoming commands
         /// </summary>
         /// <param name="input">Incoming string from interface</param>
-        public void Comminication(string input)
+        public void Comunication(string input)
         {
             string command = input.Split(' ').First();
             string messageBody = input.Substring(command.Length).Trim();
@@ -65,7 +59,7 @@ namespace ChessEngine.Main
                     {
                         if (messageBody == "2")
                         {
-                            WriteLine(@"feature  setboard=1 usermove=1 colors=0 reuse=1 time=1 myname=""The Turk"" name=1 done=1");
+                            Console.WriteLine(@"feature  setboard=1 usermove=1 colors=0 reuse=1 time=1 myname=""The Turk"" name=1 done=1");
                         }
                         break;
                     }
@@ -99,7 +93,7 @@ namespace ChessEngine.Main
                         {
                             Console.WriteLine("force mode is on");
                             var result = engine.Search(timer.timeForPerMove);
-                            WriteLine("move " + result.BestLine.First().IONotation());
+                            Console.WriteLine("move " + result.BestLine.First().IONotation());
                             engine.Board.MakeMove(result.BestLine.First());
                             GameHistory.Push(result.BestLine.First());
                         }
@@ -109,7 +103,7 @@ namespace ChessEngine.Main
                     {
                         force = true;
                         var result = engine.Search(timer.timeForPerMove);
-                        WriteLine("move " + result.BestLine.First().IONotation());
+                        Console.WriteLine("move " + result.BestLine.First().IONotation());
                         engine.Board.MakeMove(result.BestLine.First());
                         GameHistory.Push(result.BestLine.First());
                         break;
@@ -147,71 +141,44 @@ namespace ChessEngine.Main
                         engine.Board.ShowBoard();
                         break;
                     }
-                case "exportlog"://just for testing purposes
-                    {
-                        TextWriter txtfile = new StreamWriter("TheTurkLog");
-                        txtfile.Write(Logger);
-                        txtfile.Flush();
-                        txtfile.Close();
-                        Process.Start("notepad.exe", "TheTurkLog");
-                        break;
-                    }
-                case "xmllog"://just for testing purposes
-                    {
-                        XLogger.Save("xmllog.xml");
-                        Process.Start("notepad.exe", "xmllog.xml");
-                        break;
-                    }
             }
         }
         public void ProcessQueue()
         {
             while (true)
             {
-                Comminication(commandConsumer.Take());
+                Comunication(commandConsumer.Take());
             }
 
         }
         private void ReceivedMove(string moveNotation)
         {
-            try
-            {
-                var from = Coordinate.NotationToSquare(moveNotation.Substring(0, 2));//convert string notation coordinate
-                var moves = from.GetPiece(engine.Board).GenerateMoves(engine.Board);
-                foreach (var move in moves)
-                {
-                    if (move.IONotation() == moveNotation)
-                    {
-                        GameHistory.Push(move);
-                        engine.Board.MakeMove(move);
-                        return;
-                    }
-                }
-                throw new NullReferenceException();
-            }
-            catch (NullReferenceException)
-            {
-                WriteLine("illegal move : " + moveNotation);
+            var from = Coordinate.NotationToSquare(moveNotation.Substring(0, 2));//convert string notation coordinate
+            
+            var move = from.GetPiece(engine.Board)
+                           .GenerateMoves(engine.Board)
+                           .FirstOrDefault(m => m.IONotation() == moveNotation);
 
+            if (move != null)
+            {
+                GameHistory.Push(move);
+                engine.Board.MakeMove(move);
+                return;
             }
+
+            Console.WriteLine("illegal move : " + moveNotation);
         }
+
         public void WriteOutput(Engine.Result result)
         {
             if (result.BestLine.Count > 0)
             {
                 Console.Write("{0} {1} {2} {3} ", result.Ply, result.Score, result.ElapsedTime / 10L, result.NodesCount);
 
-                foreach (var move in result.BestLine)
-                {
-                    Console.Write(move.Notation() + " ");
-                }
+                result.BestLine.ForEach(move => Console.Write(move.Notation() + " "));
+
                 Console.WriteLine();
             }
-        }
-        private void WriteLine(string line)
-        {
-            Logger.AppendLine(line);
-            Console.WriteLine(line);
         }
     }
 }

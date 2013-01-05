@@ -8,7 +8,7 @@ namespace ChessEngine.Main
     {
         public static int Evaluate(Board board)
         {
-            return (int)board.Side * board.Pieces().Sum(p => p.Evaluation());
+            return (int)board.Side * board.GetPieces().Sum(p => p.Evaluation());
         }
     }
 }

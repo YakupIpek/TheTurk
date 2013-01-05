@@ -75,53 +75,45 @@ namespace ChessEngine.Pieces
                     Coordinate crossSquare = From.To(Coordinate.Directions.NorthEast);
                     //Check for capture
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
-                    {
-                        move = new Ordinary(board, this, crossSquare);
-                        moves.Add(move);
-                    }
+                        moves.Add(new Ordinary(board, this, crossSquare));
+
                     crossSquare = From.To(Coordinate.Directions.NorthWest);
+
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
-                    {
-                        move = new Ordinary(board, this, crossSquare);
-                        moves.Add(move);
-                    }
+                        moves.Add(new Ordinary(board, this, crossSquare));
+
                 }
                 if (From.Rank == 5)//Check possibility of enpassant move
                 {
                     var crossSquare = From.To(Coordinate.Directions.NorthEast);
+
                     if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
-                    {
-                        move = new EnPassant(board, this, crossSquare);
-                        moves.Add(move);
-                    }
+                        moves.Add(new EnPassant(board, this, crossSquare));
                     else
                     {
                         crossSquare = From.To(Coordinate.Directions.NorthWest);
+
                         if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
-                        {
-                            move = new EnPassant(board, this, crossSquare);
-                            moves.Add(move);
-                        }
+                            moves.Add(new EnPassant(board, this, crossSquare));
                     }
                 }
                 if (From.Rank == 7)//Check pawn promotions
                 {
                     upSquare = From.To(Coordinate.Directions.North);
+
                     if (upSquare.IsEmpty(board))
-                    {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, upSquare));
 
-                    }
                     var crossSquare = From.To(Coordinate.Directions.NorthEast);
+
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
-                    {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
-                    }
+
                     crossSquare = From.To(Coordinate.Directions.NorthWest);
+
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.Black)
-                    {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
-                    }
+
                 }
 
             }
@@ -130,75 +122,60 @@ namespace ChessEngine.Pieces
                 var downSquare = From.To(Coordinate.Directions.South);
                 if (downSquare.IsEmpty(board) && From.Rank != 2)
                 {
-                    move = new Ordinary(board, this, downSquare);
-                    moves.Add(move);
+                    moves.Add(new Ordinary(board, this, downSquare));
+
                     var twoDownSquare = downSquare.To(Coordinate.Directions.South);
 
                     if (From.Rank == 7 && twoDownSquare.IsEmpty(board))
-                    {
-                        move = new Ordinary(board, this, twoDownSquare);
-                        moves.Add(move);
-                    }
+                        moves.Add(new Ordinary(board, this, twoDownSquare));
                 }
 
                 if (From.Rank != 2)
                 {
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
-                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) &&
-                        crossSquare.GetPiece(board).Color == Color.White)
-                    {
-                        move = new Ordinary(board, this, crossSquare);
-                        moves.Add(move);
-                    }
+
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.White)
+                        moves.Add(new Ordinary(board, this, crossSquare));
+
                     crossSquare = From.To(Coordinate.Directions.SouthWest);
-                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) &&
-                        crossSquare.GetPiece(board).Color == Color.White)
-                    {
-                        move = new Ordinary(board, this, crossSquare);
-                        moves.Add(move);
-                    }
+
+                    if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.White)
+                        moves.Add(new Ordinary(board, this, crossSquare));
+
                 }
+
                 if (From.Rank == 4)
                 {
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
+
                     if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
-                    {
-                        move = new EnPassant(board, this, crossSquare);
-                        moves.Add(move);
-                    }
+                        moves.Add(new EnPassant(board, this, crossSquare));
                     else
                     {
                         crossSquare = From.To(Coordinate.Directions.SouthWest);
                         if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
-                        {
-                            move = new EnPassant(board, this, crossSquare);
-                            moves.Add(move);
-                        }
+                            moves.Add(new EnPassant(board, this, crossSquare));
                     }
                 }
                 if (From.Rank == 2)
                 {
                     downSquare = From.To(Coordinate.Directions.South);
+
                     if (downSquare.IsEmpty(board))
-                    {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, downSquare));
 
-                    }
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
+
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.White)
-                    {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
-                    }
+
                     crossSquare = From.To(Coordinate.Directions.SouthWest);
+
                     if (crossSquare.IsOnboard() && !crossSquare.IsEmpty(board) && crossSquare.GetPiece(board).Color == Color.White)
-                    {
                         moves.AddRange(Promote.AllPossiblePromotions(board, this, crossSquare));
-                    }
+
                 }
-
             }
-
-
 
             return moves;
         }

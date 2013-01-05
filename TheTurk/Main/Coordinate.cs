@@ -147,13 +147,13 @@ namespace ChessEngine.Main
         /// <returns></returns>
         public bool IsAttackedSquare(Board board, Color enemyColor)
         {
-            Piece piece;
+            
             foreach (var direction in Coordinate.crossFourDirectionDelta) //Check cross directions for queen and bishop
             {
                 Coordinate to = this;
                 while ((to = to.To(direction)).IsOnboard())
                 {
-                    piece = to.GetPiece(board);
+                    var piece = to.GetPiece(board);
                     if (piece != null)
                     {
                         if ((piece is Queen || piece is Bishop) && piece.Color == enemyColor)
@@ -169,7 +169,7 @@ namespace ChessEngine.Main
                 Coordinate to = this;
                 while ((to = to.To(direction)).IsOnboard())
                 {
-                    piece = to.GetPiece(board);
+                    var piece = to.GetPiece(board);
                     if (piece != null)
                     {
                         if ((piece is Queen || piece is Rook) && piece.Color == enemyColor)
@@ -183,21 +183,20 @@ namespace ChessEngine.Main
 
             foreach (var direction in Knight.Directions) // Knight directions
             {
-                Coordinate to = this;
-                to = to.To(direction);
+                var to = this.To(direction);
+
                 if (to.IsOnboard())
                 {
-                    piece = to.GetPiece(board);
-                    if (piece != null)
+                    var piece = to.GetPiece(board);
+
+                    if (piece != null && (piece is Knight) && piece.Color == enemyColor)
                     {
-                        if ((piece is Knight) && piece.Color == enemyColor)
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
             }
-            King opponentking = enemyColor == Color.White ? board.WhiteKing : board.BlackKing;
+
+            var opponentking = enemyColor == Color.White ? board.WhiteKing : board.BlackKing;
 
             if (this.IsNeighboreSquare(opponentking.From)) //Check for oppenent king
             {
@@ -206,7 +205,7 @@ namespace ChessEngine.Main
             if (enemyColor == Color.Black) //Check for pawns
             {
 
-                piece = this.To(Coordinate.Directions.NorthEast).GetPiece(board);
+                var piece = this.To(Coordinate.Directions.NorthEast).GetPiece(board);
                 if (piece != null && piece is Pawn && piece.Color == enemyColor)
                 {
                     return true;
@@ -219,7 +218,7 @@ namespace ChessEngine.Main
             }
             else // Black Pawns
             {
-                piece = this.To(Coordinate.Directions.SouthEast).GetPiece(board);
+                var piece = this.To(Coordinate.Directions.SouthEast).GetPiece(board);
                 if (piece != null && piece is Pawn && piece.Color == enemyColor)
                 {
                     return true;

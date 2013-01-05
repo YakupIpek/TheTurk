@@ -187,11 +187,10 @@ namespace ChessEngine.Main
                     historyMoves.AddMove(move);
                     pvSearch = true;
                     alpha = score;
-                    #region Collect principal variation
+
                     pv.Clear();
                     pv.Add(move);
                     pv.AddRange(localpv);
-                    #endregion
                 }
             }
             return alpha;

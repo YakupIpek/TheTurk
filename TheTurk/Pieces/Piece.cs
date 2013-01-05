@@ -39,10 +39,10 @@ namespace ChessEngine.Pieces
             foreach (var direction in this.PieceDirection)
             {
                 Coordinate destination = From;
-                Piece piece;
+                
                 while ((destination = destination.To(direction)).IsOnboard())
                 {
-                    piece = board[destination];
+                    var piece = board[destination];
                     if (piece != null && this.Color == piece.Color) break;
 
                     moves.Add(new Ordinary(board, this, destination));

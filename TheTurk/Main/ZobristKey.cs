@@ -61,7 +61,7 @@ namespace ChessEngine.Main
         private void AssignFirstZobristKey()
         {
             var side = (int)board.Side == 1 ? 0 : 1;
-            foreach (var piece in board.Pieces())
+            foreach (var piece in board.GetPieces())
             {
                 zobristKey ^= pieces[side, piece.ToInt, piece.From.Rank, piece.From.File];
             }

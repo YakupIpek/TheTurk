@@ -56,29 +56,20 @@ namespace ChessEngine.Pieces
             var moves = base.GenerateMoves(board);
 
             moves.AddRange(CreateCastleMoves(board));
+
             return moves;
         }
         List<Move> CreateCastleMoves(Board board)
         {
             var moves = new List<Move>();
             var castleSide = this.Color == Pieces.Color.White ? board.WhiteCastle : board.BlackCastle;
-            if (castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.ShortCastle)
-            {
-                if (ShortCastle.Available(board, this.Color))
-                {
-                    moves.Add(new ShortCastle(this));
-
-                }
-            }
-            if (castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.LongCastle)
-            {
-                if (LongCastle.Available(board, this.Color))
-                {
-                    moves.Add(new LongCastle(this));
-                }
-            }
-
-
+            
+            if ((castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.ShortCastle) && ShortCastle.Available(board, this.Color))
+                moves.Add(new ShortCastle(this));
+            
+            if ((castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.LongCastle) && LongCastle.Available(board, this.Color))
+                moves.Add(new LongCastle(this));
+            
             return moves;
         }
         public override int[,] PieceSquareTable

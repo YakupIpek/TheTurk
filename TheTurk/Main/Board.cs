@@ -336,7 +336,7 @@ namespace ChessEngine.Main
             Side = Side == Color.White ? Color.Black : Color.White;
         }
         
-        public IEnumerable<Piece> Pieces()
+        public IEnumerable<Piece> GetPieces()
         {
             return pieces.Cast<Piece>().Where(p => p != null);
         }
