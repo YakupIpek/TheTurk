@@ -1,6 +1,6 @@
 The Turk is chess engine that you can play under Winboard protocol supported user interfaces. The Turk has been written in Object Oriented design instead of traditional functional chess engines. Object Oriented Design has been choosen to simplify complexity of project for help others to understand and read code more easily.
 
-Name of chess engine comes from chess Automaton in history. Detailed info is here
+Name of chess engine comes from chess Automaton in history. Detailed info is [here](http://en.wikipedia.org/wiki/The_Turk)
 
 # Ýmplemented Features
 
