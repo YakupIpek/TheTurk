@@ -2,7 +2,7 @@ The Turk is chess engine that you can play under Winboard protocol supported use
 
 Name of chess engine comes from chess Automaton in history. Detailed info is [here](http://en.wikipedia.org/wiki/The_Turk)
 
-[How to Play Under Areana GUI]()
+[How to Play Under Areana GUI](https://github.com/YakupIpek/TheTurk/wiki)
 ![](http://yakupipek.github.io/TheTurk/play.jpg)
 # İmplemented Features
 
