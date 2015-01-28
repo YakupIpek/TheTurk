@@ -1,6 +1,4 @@
-TheTurk/bin/
-TheTurk/obj/**/*
-TestTheTurk/obj/
-TestTheTurk/bin/
-
-TheTurk/obj/x86/Debug/**/*
+TheTurk/bin/*
+TheTurk/obj/*
+TestTheTurk/obj/*
+TestTheTurk/bin/*
