@@ -18,3 +18,8 @@ C:\Users\ffreshblood\Documents\Visual Studio 2012\Projects\TheTurk\TheTurk\obj\x
 C:\Users\ffreshblood\Documents\Visual Studio 2012\Projects\TheTurk\TheTurk\obj\x86\Debug\TheTurk.csprojResolveAssemblyReference.cache
 C:\Users\ffreshblood\Documents\Visual Studio 2012\Projects\TheTurk\TheTurk\bin\Debug\TheTurk.exe
 C:\Users\ffreshblood\Documents\Visual Studio 2012\Projects\TheTurk\TheTurk\bin\Debug\TheTurk.pdb
+C:\Users\Yakup\Documents\GitHub\TheTurk\TheTurk\bin\Debug\TheTurk.exe
+C:\Users\Yakup\Documents\GitHub\TheTurk\TheTurk\bin\Debug\TheTurk.pdb
+C:\Users\Yakup\Documents\GitHub\TheTurk\TheTurk\obj\x86\Debug\TheTurk.csprojResolveAssemblyReference.cache
+C:\Users\Yakup\Documents\GitHub\TheTurk\TheTurk\obj\x86\Debug\TheTurk.exe
+C:\Users\Yakup\Documents\GitHub\TheTurk\TheTurk\obj\x86\Debug\TheTurk.pdb

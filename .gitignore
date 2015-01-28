@@ -1,4 +1,10 @@
-TheTurk/bin/*
-TheTurk/obj/*
-TestTheTurk/obj/*
-TestTheTurk/bin/*
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+x64/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+TheTurk/obj/x86/Debug/TheTurk.csproj.FileListAbsolute.txt
