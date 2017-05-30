@@ -1,4 +1,4 @@
-﻿using ChessEngine.Main;
+﻿using ChessEngine.Engine;
 using ChessEngine.Pieces;
 
 namespace ChessEngine.Moves

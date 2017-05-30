@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ChessEngine.Main.Board" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACKKIBAAgBggCAAgAAAgMAACAgAAKAAQAgACAAA=</HashCode>
+      <FileName>Main\Board.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ChessEngine.Main.Engine" Collapsed="true">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAAAAAAAABAAAAACAAAAAAAACAgAAA=</HashCode>
+      <FileName>Main\Engine.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Main.Evaluation" Collapsed="true">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Main\Evaluation.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Main.OutOfBoardException" Collapsed="true">
+    <Position X="4" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Main\Exceptions.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChessEngine.Main.Winboard" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="5.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQgAAAAAACAAAAAAAAAgAAAAAAACAAAAAAAACAQAAAA=</HashCode>
+      <FileName>Main\Winboard.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Struct Name="ChessEngine.Main.Coordinate" Collapsed="true">
+    <Position X="4" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>GARCAAABAQAE+wQEgAAAhBAAACAIYAAABIBgHwAAAAA=</HashCode>
+      <FileName>Main\Coordinate.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Interface Name="ChessEngine.Main.IProtocol" Collapsed="true">
+    <Position X="4" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Main\IProtocol.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="ChessEngine.Main.Direction" Collapsed="true">
+    <Position X="4" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACCCABABAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAABAAQ=</HashCode>
+      <FileName>Main\Coordinate.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

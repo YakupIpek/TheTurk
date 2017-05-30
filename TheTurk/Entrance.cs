@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Xml.Linq;
-using ChessEngine.Main;
+using ChessEngine.Engine;
 
 namespace ChessEngine
 {

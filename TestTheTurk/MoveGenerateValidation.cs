@@ -2,7 +2,7 @@
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using ChessEngine.Main;
+using ChessEngine.Engine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ChessEngine.Pieces;
 using ChessEngine.Moves;

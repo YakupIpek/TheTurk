@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using ChessEngine.Main;
+using ChessEngine.Engine;
 using ChessEngine.Moves;
 
 namespace ChessEngine.Pieces
