@@ -1,7 +1,0 @@
-syntax: glob
-Chat/obj/
-Chat/bin/
-Chat.Tests/bin/
-Chat.Tests/obj/
-Task2.Tests/obj/
-Task2.Tests/bin/
