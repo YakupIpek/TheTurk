@@ -7,7 +7,7 @@ Name of chess engine comes from chess automaton in history. Detailed info is [he
 # İmplemented Features
 
 * Winboard protocol support
-* [8,8] 2 dimensional array for board representation (none-zero based)
+* [8,8] 2 dimensional array for board representation
 * Fen notation support
 * AlphaBeta Algorithim
 * Quiescence Search with MVV/LVA Sorting
