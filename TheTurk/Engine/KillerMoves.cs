@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ChessEngine.Moves;
+using TheTurk.Moves;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     class KillerMoves
     {

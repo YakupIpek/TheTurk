@@ -2,10 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using ChessEngine.Moves;
-using ChessEngine.Pieces;
+using TheTurk.Moves;
+using TheTurk.Pieces;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     public partial class Board
     {

@@ -1,7 +1,7 @@
-﻿using ChessEngine.Moves;
-using ChessEngine.Pieces;
+﻿using TheTurk.Moves;
+using TheTurk.Pieces;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     class HistoryMoves
     {

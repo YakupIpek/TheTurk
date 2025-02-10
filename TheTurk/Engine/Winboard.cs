@@ -8,8 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using ChessEngine.Moves;
-namespace ChessEngine.Engine
+using TheTurk.Moves;
+namespace TheTurk.Engine
 {
     class Winboard : IProtocol
     {

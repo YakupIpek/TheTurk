@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     static class ExtensionMethods
     {

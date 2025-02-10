@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     public class ChessClock
     {

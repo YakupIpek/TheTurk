@@ -1,6 +1,6 @@
-﻿using ChessEngine.Engine;
+﻿using TheTurk.Engine;
 
-namespace ChessEngine.Pieces
+namespace TheTurk.Pieces
 {
     public class Bishop : Piece
     {

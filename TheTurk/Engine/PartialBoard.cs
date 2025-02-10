@@ -1,4 +1,4 @@
-﻿namespace ChessEngine.Engine
+﻿namespace TheTurk.Engine
 {
     public partial class Board
     {

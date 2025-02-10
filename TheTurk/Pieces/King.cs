@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using ChessEngine.Engine;
-using ChessEngine.Moves;
+using TheTurk.Engine;
+using TheTurk.Moves;
 
-namespace ChessEngine.Pieces
+namespace TheTurk.Pieces
 {
     public class King : Piece
     {

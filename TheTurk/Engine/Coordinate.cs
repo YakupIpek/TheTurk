@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using ChessEngine.Pieces;
+using TheTurk.Pieces;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     /// <summary>
     /// Defines Square coordinates as rank and file

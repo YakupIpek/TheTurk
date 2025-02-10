@@ -1,8 +1,8 @@
 ﻿using System;
-using ChessEngine.Pieces;
+using TheTurk.Pieces;
 using System.Linq;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     public class Evaluation
     {

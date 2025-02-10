@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using ChessEngine.Engine;
-using ChessEngine.Pieces;
+using TheTurk.Engine;
+using TheTurk.Pieces;
 
-namespace ChessEngine.Moves
+namespace TheTurk.Moves
 {
 
     public class Promote : Ordinary

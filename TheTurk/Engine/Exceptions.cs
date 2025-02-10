@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
 
     public class OutOfBoardException : Exception

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ChessEngine.Moves;
+using TheTurk.Moves;
 using System.Linq;
-using ChessEngine.Pieces;
+using TheTurk.Pieces;
 
-namespace ChessEngine.Engine
+namespace TheTurk.Engine
 {
     public class Engine
     {
