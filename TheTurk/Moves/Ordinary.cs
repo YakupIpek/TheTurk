@@ -27,8 +27,6 @@ namespace TheTurk.Moves
             {
                 CapturedPiece.PutMe(board);
             }
-
-
         }
         public override int MovePriority()
         {
@@ -44,8 +42,11 @@ namespace TheTurk.Moves
         }
         public override string Notation()
         {
-            string captured = CapturedPiece == null ? "" : "x";
-            if (Piece.GetType() == typeof(Pawn) && captured == "x") return (From.ToString()[0] + captured + To);
+            var captured = CapturedPiece == null ? "" : "x";
+
+            if (Piece is Pawn && captured == "x")
+                return (From.ToString()[0] + captured + To);
+
             return (Piece.NotationLetter + captured + To).Trim();
         }
         public override string ToString()

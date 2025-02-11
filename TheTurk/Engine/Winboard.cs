@@ -31,7 +31,6 @@ namespace TheTurk.Engine
         /// </summary>
         public void Start()
         {
-            Action<string> com = Comunication;
             Task.Factory.StartNew(ProcessQueue);//start new thread for consume commands
             while (true)
             {
@@ -111,7 +110,7 @@ namespace TheTurk.Engine
                 case "analyze":
                     {
                         force = true;
-                        var result = engine.Search(timer.timeForPerMove);
+                        engine.Search(timer.timeForPerMove);
                         break;
                     }
                 case "undo":
@@ -160,7 +159,7 @@ namespace TheTurk.Engine
         private void ReceivedMove(string moveNotation)
         {
             var from = Coordinate.NotationToSquare(moveNotation.Substring(0, 2));//convert string notation coordinate
-            
+
             var move = from.GetPiece(engine.Board)
                            .GenerateMoves(engine.Board)
                            .FirstOrDefault(m => m.IONotation() == moveNotation);

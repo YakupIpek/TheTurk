@@ -58,10 +58,7 @@ namespace TheTurk.Moves
         public override void UnMakeMove(Board board)
         {
             PromotedPiece.RemoveMe(board);
-            if (CapturedPiece != null)
-            {
-                CapturedPiece.PutMe(board);
-            }
+            CapturedPiece?.PutMe(board);
             Piece.PutMe(board);
         }
         public override int MovePriority()

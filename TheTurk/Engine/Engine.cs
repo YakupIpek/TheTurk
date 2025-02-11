@@ -97,22 +97,12 @@ namespace TheTurk.Engine
             }
             return result;
         }
-        /// <summary>
-        /// AlphaBeta algorithm.Calculates best line in given depth
-        /// </summary>
-        /// <param name="alpha">Lowest value</param>
-        /// <param name="beta">highest value</param>
-        /// <param name="ply"></param>
-        /// <param name="depth"></param>
-        /// <param name="pv">Holds principal variation</param>
-        /// <param name="nullmove"></param>
-        /// <param name="nodeCount">Holds value of calculated moves</param>
-        /// <returns>Returning value is the score of best line</returns>
+
         int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, bool nullMoveActive, ref int nodeCount)
         {
             //if time out or exit requested after 1st iteration,so leave thinking.
             if ((!HaveTime() || Exit) && iterationPly > 1)
-                return 0;
+                return Board.StaleMateValue;
 
             nodeCount++;
 
