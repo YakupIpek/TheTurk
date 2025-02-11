@@ -108,6 +108,12 @@ namespace TheTurk.Engine
                         GameHistory.Push(result.BestLine.First());
                         break;
                     }
+                case "analyze":
+                    {
+                        force = true;
+                        var result = engine.Search(timer.timeForPerMove);
+                        break;
+                    }
                 case "undo":
                     {
                         engine.Board.TakeBackMove(GameHistory.Pop());
@@ -169,11 +175,11 @@ namespace TheTurk.Engine
             Console.WriteLine("illegal move : " + moveNotation);
         }
 
-        public void WriteOutput(Engine.Result result)
+        public void WriteOutput(EngineResult result)
         {
             if (result.BestLine.Count > 0)
             {
-                Console.Write("{0} {1} {2} {3} ", result.Ply, result.Score, result.ElapsedTime / 10L, result.NodesCount);
+                Console.Write("{0} {1} {2} {3} ", result.Ply, result.Score, result.ElapsedTime, result.NodesCount);
 
                 result.BestLine.ForEach(move => Console.Write(move.Notation() + " "));
 

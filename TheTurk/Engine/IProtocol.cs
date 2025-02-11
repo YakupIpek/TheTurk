@@ -7,6 +7,6 @@ namespace TheTurk.Engine
 {
     public interface IProtocol
     {
-        void WriteOutput(Engine.Result result);
+        void WriteOutput(EngineResult result);
     }
 }
