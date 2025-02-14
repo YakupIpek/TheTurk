@@ -64,7 +64,7 @@ namespace TheTurk.Engine
                     }
                 case "force":
                     {
-                        force = force ? false : true;
+                        force = !force;
                         break;
                     }
                 case "new":
@@ -76,7 +76,7 @@ namespace TheTurk.Engine
                     }
                 case "setboard":
                     {
-                        engine.Board.Fen = messageBody;
+                        engine.Board.SetUpBoard(messageBody);
                         GameHistory.Clear();
                         break;
                     }
@@ -115,7 +115,7 @@ namespace TheTurk.Engine
                     }
                 case "undo":
                     {
-                        engine.Board.TakeBackMove(GameHistory.Pop());
+                        engine.Board.UndoMove(GameHistory.Pop());
                         break;
                     }
                 case "level":
@@ -126,19 +126,6 @@ namespace TheTurk.Engine
                 case "st":
                     {
                         timer = new ChessClock("0 0 " + messageBody);
-                        break;
-                    }
-                case "fen": //just for testing purposes
-                    {
-                        engine.Board.Fen = "rn4kr/4p1bp/2pp4/1p3P1Q/2P1P3/6R1/PBp3PP/RN4K1 w - - 0 24 ";
-                        GameHistory.Clear();
-                        break;
-                    }
-                case "score": //just for testing purposes
-                    {
-                        var score = Evaluation.Evaluate(engine.Board);
-                        engine.Board.ShowBoard();
-                        Console.WriteLine("score : " + score);
                         break;
                     }
                 case "show": //just for testing purposes

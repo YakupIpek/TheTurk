@@ -118,7 +118,7 @@ namespace TheTurk.Engine
         }
         public static Coordinate NotationToSquare(string notation)
         {
-            Coordinate coordinate = new Coordinate();
+            var coordinate = new Coordinate();
             coordinate.rank = int.Parse(notation[1].ToString());
             for (int i = 0; i < fileLetters.Length; i++)
             {

@@ -14,16 +14,11 @@ namespace TheTurk.Moves
             Piece = piece;
             From = piece.From;
         }
-        /// <summary>
-        /// Makes move on board
-        /// </summary>
-        /// <param name="board"></param>
+
         public abstract void MakeMove(Board board);
-        /// <summary>
-        /// Takebacks move
-        /// </summary>
-        /// <param name="board"></param>
-        public abstract void UnMakeMove(Board board);
+
+        public abstract void UndoMove(Board board);
+
         /// <summary>
         /// Used for sorting.Better to worst
         /// </summary>
@@ -35,7 +30,7 @@ namespace TheTurk.Moves
         /// <returns></returns>
         public virtual string IONotation()
         {
-            return Piece.From.ToString();
+            return From.ToString();
         }
         public virtual string Notation()
         {

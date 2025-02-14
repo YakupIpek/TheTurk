@@ -27,7 +27,7 @@ namespace TheTurk.Moves
             }
         }
 
-        public override void UnMakeMove(Board board)
+        public override void UndoMove(Board board)
         {
             if (Piece.Color == Color.White)
             {

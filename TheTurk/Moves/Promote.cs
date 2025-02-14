@@ -55,7 +55,7 @@ namespace TheTurk.Moves
             CapturedPiece = To.GetPiece(board);
             board[To] = PromotedPiece;
         }
-        public override void UnMakeMove(Board board)
+        public override void UndoMove(Board board)
         {
             PromotedPiece.RemoveMe(board);
             CapturedPiece?.PutMe(board);

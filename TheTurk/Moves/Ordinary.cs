@@ -17,10 +17,9 @@ namespace TheTurk.Moves
 
         public override void MakeMove(Board board)
         {
-
             Piece.MoveTo(board, To);
         }
-        public override void UnMakeMove(Board board)
+        public override void UndoMove(Board board)
         {
             Piece.MoveTo(board, From);
             if (CapturedPiece != null)

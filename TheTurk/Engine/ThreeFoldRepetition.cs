@@ -7,34 +7,37 @@ namespace TheTurk.Engine
 {
     public class ThreeFoldRepetition
     {
-        private HashSet<long> first;
-        private HashSet<long> second;
-        private HashSet<long> third;
-        private Stack<long> history;
-        public bool IsThreeFoldRepetetion { get { return second.Contains(history.Peek()); } }
-        public ThreeFoldRepetition()
-        {
-            first = new HashSet<long>();
-            second = new HashSet<long>();
-            third = new HashSet<long>();
-            history = new Stack<long>();
+        private Dictionary<long, int> zobristKeys = [];
+        private int counter;
+        public bool IsThreeFoldRepetetion => counter > 0;
 
-        }
         public void Add(long zobristKey)
         {
-            history.Push(zobristKey);
+            var value = zobristKeys.GetValueOrDefault(zobristKey) + 1;
+            zobristKeys[zobristKey] =  value;
 
-            if (!first.Add(zobristKey))
-                if (!second.Add(zobristKey))
-                    if (third.Add(zobristKey)) ;
+            //Console.WriteLine($"added key : {zobristKey}, {value}");
+
+            if (value == 3)
+            {
+                counter++;
+            }
         }
 
-        public void Remove()
+        public void Remove(long zobristKey)
         {
-            long zobristKey = history.Pop();
-            if (!third.Remove(zobristKey))
-                if (!second.Remove(zobristKey))
-                    if (!first.Remove(zobristKey)) ;
+            var value = zobristKeys[zobristKey] -= 1;
+
+            if (value == 0)
+                zobristKeys.Remove(zobristKey);
+
+            if (value == 2)
+            {
+                counter--;
+            }
+
+            //Console.WriteLine($"removed key : {zobristKey}, {value + 1}");
+
         }
     }
 }

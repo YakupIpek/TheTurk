@@ -15,7 +15,7 @@ namespace TheTurk.Engine
                          StaleMateValue = 0,
                          Draw = 0;
 
-        public readonly ThreeFoldRepetition threeFoldRepetetion;
+        public ThreeFoldRepetition threeFoldRepetetion;
         private Zobrist zobrist;
         private Stack<State> boardStateHistory;
         private Piece[,] pieces;
@@ -27,92 +27,7 @@ namespace TheTurk.Engine
         public Coordinate EnPassantSquare { get; private set; }
         public Castle WhiteCastle { get; private set; }
         public Castle BlackCastle { get; private set; }
-        public string Fen
-        {
-            set
-            {
-                pieces = new Piece[8, 8];
-                boardStateHistory.Clear();
-                var splitted = value.Trim().Split(' ');
-                var ranks = splitted[0].Split('/').Reverse().ToArray();
-                var allLetters = from rank in ranks
-                                 from letter in rank
-                                 select letter;
-                Side = splitted[1] == "w" ? Color.White : Color.Black;
-
-                var castles = splitted[2];
-
-                if (castles.Contains("KQ")) WhiteCastle = Castle.BothCastle;
-                else if (castles.Contains("K")) WhiteCastle = Castle.ShortCastle;
-                else if (castles.Contains("Q")) WhiteCastle = Castle.LongCastle;
-                else WhiteCastle = Castle.NoneCastle;
-
-                if (castles.Contains("kq")) BlackCastle = Castle.BothCastle;
-                else if (castles.Contains("k")) BlackCastle = Castle.ShortCastle;
-                else if (castles.Contains("q")) BlackCastle = Castle.LongCastle;
-                else BlackCastle = Castle.NoneCastle;
-
-                EnPassantSquare = splitted[3] == "-" ? new Coordinate(0, 0) : Coordinate.NotationToSquare(splitted[3]);
-
-                if (splitted.Length > 4)
-                    fiftyMovesRule = Convert.ToInt32(splitted[4]);
-                else
-                    fiftyMovesRule = 0;
-                if (splitted.Length > 5)
-                    totalMoves = Convert.ToInt32(splitted[5]);
-                else
-                    totalMoves = 1;
-
-
-
-                Coordinate square = Coordinate.a1;
-                foreach (var letter in allLetters)
-                {
-                    Color color = char.IsUpper(letter) ? Color.White : Color.Black;
-                    switch (char.ToUpper(letter))
-                    {
-                        case Queen.Letter: this[square] = new Queen(square, color);
-                            break;
-                        case Rook.Letter: this[square] = new Rook(square, color);
-                            break;
-                        case Bishop.Letter: this[square] = new Bishop(square, color);
-                            break;
-                        case Knight.Letter: this[square] = new Knight(square, color);
-                            break;
-                        case 'P': this[square] = new Pawn(square, color);
-                            break;
-                        case King.Letter:
-                            {
-                                var king = new King(square, color);
-                                this[square] = king;
-                                if (color == Color.White) WhiteKing = king;
-                                else BlackKing = king;
-
-
-                            }
-                            break;
-                        default:
-                            {
-                                for (int i = 1; i < int.Parse(letter.ToString()); i++)
-                                {
-                                    square = square.To(Coordinate.Directions.East);
-
-                                }
-
-                            }
-                            break;
-                    }
-                    if (square.File == 8)
-                    {
-                        if (square.Rank == 8 && square.File == 8) break;
-                        square = new Coordinate(square.Rank + 1, 1);
-                        continue;
-                    }
-                    square = square.To(Coordinate.Directions.East);
-                }
-
-            }
-        }
+        
 
         public Board()
         {
@@ -123,8 +38,6 @@ namespace TheTurk.Engine
             EnPassantSquare = new Coordinate(0, 0);//means deactive
             boardStateHistory = new Stack<State>();
             SetUpBoard();
-            zobrist = new Zobrist(this);
-            threeFoldRepetetion = new ThreeFoldRepetition();
         }
 
         #endregion
@@ -157,8 +70,7 @@ namespace TheTurk.Engine
             else
                 EnPassantSquare = new Coordinate(0, 0);
 
-
-            if (movingPiece is Pawn || (move is Ordinary) && (move as Ordinary).CapturedPiece != null)
+            if (movingPiece is Pawn || (move is Ordinary m && m.CapturedPiece != null))
                 fiftyMovesRule = 0;
             else
                 fiftyMovesRule++;
@@ -242,9 +154,10 @@ namespace TheTurk.Engine
             ToggleSide();
             zobrist.ZobristUpdate(move);
             threeFoldRepetetion.Add(zobrist.ZobristKey);
+            boardStateHistory.Peek().NextZobristKey = zobrist.ZobristKey;
         }
 
-        public void TakeBackMove(Move move)
+        public void UndoMove(Move move)
         {
             var state = boardStateHistory.Pop();
             EnPassantSquare = state.EnPassantSquare;
@@ -252,9 +165,9 @@ namespace TheTurk.Engine
             BlackCastle = state.BlackCastle;
             fiftyMovesRule = state.FiftyMovesRule;
             zobrist.ZobristKey = state.ZobristKey;
-            threeFoldRepetetion.Remove();
+            threeFoldRepetetion.Remove(state.NextZobristKey);
 
-            move.UnMakeMove(this);
+            move.UndoMove(this);
 
             if (Side == Color.Black)
                 totalMoves--;
@@ -272,7 +185,7 @@ namespace TheTurk.Engine
                          {
                              MakeMove(x);
                              var result = king.From.IsAttackedSquare(this, king.OppenentColor);
-                             TakeBackMove(x);
+                             UndoMove(x);
                              return !result;
                          });
 
@@ -291,16 +204,118 @@ namespace TheTurk.Engine
         /// Determine player side is in checkmate or stalemate
         /// </summary>
         /// <returns>returns Checkmate or stalemate value</returns>
-        public int GetCheckMateOrStaleMateScore(int ply)
+        public int GetCheckMateOrStaleMateScore(int depth)
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
-            bool result = king.From.IsAttackedSquare(this, king.OppenentColor);
-            return result == true ? (CheckMateValue + ply) : StaleMateValue;
+            var attacked = king.From.IsAttackedSquare(this, king.OppenentColor);
+            return attacked ? CheckMateValue + depth : StaleMateValue;
         }
 
         public void SetUpBoard()
         {
-            Fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            SetFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+
+            zobrist = new Zobrist(this);
+            threeFoldRepetetion = new ThreeFoldRepetition();
+            threeFoldRepetetion.Add(zobrist.ZobristKey);
+        }
+
+        public void SetUpBoard(string fen)
+        {
+            SetFen(fen);
+
+            zobrist = new Zobrist(this);
+            threeFoldRepetetion = new ThreeFoldRepetition();
+            threeFoldRepetetion.Add(zobrist.ZobristKey);
+        }
+
+        private void SetFen(string value)
+        {
+
+            {
+                pieces = new Piece[8, 8];
+                boardStateHistory.Clear();
+                var splitted = value.Trim().Split(' ');
+                var ranks = splitted[0].Split('/').Reverse().ToArray();
+                var allLetters = from rank in ranks
+                                 from letter in rank
+                                 select letter;
+                Side = splitted[1] == "w" ? Color.White : Color.Black;
+
+                var castles = splitted[2];
+
+                if (castles.Contains("KQ")) WhiteCastle = Castle.BothCastle;
+                else if (castles.Contains("K")) WhiteCastle = Castle.ShortCastle;
+                else if (castles.Contains("Q")) WhiteCastle = Castle.LongCastle;
+                else WhiteCastle = Castle.NoneCastle;
+
+                if (castles.Contains("kq")) BlackCastle = Castle.BothCastle;
+                else if (castles.Contains("k")) BlackCastle = Castle.ShortCastle;
+                else if (castles.Contains("q")) BlackCastle = Castle.LongCastle;
+                else BlackCastle = Castle.NoneCastle;
+
+                EnPassantSquare = splitted[3] == "-" ? new Coordinate(0, 0) : Coordinate.NotationToSquare(splitted[3]);
+
+                if (splitted.Length > 4)
+                    fiftyMovesRule = Convert.ToInt32(splitted[4]);
+                else
+                    fiftyMovesRule = 0;
+                if (splitted.Length > 5)
+                    totalMoves = Convert.ToInt32(splitted[5]);
+                else
+                    totalMoves = 1;
+
+                Coordinate square = Coordinate.a1;
+                foreach (var letter in allLetters)
+                {
+                    Color color = char.IsUpper(letter) ? Color.White : Color.Black;
+                    switch (char.ToUpper(letter))
+                    {
+                        case Queen.Letter:
+                            this[square] = new Queen(square, color);
+                            break;
+                        case Rook.Letter:
+                            this[square] = new Rook(square, color);
+                            break;
+                        case Bishop.Letter:
+                            this[square] = new Bishop(square, color);
+                            break;
+                        case Knight.Letter:
+                            this[square] = new Knight(square, color);
+                            break;
+                        case 'P':
+                            this[square] = new Pawn(square, color);
+                            break;
+                        case King.Letter:
+                            {
+                                var king = new King(square, color);
+                                this[square] = king;
+                                if (color == Color.White) WhiteKing = king;
+                                else BlackKing = king;
+
+
+                            }
+                            break;
+                        default:
+                            {
+                                for (int i = 1; i < int.Parse(letter.ToString()); i++)
+                                {
+                                    square = square.To(Coordinate.Directions.East);
+
+                                }
+
+                            }
+                            break;
+                    }
+                    if (square.File == 8)
+                    {
+                        if (square.Rank == 8 && square.File == 8) break;
+                        square = new Coordinate(square.Rank + 1, 1);
+                        continue;
+                    }
+                    square = square.To(Coordinate.Directions.East);
+                }
+            }
         }
 
         public void ShowBoard()
@@ -335,7 +350,7 @@ namespace TheTurk.Engine
         {
             Side = Side == Color.White ? Color.Black : Color.White;
         }
-        
+
         public IEnumerable<Piece> GetPieces()
         {
             return pieces.Cast<Piece>().Where(p => p != null);

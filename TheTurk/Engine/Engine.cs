@@ -11,7 +11,7 @@ namespace TheTurk.Engine
     {
         private KillerMoves killerMoves;
         private HistoryMoves historyMoves;
-        private List<Move> previousPV;
+        public List<Move> previousPV;
         private int iterationPly;
         private long timeLimit;
         private Stopwatch elapsedTime;
@@ -43,7 +43,12 @@ namespace TheTurk.Engine
         {
             this.timeLimit = timeLimit;
             int infinity = int.MaxValue;
-            int alpha = -infinity, beta = infinity, depth = 0, nodesCount = 0;
+
+            int alpha = -infinity,
+                beta = infinity,
+                depth = 0,
+                nodesCount = 0;
+
             EngineResult previousResult = null;
             elapsedTime.Restart();
             EngineResult result;
@@ -70,7 +75,6 @@ namespace TheTurk.Engine
                     continue;
                 }
 
-
                 if ((!HaveTime() || Exit) && iterationPly > 1) //time control and stop mode
                 {
                     return previousResult;
@@ -89,7 +93,7 @@ namespace TheTurk.Engine
                 if (result.BestLine.Count > 0)
                     Protocol.WriteOutput(result);
 
-                if (Math.Abs(score) == Board.CheckMateValue || Exit || iterationPly>30)
+                if (Math.Abs(score) >= Board.CheckMateValue || Exit)
                     break;
 
                 iterationPly++;
@@ -102,10 +106,12 @@ namespace TheTurk.Engine
         {
             //if time out or exit requested after 1st iteration,so leave thinking.
             if ((!HaveTime() || Exit) && iterationPly > 1)
-                return Board.StaleMateValue;
+                return Board.Draw;
+
+            if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
+                return Board.Draw;
 
             nodeCount++;
-
             var moves = Board.GenerateMoves();
             if (!moves.Any())
                 return -Board.GetCheckMateOrStaleMateScore(depth);
@@ -116,54 +122,49 @@ namespace TheTurk.Engine
             var localpv = new List<Move>();
             var pvSearch = false;
 
-            #region Null Move Prunning
-            if (nullMoveActive && !Board.IsInCheck())
-            {
-                Board.ToggleSide();
+            //#region Null Move Prunning
+            //if (nullMoveActive && !Board.IsInCheck())
+            //{
+            //    Board.ToggleSide();
 
-                int score = -AlphaBeta(-beta, -beta + 1, ply - 1 - 2, depth + 1, localpv, false, ref nodeCount);
-                Board.ToggleSide();
-                if (score >= beta) return score;
-            }
-            #endregion
+            //    int score = -AlphaBeta(-beta, -beta + 1, ply - 1 - 2, depth + 1, localpv, false, ref nodeCount);
+            //    Board.ToggleSide();
+            //    if (score >= beta) return score;
+            //}
+            //#endregion
             var sortedMoves = SortMoves(moves, depth);
             foreach (var move in sortedMoves)
             {
                 Board.MakeMove(move);
                 int score;
-                if (Board.threeFoldRepetetion.IsThreeFoldRepetetion) score = Board.Draw;
-                else
+
+                #region Late Move Reduction
+
+                if (!Board.IsInCheck())
                 {
-                    #region Late Move Reduction
-
-                    if (!Board.IsInCheck())
+                    score = -AlphaBeta(-alpha - 1, -alpha, ply - 2, depth + 1, localpv, true, ref nodeCount);
+                }
+                else score = alpha + 1;
+                #endregion
+                if (score > alpha)
+                {
+                    if (pvSearch)
                     {
-                        score = -AlphaBeta(-alpha - 1, -alpha, ply - 2, depth + 1, localpv, true, ref nodeCount);
+                        score = -AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, localpv, false, ref nodeCount);
+
+                        if (score > alpha && score < beta)
+                        {
+                            score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, false, ref nodeCount);
+                        }
                     }
-                    else score = alpha + 1;
-                    #endregion
-                    if (score > alpha)
+                    else
                     {
-                        if (pvSearch)
-                        {
-                            score = -AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, localpv, false, ref nodeCount);
-
-                            if (score > alpha && score < beta)
-                            {
-                                score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, false, ref nodeCount);
-                            }
-                        }
-                        else
-                        {
-                            score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
-                        }
-
+                        score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
                     }
+
                 }
 
-
-
-                Board.TakeBackMove(move);
+                Board.UndoMove(move);
 
                 if (score >= beta)
                 {
@@ -195,8 +196,6 @@ namespace TheTurk.Engine
         {
             nodeCount++;
 
-
-
             int eval = Evaluation.Evaluate(Board);
 
             if (eval >= beta)
@@ -217,7 +216,7 @@ namespace TheTurk.Engine
 
                 eval = -QuiescenceSearch(-beta, -alpha, ref nodeCount);
 
-                Board.TakeBackMove(capture);
+                Board.UndoMove(capture);
 
 
 
