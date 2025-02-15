@@ -15,7 +15,7 @@ namespace TheTurk.Engine
         private int iterationPly;
         private long timeLimit;
         private Stopwatch elapsedTime;
-        public bool Exit { get; set; }
+        public bool ExitRequested { get; set; }
         public readonly Board Board;
         public readonly IProtocol Protocol;
 
@@ -26,7 +26,7 @@ namespace TheTurk.Engine
         /// <param name="protocol">Protocol will be used to write output of bestline</param>
         public Engine(Board board, IProtocol protocol)
         {
-            Exit = false;
+            ExitRequested = false;
             Board = board;
             Protocol = protocol;
             elapsedTime = new Stopwatch();
@@ -54,7 +54,7 @@ namespace TheTurk.Engine
             EngineResult result;
             var pv = new List<Move>();
             previousPV = [];
-            Exit = false;
+            ExitRequested = false;
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
 
@@ -75,8 +75,9 @@ namespace TheTurk.Engine
                     continue;
                 }
 
-                if ((!HaveTime() || Exit) && iterationPly > 1) //time control and stop mode
+                if ((!HaveTime() || ExitRequested) && iterationPly > 1) //time control and stop mode
                 {
+                    ExitRequested = false;
                     return previousResult;
                 }
 
@@ -93,25 +94,30 @@ namespace TheTurk.Engine
                 if (result.BestLine.Count > 0)
                     Protocol.WriteOutput(result);
 
-                if (Math.Abs(score) >= Board.CheckMateValue || Exit)
+                if (Math.Abs(score) >= Board.CheckMateValue || ExitRequested)
                     break;
 
                 iterationPly++;
                 nodesCount = 0;
             }
+
+            ExitRequested = false;
+
             return result;
         }
 
         int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, bool nullMoveActive, ref int nodeCount)
         {
+            nodeCount++;
+
             //if time out or exit requested after 1st iteration,so leave thinking.
-            if ((!HaveTime() || Exit) && iterationPly > 1)
+            if ((!HaveTime() || ExitRequested) && iterationPly > 1)
                 return Board.Draw;
 
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
                 return Board.Draw;
 
-            nodeCount++;
+
             var moves = Board.GenerateMoves();
             if (!moves.Any())
                 return -Board.GetCheckMateOrStaleMateScore(depth);

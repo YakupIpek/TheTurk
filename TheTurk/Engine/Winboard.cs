@@ -37,7 +37,7 @@ namespace TheTurk.Engine
                 string input = Console.ReadLine();
                 if (input == "?") //if it is stop command, immediately stop engine without put it into queue
                 {
-                    engine.Exit = true;
+                    engine.ExitRequested = true;
                     commandConsumer.Clear();
                     continue;
                 }

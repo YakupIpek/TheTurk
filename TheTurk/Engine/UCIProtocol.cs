@@ -13,7 +13,6 @@ public class UCIProtocol : IProtocol
     private BlockingCollection<string> commandQueue;
     private readonly Engine engine;
     private Stack<Move> gameHistory;
-    private bool isUciMode = false;
 
     public UCIProtocol()
     {
@@ -24,10 +23,23 @@ public class UCIProtocol : IProtocol
 
     public void Start()
     {
+        
         Task.Factory.StartNew(ProcessQueue, TaskCreationOptions.LongRunning);
         while (true)
         {
-            string input = Console.ReadLine();
+            string input = Console.ReadLine().Trim();
+
+            if(engine.ExitRequested)
+            {
+                continue;
+            }
+
+            if (input == "stop")
+            {
+                engine.ExitRequested = true;
+                continue;
+            }
+
             commandQueue.Add(input);
         }
     }
@@ -43,7 +55,6 @@ public class UCIProtocol : IProtocol
                 Console.WriteLine("id name TheTurk");
                 Console.WriteLine("id author Yakup Ipek");
                 Console.WriteLine("uciok");
-                isUciMode = true;
                 break;
 
             case ["isready"]:
@@ -82,16 +93,11 @@ public class UCIProtocol : IProtocol
                 break;
 
             case ["go", "infinite"]:
-                engine.Search(int.MaxValue);
+                HandleGo(int.MaxValue);
                 break;
 
             case ["back"]:
                 engine.Board.UndoMove(gameHistory.Pop());
-                break;
-
-            case ["stop"]:
-                engine.Exit = true;
-                Console.WriteLine("bestmove " + engine.previousPV.First().IONotation());
                 break;
 
             case ["show"]:
@@ -133,12 +139,6 @@ public class UCIProtocol : IProtocol
         Console.WriteLine("bestmove " + result.BestLine.First().IONotation());
     }
 
-    private string GetBestMove()
-    {
-        var result = engine.Search(1000);
-        return result.BestLine.First().IONotation();
-    }
-
     private void ProcessQueue()
     {
         while (true)
@@ -160,4 +160,5 @@ public class UCIProtocol : IProtocol
             Console.WriteLine();
         }
     }
+
 }
