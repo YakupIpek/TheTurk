@@ -260,7 +260,7 @@ namespace TheTurk.Engine
             var bestHistoryMove = Board.Side == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
 
             // List to hold sorting criteria, starting with MovePriority at the end
-            var sortCriteria = moves.OrderBy(m => true);
+            var sortCriteria = moves.OrderBy(m => false);
 
             // Add the sorting criteria only if they are not null
             if (previousBestMove != null)

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using TheTurk.Moves;
 
@@ -23,13 +24,13 @@ public class UCIProtocol : IProtocol
 
     public void Start()
     {
-        
+
         Task.Factory.StartNew(ProcessQueue, TaskCreationOptions.LongRunning);
         while (true)
         {
             string input = Console.ReadLine().Trim();
 
-            if(engine.ExitRequested)
+            if (engine.ExitRequested)
             {
                 continue;
             }
@@ -106,6 +107,10 @@ public class UCIProtocol : IProtocol
 
             case ["quit"]:
                 Environment.Exit(0);
+                break;
+
+            default:
+                Console.WriteLine("[DEBUG] Unknown command!");
                 break;
         }
     }
