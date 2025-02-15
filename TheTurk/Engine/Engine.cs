@@ -138,6 +138,7 @@ namespace TheTurk.Engine
                 if (score >= beta) return score;
             }
             #endregion
+
             var sortedMoves = SortMoves(moves, depth);
             foreach (var move in sortedMoves)
             {

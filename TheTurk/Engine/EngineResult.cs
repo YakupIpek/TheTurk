@@ -15,11 +15,11 @@ public class EngineResult
 
     public EngineResult(int ply, int score, long rawElapsedTime, int nodesCount, List<Move> bestLine)
     {
-        var depth = Math.Abs(score) - Board.CheckMateValue;
+        var depth = bestLine.Count;
 
         Ply = ply;
         Score = score;
-        MateIn = depth > 0 ? (int)Math.Ceiling(depth / 2.0) * Math.Sign(score) : 0;
+        MateIn = Math.Abs(score) >= Board.CheckMateValue ? (int)Math.Ceiling(depth / 2.0) * Math.Sign(score) : 0;
         ElapsedTime = rawElapsedTime;
         NodesCount = nodesCount;
         BestLine = bestLine;
