@@ -2,8 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using TheTurk.Moves;
 
@@ -11,45 +14,66 @@ namespace TheTurk.Engine;
 
 public class UCIProtocol : IProtocol
 {
-    private BlockingCollection<string> commandQueue;
     private readonly Engine engine;
     private Stack<Move> gameHistory;
 
     public UCIProtocol()
     {
-        commandQueue = new BlockingCollection<string>();
         gameHistory = new Stack<Move>();
         engine = new Engine(new Board(), this);
     }
 
-    public void Start()
+    public async Task Start()
+    {
+        var channel = Channel.CreateUnbounded<string[]>(new() { SingleReader = true, SingleWriter = true });
+
+        var listener = CommandListener(channel.Writer);
+
+        var handler = CommandHandlerAsync(channel.Reader);
+
+        await Task.WhenAll(listener, handler);
+
+    }
+
+    public async Task CommandListener(ChannelWriter<string[]> writer)
     {
 
-        Task.Factory.StartNew(ProcessQueue, TaskCreationOptions.LongRunning);
+        using var stream = Console.OpenStandardInput();
+        using var reader = new StreamReader(stream, Encoding.UTF8);
+
         while (true)
         {
-            string input = Console.ReadLine().Trim();
+            var input = await reader.ReadLineAsync();
+
+            var command = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
             if (engine.ExitRequested)
             {
                 continue;
             }
 
-            if (input == "stop")
+            if (command is ["stop"])
             {
                 engine.ExitRequested = true;
                 continue;
             }
 
-            commandQueue.Add(input);
+            await writer.WriteAsync(command);
         }
     }
 
-    private void ProcessCommand(string input)
+    private async Task CommandHandlerAsync(ChannelReader<string[]> reader)
     {
-        var tokens = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-        switch (tokens)
+        await foreach (var command in reader.ReadAllAsync())
+        {
+            ProcessCommand(command);
+        }
+    }
+
+    private void ProcessCommand(string[] command)
+    {
+        switch (command)
         {
             case []: break;
             case ["uci"]:
@@ -144,13 +168,6 @@ public class UCIProtocol : IProtocol
         Console.WriteLine("bestmove " + result.BestLine.First().IONotation());
     }
 
-    private void ProcessQueue()
-    {
-        while (true)
-        {
-            ProcessCommand(commandQueue.Take());
-        }
-    }
 
     public void WriteOutput(EngineResult result)
     {

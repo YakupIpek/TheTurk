@@ -1,4 +1,4 @@
 ﻿using TheTurk.Engine;
 
 var uciProtocol = new UCIProtocol();
-uciProtocol.Start();
+await uciProtocol.Start();
