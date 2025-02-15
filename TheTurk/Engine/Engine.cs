@@ -128,16 +128,16 @@ namespace TheTurk.Engine
             var localpv = new List<Move>();
             var pvSearch = false;
 
-            //#region Null Move Prunning
-            //if (nullMoveActive && !Board.IsInCheck())
-            //{
-            //    Board.ToggleSide();
+            #region Null Move Prunning
+            if (nullMoveActive && !Board.IsInCheck())
+            {
+                Board.ToggleSide();
 
-            //    int score = -AlphaBeta(-beta, -beta + 1, ply - 1 - 2, depth + 1, localpv, false, ref nodeCount);
-            //    Board.ToggleSide();
-            //    if (score >= beta) return score;
-            //}
-            //#endregion
+                int score = -AlphaBeta(-beta, -beta + 1, ply - 1 - 2, depth + 1, localpv, false, ref nodeCount);
+                Board.ToggleSide();
+                if (score >= beta) return score;
+            }
+            #endregion
             var sortedMoves = SortMoves(moves, depth);
             foreach (var move in sortedMoves)
             {
