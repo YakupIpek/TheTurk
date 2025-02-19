@@ -1,26 +1,16 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using TheTurk.Moves;
 
 namespace TheTurk.Engine;
 
 public class UCIProtocol : IProtocol
 {
-    private readonly Engine engine;
-    private Stack<Move> gameHistory;
+    private readonly ChessEngine engine;
 
     public UCIProtocol()
     {
-        gameHistory = new Stack<Move>();
-        engine = new Engine(new Board(), this);
+        engine = new ChessEngine(new Board(), this);
     }
 
     public async Task Start()
@@ -88,27 +78,22 @@ public class UCIProtocol : IProtocol
 
             case ["ucinewgame"]:
                 engine.Board.SetUpBoard();
-                gameHistory.Clear();
                 break;
 
             case ["position", "fen", string f, string e, string n, string s, string t, string r, "moves", .. var moves]:
                 engine.Board.SetUpBoard(string.Join(' ', f, e, n, s, t, r));
-                gameHistory.Clear();
                 ApplyMoves(moves);
                 break;
 
             case ["position", "fen", .. var fen]:
                 engine.Board.SetUpBoard(string.Join(' ', fen));
-                gameHistory.Clear();
                 break;
 
             case ["position", "startpos"]:
                 engine.Board.SetUpBoard();
-                gameHistory.Clear();
                 break;
 
             case ["position", "startpos", "moves", .. var moves]:
-                gameHistory.Clear();
                 engine.Board.SetUpBoard();
                 ApplyMoves(moves);
                 break;
@@ -119,10 +104,6 @@ public class UCIProtocol : IProtocol
 
             case ["go", "infinite"]:
                 HandleGo(int.MaxValue);
-                break;
-
-            case ["back"]:
-                engine.Board.UndoMove(gameHistory.Pop());
                 break;
 
             case ["show"]:
@@ -145,6 +126,10 @@ public class UCIProtocol : IProtocol
         {
             var from = Coordinate.NotationToSquare(moveNotation);//convert string notation coordinate
 
+            var board = engine.Board;
+
+            var king = board.Side == Pieces.Color.White ? board.WhiteKing : board.BlackKing;
+
             var move = from.GetPiece(engine.Board)
                            .GenerateMoves(engine.Board)
                            .FirstOrDefault(m => m.IONotation() == moveNotation);
@@ -155,8 +140,19 @@ public class UCIProtocol : IProtocol
                 return;
             }
 
-            gameHistory.Push(move);
-            engine.Board.MakeMove(move);
+            var state = board.GetState();
+            board.MakeMove(move);
+
+            var attacked = king.From.IsAttackedSquare(board, king.OppenentColor);
+
+
+            if (attacked)
+            {
+                Console.WriteLine($"illegal move : {moveNotation} - Reason : King exposed to check.");
+
+                board.UndoMove(move, state);
+                return;
+            }
         }
     }
 
@@ -164,7 +160,6 @@ public class UCIProtocol : IProtocol
     {
         var result = engine.Search(time);
         engine.Board.MakeMove(result.BestLine.First());
-        gameHistory.Push(result.BestLine.First());
         Console.WriteLine("bestmove " + result.BestLine.First().IONotation());
     }
 

@@ -4,7 +4,7 @@ namespace TheTurk.Pieces
 {
     public class Queen : Piece
     {
-        private const int queen = 4;
+        public const int Id = 4;
         public const char Letter = 'Q';
         const int pieceValue = 900;
         private static readonly int[,] pieceSquareTable;
@@ -46,9 +46,9 @@ namespace TheTurk.Pieces
             get { return pieceSquareTable; }
         }
 
-        public override int ToInt
+        public override int Number
         {
-            get { return queen; }
+            get { return Id; }
         }
     }
 }

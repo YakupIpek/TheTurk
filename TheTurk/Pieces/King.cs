@@ -6,7 +6,7 @@ namespace TheTurk.Pieces
 {
     public class King : Piece
     {
-        private const int king = 5;
+        public const int Id = 5;
         public const char Letter = 'K';
         const int pieceValue = 1000000;
         private static readonly int[,] pieceSquareTable;
@@ -64,10 +64,10 @@ namespace TheTurk.Pieces
             var moves = new List<Move>();
             var castleSide = this.Color == Pieces.Color.White ? board.WhiteCastle : board.BlackCastle;
             
-            if ((castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.ShortCastle) && ShortCastle.Available(board, this.Color))
+            if ((castleSide == Castle.BothCastle || castleSide == Castle.ShortCastle) && ShortCastle.Available(board, this.Color))
                 moves.Add(new ShortCastle(this));
             
-            if ((castleSide == Board.Castle.BothCastle || castleSide == Board.Castle.LongCastle) && LongCastle.Available(board, this.Color))
+            if ((castleSide == Castle.BothCastle || castleSide == Castle.LongCastle) && LongCastle.Available(board, this.Color))
                 moves.Add(new LongCastle(this));
             
             return moves;
@@ -77,9 +77,9 @@ namespace TheTurk.Pieces
             get { return pieceSquareTable; }
         }
 
-        public override int ToInt
+        public override int Number
         {
-            get { return king; }
+            get { return Id; }
         }
     }
 }

@@ -6,22 +6,17 @@ namespace TheTurk.Moves
     public class EnPassant : Ordinary
     {
 
-
-
         public EnPassant(Board board, Piece piece, Coordinate to) : base(board, piece, to)
         {
-
+            var direction = Piece.Color == Color.White ? Coordinate.Directions.South: Coordinate.Directions.North;
+            
+            CapturedPiece = To.To(direction).GetPiece(board);
+            
         }
+
         public override void MakeMove(Board board)
         {
-            if (Piece.Color == Color.White)
-            {
-                CapturedPiece = To.To(Coordinate.Directions.South).GetPiece(board);
-            }
-            else
-            {
-                CapturedPiece = To.To(Coordinate.Directions.North).GetPiece(board);
-            }
+
             CapturedPiece.RemoveMe(board);
             Piece.MoveTo(board, To);
         }

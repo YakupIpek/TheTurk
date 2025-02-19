@@ -105,6 +105,6 @@ namespace TheTurk.Pieces
         {
             return GetType().Name;
         }
-        public abstract int ToInt { get;  }
+        public abstract int Number { get;  }
     }
 }

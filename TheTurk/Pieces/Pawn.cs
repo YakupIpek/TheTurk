@@ -6,7 +6,7 @@ namespace TheTurk.Pieces
 {
     public class Pawn : Piece
     {
-        public const int pawn = 0;
+        public const int Id = 0;
         public const char Letter = ' ';
         public const int Piecevalue = 100;
         public static readonly int[,] pieceSquareTable;
@@ -87,13 +87,13 @@ namespace TheTurk.Pieces
                 {
                     var crossSquare = From.To(Coordinate.Directions.NorthEast);
 
-                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
+                    if (crossSquare.Equals(board.EnPassantSquare))
                         moves.Add(new EnPassant(board, this, crossSquare));
                     else
                     {
                         crossSquare = From.To(Coordinate.Directions.NorthWest);
 
-                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
+                        if (crossSquare.Equals(board.EnPassantSquare))
                             moves.Add(new EnPassant(board, this, crossSquare));
                     }
                 }
@@ -148,12 +148,12 @@ namespace TheTurk.Pieces
                 {
                     var crossSquare = From.To(Coordinate.Directions.SouthEast);
 
-                    if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
+                    if (crossSquare.Equals(board.EnPassantSquare))
                         moves.Add(new EnPassant(board, this, crossSquare));
                     else
                     {
                         crossSquare = From.To(Coordinate.Directions.SouthWest);
-                        if (crossSquare.IsOnboard() && crossSquare.Equals(board.EnPassantSquare))
+                        if ( crossSquare.Equals(board.EnPassantSquare))
                             moves.Add(new EnPassant(board, this, crossSquare));
                     }
                 }
@@ -184,9 +184,9 @@ namespace TheTurk.Pieces
             get { return pieceSquareTable; }
         }
 
-        public override int ToInt
+        public override int Number
         {
-            get { return pawn; }
+            get { return Id; }
         }
     }
 }

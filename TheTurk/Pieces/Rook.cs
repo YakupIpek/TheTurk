@@ -4,7 +4,7 @@ namespace TheTurk.Pieces
 {
     public class Rook : Piece
     {
-        public const int rook = 3;
+        public const int Id = 3;
         public const char Letter = 'R';
         const int pieceValue = 500;
         private static readonly int[,] pieceSquareTable;
@@ -48,9 +48,9 @@ namespace TheTurk.Pieces
             get { return pieceSquareTable; }
         }
 
-        public override int ToInt
+        public override int Number
         {
-            get { return rook; }
+            get { return Id; }
         }
     }
 }

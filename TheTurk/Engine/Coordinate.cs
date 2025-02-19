@@ -41,12 +41,9 @@ namespace TheTurk.Engine
         static Coordinate()
         {
 
+            fourDirectionDelta = [Directions.East, Directions.West, Directions.South, Directions.North];
 
-            fourDirectionDelta = new Coordinate[]{Coordinate.Directions.East,Coordinate.Directions.West,
-                                                  Coordinate.Directions.South,Coordinate.Directions.North};
-
-            crossFourDirectionDelta = new Coordinate[] { Coordinate.Directions.SouthEast, Coordinate.Directions.SouthWest,
-                                                         Coordinate.Directions.NorthWest, Coordinate.Directions.NorthEast };
+            crossFourDirectionDelta = [Directions.SouthEast, Directions.SouthWest, Directions.NorthWest, Directions.NorthEast];
 
             allDirectionDelta = fourDirectionDelta.Concat(crossFourDirectionDelta).ToArray();
 
@@ -55,9 +52,15 @@ namespace TheTurk.Engine
         }
         public static class Directions
         {
-            public static readonly Coordinate South = new Coordinate(-1, 0), North = new Coordinate(1, 0), West = new Coordinate(0, -1),
-                                              East = new Coordinate(0, 1), NorthEast = new Coordinate(1, 1), NorthWest = new Coordinate(1, -1), SouthEast = new Coordinate(-1, 1),
-                                              SouthWest = new Coordinate(-1, -1);
+            public static readonly Coordinate 
+                South = new(-1, 0),
+                North = new(1, 0),
+                West = new(0, -1),
+                East = new(0, 1),
+                NorthEast = new(1, 1),
+                NorthWest = new(1, -1),
+                SouthEast = new(-1, 1),
+                SouthWest = new(-1, -1);
         }
 
         #endregion
@@ -147,7 +150,7 @@ namespace TheTurk.Engine
         /// <returns></returns>
         public bool IsAttackedSquare(Board board, Color enemyColor)
         {
-            
+
             foreach (var direction in Coordinate.crossFourDirectionDelta) //Check cross directions for queen and bishop
             {
                 Coordinate to = this;

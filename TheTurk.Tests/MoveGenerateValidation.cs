@@ -38,8 +38,6 @@ namespace TestTheTurk
                 int  resultCount = MinMax(board, i);
                 if (resultCount!= movesCount[i - 1])
                 {
-
-                    
                     Assert.Fail("Move count not matched. result count {0} and valid count {1} and Depth {2}",resultCount,movesCount[i-1],i);
 
                 }
@@ -52,9 +50,10 @@ namespace TestTheTurk
             var moves = board.GenerateMoves();
             foreach (Move move in moves)
             {
+                var state = board.GetState();
                 board.MakeMove(move);
                 nodes += MinMax(board, ply - 1);
-                board.UndoMove(move);
+                board.UndoMove(move, state);
             }
             return nodes;
         }

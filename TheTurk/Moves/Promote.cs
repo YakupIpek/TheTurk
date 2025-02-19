@@ -16,7 +16,7 @@ namespace TheTurk.Moves
 
         #endregion
 
-        readonly Piece PromotedPiece;
+        public readonly Piece PromotedPiece;
 
         public Promote(Board board, Piece piece, Coordinate to, PromotionType type)
             : base(board, piece, to)

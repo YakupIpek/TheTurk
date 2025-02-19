@@ -6,7 +6,7 @@ namespace TheTurk.Pieces
 {
     public class Knight : Piece
     {
-        private const int knight = 1;
+        public const int Id = 1;
         const int pieceValue = 325;
         public const char Letter = 'N';
         public static readonly Coordinate[] Directions;
@@ -64,9 +64,9 @@ namespace TheTurk.Pieces
             get { return pieceSquareTable; }
         }
 
-        public override int ToInt
+        public override int Number
         {
-            get { return knight; }
+            get { return Id; }
         }
     }
 }

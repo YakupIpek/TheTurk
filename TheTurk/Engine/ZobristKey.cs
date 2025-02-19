@@ -4,41 +4,48 @@ using TheTurk.Pieces;
 
 namespace TheTurk.Engine
 {
-    sealed class Zobrist
+    public class Zobrist
     {
         private Board board;
 
-        public long ZobristKey { get; set; }
+        public ulong ZobristKey { get; set; }
 
         private Random random;
         /// <summary>
         /// pieces[side,piece,rank,file]
         /// </summary>
-        private long[,,,] pieces;
-        private long[] whiteCastle;
-        private long[] blackCastle;
-        private long[,] enPassant;//[rank,file]
-        private long side;
+        private ulong[,,,] pieces;
+        private ulong[] whiteCastle;
+        private ulong[] blackCastle;
+        private ulong[,] enPassant;//[rank,file]
+        private ulong side;
 
         public Zobrist(Board board)
         {
             this.board = board;
             random = new Random(638750994);
-            pieces = new long[2, 6, 9, 9];
-            whiteCastle = new long[4];
-            blackCastle = new long[4];
-            enPassant = new long[9, 9];
+            pieces = new ulong[2, 6, 9, 9];
+            whiteCastle = new ulong[4];
+            blackCastle = new ulong[4];
+            enPassant = new ulong[9, 9];
             Initialize();
             AssignFirstZobristKey();
         }
+
+        private ulong GetNext()
+        {
+            byte[] buffer = new byte[8];
+            random.NextBytes(buffer);
+            return BitConverter.ToUInt64(buffer, 0);
+        }
         private void Initialize()
         {
-            this.side = random.NextLong();
+            this.side = GetNext();
 
             for (int i = 0; i < 4; i++)
             {
-                whiteCastle[i] = random.NextLong();
-                blackCastle[i] = random.NextLong();
+                whiteCastle[i] = GetNext();
+                blackCastle[i] = GetNext();
             }
 
             for (int rank = 1; rank < 9; rank++)
@@ -49,28 +56,83 @@ namespace TheTurk.Engine
                     {
                         for (int side = 0; side < 2; side++)
                         {
-                            pieces[side, piece, rank, file] = random.NextLong();
+                            pieces[side, piece, rank, file] = GetNext();
                         }
                     }
-                    enPassant[rank, file] = random.NextLong();
+                    enPassant[rank, file] = GetNext();
                 }
             }
-            enPassant[0, 0] = random.NextLong();
+            enPassant[0, 0] = GetNext();
         }
         private void AssignFirstZobristKey()
         {
             var side = (int)board.Side == 1 ? 0 : 1;
             foreach (var piece in board.GetPieces())
             {
-                ZobristKey ^= pieces[side, piece.ToInt, piece.From.Rank, piece.From.File];
+                ZobristKey ^= pieces[side, piece.Number, piece.From.Rank, piece.From.File];
             }
             ZobristKey ^= whiteCastle[(int)board.WhiteCastle];
             ZobristKey ^= blackCastle[(int)board.BlackCastle];
             ZobristKey ^= enPassant[board.EnPassantSquare.Rank, board.EnPassantSquare.File];
             ZobristKey ^= this.side;
         }
+
+        public void ZobristUpdateForNullMove()
+        {
+            ZobristKey ^= this.side;
+        }
+
         public void ZobristUpdate(Move move)
         {
+            var (movingSide, oppositeSide) = move.Piece.Color == Color.White ? (0, 1) : (1, 0);
+
+            // Remove moving piece from its original square
+            Update(movingSide, move.Piece.Number, move.From);
+
+            if (move is Ordinary ordinaryMove)
+            {
+                if (ordinaryMove.CapturedPiece is not null)
+                {
+                    // Remove captured piece from the destination square.
+                    Update(oppositeSide, ordinaryMove.CapturedPiece.Number, move.To);
+                }
+
+                if (ordinaryMove is Promote promotionMove)
+                {
+                    // Add the promoted piece to the destination square.
+                    Update(movingSide, promotionMove.PromotedPiece.Number, move.To);
+                }
+            }
+            else if (move is ShortCastle)
+            {
+                var (h1, f1, h8, f8) = (Coordinate.h1, Coordinate.f1, Coordinate.h8, Coordinate.f8);
+
+                // Update rook's position for short castle.
+                var (from, to) = move.Piece.Color == Color.White ? (h1, f1) : (h8, f8);
+
+                // Remove rook from its original square.
+                Update(movingSide, Rook.Id, from);
+                // Add rook to its new square.
+                Update(movingSide, Rook.Id, to);
+            }
+            else if (move is LongCastle)
+            {
+                var (a1, d1, a8, d8) = (Coordinate.a1, Coordinate.d1, Coordinate.a8, Coordinate.d8);
+
+                // Update rook's position for long castle.
+                var (from, to) = move.Piece.Color == Color.White ? (a1, d1) : (a8, d8);
+
+                // Remove rook from its original square.
+                Update(movingSide, Rook.Id, from);
+                // Add rook to its new square.
+                Update(movingSide, Rook.Id, to);
+            }
+
+            // Toggle side-to-move by XOR-ing with the side key.
+            ZobristKey ^= (ulong)movingSide;
+
+            // Add updated castling rights and en passant square to the hash.
+            // (Assumes that the board state has already been updated with the move.)
             ZobristKey ^= whiteCastle[(int)board.WhiteCastle];
             ZobristKey ^= blackCastle[(int)board.BlackCastle];
 
@@ -78,31 +140,11 @@ namespace TheTurk.Engine
             {
                 ZobristKey ^= enPassant[board.EnPassantSquare.Rank, board.EnPassantSquare.File];
             }
+        }
 
-            side = move.Piece.Color == Color.White ? 0 : 1;
-            ZobristKey ^= pieces[side, move.Piece.ToInt, move.From.Rank, move.From.File];//Remove piece on the square
-            ZobristKey ^= pieces[side, move.To.GetPiece(board).ToInt, move.To.Rank, move.To.File];//Carry piece to target
-            ZobristKey ^= side;
-
-            Piece capturedPiece;
-            if (move is Ordinary && (capturedPiece = (move as Ordinary).CapturedPiece) != null)
-            {
-                ZobristKey = pieces[side, capturedPiece.ToInt, capturedPiece.From.Rank, capturedPiece.From.File];
-            }
-            else if (move is ShortCastle)
-            {
-                var rookFrom = move.Piece.Color == Color.White ? Coordinate.h1 : Coordinate.h8;
-                var rookTo = move.Piece.Color == Color.White ? Coordinate.f1 : Coordinate.f8;
-                ZobristKey ^= pieces[side, Rook.rook, rookFrom.Rank, rookFrom.File];
-                ZobristKey ^= pieces[side, Rook.rook, rookTo.Rank, rookTo.File];
-            }
-            else if (move is LongCastle)
-            {
-                var rookFrom = move.Piece.Color == Color.White ? Coordinate.a1 : Coordinate.a8;
-                var rookTo = move.Piece.Color == Color.White ? Coordinate.d1 : Coordinate.d8;
-                ZobristKey ^= pieces[side, Rook.rook, rookFrom.Rank, rookFrom.File];
-                ZobristKey ^= pieces[side, Rook.rook, rookTo.Rank, rookTo.File];
-            }
+        private void Update(int side, int piece, Coordinate square)
+        {
+            ZobristKey ^= pieces[side, piece, square.Rank, square.File];
         }
     }
 }

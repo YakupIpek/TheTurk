@@ -7,7 +7,7 @@ using TheTurk.Pieces;
 
 namespace TheTurk.Engine
 {
-    public partial class Board
+    public class Board
     {
         #region Fields and Properties
 
@@ -16,8 +16,7 @@ namespace TheTurk.Engine
                          Draw = 0;
 
         public ThreeFoldRepetition threeFoldRepetetion;
-        private Zobrist zobrist;
-        private Stack<State> boardStateHistory;
+        public Zobrist Zobrist;
         private Piece[,] pieces;
         private int fiftyMovesRule, totalMoves;
 
@@ -27,7 +26,7 @@ namespace TheTurk.Engine
         public Coordinate EnPassantSquare { get; private set; }
         public Castle WhiteCastle { get; private set; }
         public Castle BlackCastle { get; private set; }
-        
+
 
         public Board()
         {
@@ -36,7 +35,6 @@ namespace TheTurk.Engine
             BlackCastle = Castle.NoneCastle;
             Side = Color.White;
             EnPassantSquare = new Coordinate(0, 0);//means deactive
-            boardStateHistory = new Stack<State>();
             SetUpBoard();
         }
 
@@ -52,11 +50,13 @@ namespace TheTurk.Engine
             set { pieces[square.Rank - 1, square.File - 1] = value; }
         }
 
+        public BoardState GetState()
+        {
+            return new BoardState(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule, Zobrist.ZobristKey);
+        }
         public void MakeMove(Move move)
         {
             Piece movingPiece = move.Piece;
-
-            boardStateHistory.Push(new State(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule, zobrist.ZobristKey));
 
             if (Side == Color.Black) totalMoves++;
 
@@ -152,22 +152,52 @@ namespace TheTurk.Engine
             }
 
             ToggleSide();
-            zobrist.ZobristUpdate(move);
-            threeFoldRepetetion.Add(zobrist.ZobristKey);
-            boardStateHistory.Peek().NextZobristKey = zobrist.ZobristKey;
+            Zobrist.ZobristUpdate(move);
+            threeFoldRepetetion.Add(Zobrist.ZobristKey);
         }
 
-        public void UndoMove(Move move)
+        //public void MakeNullMove()
+        //{
+
+        //    boardStateHistory.Push(new BoardState(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule, Zobrist.ZobristKey));
+
+        //    EnPassantSquare = new Coordinate(0, 0);
+
+        //    ToggleSide();
+        //    Zobrist.ZobristUpdateForNullMove();
+        //    threeFoldRepetetion.Add(Zobrist.ZobristKey);
+        //    boardStateHistory.Peek().NextZobristKey = Zobrist.ZobristKey;
+        //}
+
+        //public void UndoMoveNullMove()
+        //{
+        //    var state = boardStateHistory.Pop();
+        //    EnPassantSquare = state.EnPassantSquare;
+        //    WhiteCastle = state.WhiteCastle;
+        //    BlackCastle = state.BlackCastle;
+        //    fiftyMovesRule = state.FiftyMovesRule;
+        //    Zobrist.ZobristKey = state.ZobristKey;
+        //    threeFoldRepetetion.Remove(state.NextZobristKey);
+
+        //    if (Side == Color.Black)
+        //        totalMoves--;
+
+        //    ToggleSide();
+
+        //}
+
+        public void UndoMove(Move move, BoardState state)
         {
-            var state = boardStateHistory.Pop();
+            var zobristKey = Zobrist.ZobristKey;
             EnPassantSquare = state.EnPassantSquare;
             WhiteCastle = state.WhiteCastle;
             BlackCastle = state.BlackCastle;
             fiftyMovesRule = state.FiftyMovesRule;
-            zobrist.ZobristKey = state.ZobristKey;
-            threeFoldRepetetion.Remove(state.NextZobristKey);
+            Zobrist.ZobristKey = state.ZobristKey;
 
             move.UndoMove(this);
+
+            threeFoldRepetetion.Remove(zobristKey);
 
             if (Side == Color.Black)
                 totalMoves--;
@@ -178,14 +208,15 @@ namespace TheTurk.Engine
 
         public IEnumerable<Move> GenerateMoves()
         {
-            King king = Side == Color.White ? WhiteKing : BlackKing;
+            var king = Side == Color.White ? WhiteKing : BlackKing;
 
             var moves = pieces.Cast<Piece>().Where(p => p!= null && p.Color == Side)
                                 .SelectMany(p => p.GenerateMoves(this)).Where(x =>
                          {
+                             var state = GetState();
                              MakeMove(x);
                              var result = king.From.IsAttackedSquare(this, king.OppenentColor);
-                             UndoMove(x);
+                             UndoMove(x, state);
                              return !result;
                          });
 
@@ -200,10 +231,6 @@ namespace TheTurk.Engine
 
         }
 
-        /// <summary>
-        /// Determine player side is in checkmate or stalemate
-        /// </summary>
-        /// <returns>returns Checkmate or stalemate value</returns>
         public int GetCheckMateOrStaleMateScore(int depth)
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
@@ -215,18 +242,18 @@ namespace TheTurk.Engine
         {
             SetFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-            zobrist = new Zobrist(this);
+            Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
-            threeFoldRepetetion.Add(zobrist.ZobristKey);
+            threeFoldRepetetion.Add(Zobrist.ZobristKey);
         }
 
         public void SetUpBoard(string fen)
         {
             SetFen(fen);
 
-            zobrist = new Zobrist(this);
+            Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
-            threeFoldRepetetion.Add(zobrist.ZobristKey);
+            threeFoldRepetetion.Add(Zobrist.ZobristKey);
         }
 
         private void SetFen(string value)
@@ -234,7 +261,6 @@ namespace TheTurk.Engine
 
             {
                 pieces = new Piece[8, 8];
-                boardStateHistory.Clear();
                 var splitted = value.Trim().Split(' ');
                 var ranks = splitted[0].Split('/').Reverse().ToArray();
                 var allLetters = from rank in ranks
