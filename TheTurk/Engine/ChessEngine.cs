@@ -141,7 +141,6 @@ namespace TheTurk.Engine
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
                 return Board.Draw;
 
-
             var moves = Board.GenerateMoves();
             if (!moves.Any())
                 return -Board.GetCheckMateOrStaleMateScore(ply);
@@ -152,19 +151,20 @@ namespace TheTurk.Engine
             var localpv = new List<Move>();
             var pvSearch = false;
 
-            //if (nullMoveActive && !Board.IsInCheck() && ply > 2)
-            //{
-            //    int R = (ply > 6) ? 3 : 2; // Adaptif Null Move Reduction
+            if (nullMoveActive && !Board.IsInCheck() && ply > 2)
+            {
+                int R = (ply > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
-            //    Board.MakeNullMove();
+                var state = Board.GetState();
+                Board.MakeNullMove();
 
-            //    int nullMoveScore = -AlphaBeta(-beta, -beta + 1, ply - R, depth + 1, localpv, false, ref nodeCount);
+                int nullMoveScore = -AlphaBeta(-beta, -beta + 1, ply - R, depth + 1, localpv, false, ref nodeCount);
 
-            //    Board.UndoMoveNullMove();
+                Board.UndoNullMove(state);
 
-            //    if (nullMoveScore >= beta)
-            //        return beta; // Güvenli kesme
-            //}
+                if (nullMoveScore >= beta)
+                    return beta; // Güvenli kesme
+            }
 
             var sortedMoves = SortMoves(moves, depth);
 

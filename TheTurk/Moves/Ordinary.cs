@@ -22,10 +22,9 @@ namespace TheTurk.Moves
         public override void UndoMove(Board board)
         {
             Piece.MoveTo(board, From);
-            if (CapturedPiece != null)
-            {
-                CapturedPiece.PutMe(board);
-            }
+
+            CapturedPiece?.PutMe(board);
+
         }
         public override int MovePriority()
         {

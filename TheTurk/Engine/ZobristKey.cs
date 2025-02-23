@@ -94,7 +94,7 @@ namespace TheTurk.Engine
                 if (ordinaryMove.CapturedPiece is not null)
                 {
                     // Remove captured piece from the destination square.
-                    Update(oppositeSide, ordinaryMove.CapturedPiece.Number, move.To);
+                    Update(oppositeSide, ordinaryMove.CapturedPiece.Number, ordinaryMove.CapturedPiece.From);
                 }
 
                 if (ordinaryMove is Promote promotionMove)

@@ -156,35 +156,21 @@ namespace TheTurk.Engine
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
         }
 
-        //public void MakeNullMove()
-        //{
+        public void MakeNullMove()
+        {
+            EnPassantSquare = new Coordinate(0, 0);
+            ToggleSide();
+            
+            Zobrist.ZobristUpdateForNullMove();
+        }
 
-        //    boardStateHistory.Push(new BoardState(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule, Zobrist.ZobristKey));
+        public void UndoNullMove(BoardState state)
+        {
+            EnPassantSquare = state.EnPassantSquare;
+            Zobrist.ZobristKey = state.ZobristKey;
 
-        //    EnPassantSquare = new Coordinate(0, 0);
-
-        //    ToggleSide();
-        //    Zobrist.ZobristUpdateForNullMove();
-        //    threeFoldRepetetion.Add(Zobrist.ZobristKey);
-        //    boardStateHistory.Peek().NextZobristKey = Zobrist.ZobristKey;
-        //}
-
-        //public void UndoMoveNullMove()
-        //{
-        //    var state = boardStateHistory.Pop();
-        //    EnPassantSquare = state.EnPassantSquare;
-        //    WhiteCastle = state.WhiteCastle;
-        //    BlackCastle = state.BlackCastle;
-        //    fiftyMovesRule = state.FiftyMovesRule;
-        //    Zobrist.ZobristKey = state.ZobristKey;
-        //    threeFoldRepetetion.Remove(state.NextZobristKey);
-
-        //    if (Side == Color.Black)
-        //        totalMoves--;
-
-        //    ToggleSide();
-
-        //}
+            ToggleSide();
+        }
 
         public void UndoMove(Move move, BoardState state)
         {

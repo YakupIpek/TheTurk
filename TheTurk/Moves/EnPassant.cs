@@ -16,9 +16,13 @@ namespace TheTurk.Moves
 
         public override void MakeMove(Board board)
         {
-
             CapturedPiece.RemoveMe(board);
             Piece.MoveTo(board, To);
+        }
+
+        public override int MovePriority()
+        {
+            return base.MovePriority() + Pawn.Piecevalue * 2;
         }
         public override string Notation()
         {
