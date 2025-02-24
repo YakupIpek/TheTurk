@@ -19,7 +19,7 @@ namespace TheTurk.Tests
 
             foreach (var (i, moveCount) in movesCount.Index())
             {
-                Assert.AreEqual(moveCount, MinMax(board, i + 1), $"Test: {testName} - Move count not matched at depth {i}");
+                Assert.AreEqual(moveCount, MinMax(board, i + 1));
             }
         }
 
