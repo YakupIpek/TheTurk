@@ -196,18 +196,26 @@ namespace TheTurk.Engine
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
 
-            var moves = pieces.Cast<Piece>().Where(p => p!= null && p.Color == Side)
-                                .SelectMany(p => p.GenerateMoves(this)).Where(x =>
-                         {
-                             var state = GetState();
-                             MakeMove(x);
-                             var result = king.From.IsAttackedSquare(this, king.OppenentColor);
-                             UndoMove(x, state);
-                             return !result;
-                         });
+            foreach (var piece in pieces)
+            {
+                if (piece != null && piece.Color == Side)
+                {
+                    foreach (var move in piece.GenerateMoves(this))
+                    {
+                        var state = GetState();
+                        MakeMove(move);
+                        var result = king.From.IsAttackedSquare(this, king.OppenentColor);
+                        UndoMove(move, state);
+                        
+                        if (result)
+                        {
+                            continue;
+                        }
 
-
-            return moves;
+                        yield return move;
+                    }
+                }
+            }
         }
 
         public bool IsInCheck()

@@ -26,7 +26,10 @@ namespace TheTurk.Tests
         public static int MinMax(Board board, int ply)
         {
             int nodes = 0;
-            if (ply == 0) return 1;
+
+            if (ply == 0)
+                return 1;
+
             var moves = board.GenerateMoves();
             foreach (Move move in moves)
             {
