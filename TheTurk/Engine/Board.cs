@@ -17,7 +17,7 @@ namespace TheTurk.Engine
 
         public ThreeFoldRepetition threeFoldRepetetion;
         public Zobrist Zobrist;
-        private Piece[,] pieces;
+        private Piece[] pieces;
         private int fiftyMovesRule, totalMoves;
 
         public Color Side { get; private set; }
@@ -30,7 +30,7 @@ namespace TheTurk.Engine
 
         public Board()
         {
-            pieces = new Piece[8, 8];
+            pieces = new Piece[64];
             WhiteCastle = Castle.NoneCastle;
             BlackCastle = Castle.NoneCastle;
             Side = Color.White;
@@ -46,8 +46,8 @@ namespace TheTurk.Engine
         /// <returns>Piece on that square</returns>
         public Piece this[Coordinate square]
         {
-            get { return pieces[square.Rank - 1, square.File - 1]; }
-            set { pieces[square.Rank - 1, square.File - 1] = value; }
+            get => pieces[square.Index];
+            set => pieces[square.Index] = value;
         }
 
         public BoardState GetState()
@@ -246,7 +246,7 @@ namespace TheTurk.Engine
         {
 
             {
-                pieces = new Piece[8, 8];
+                pieces = new Piece[64];
                 var splitted = value.Trim().Split(' ');
                 var ranks = splitted[0].Split('/').Reverse().ToArray();
                 var allLetters = from rank in ranks

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using TheTurk.Pieces;
 
 namespace TheTurk.Engine
@@ -7,7 +9,7 @@ namespace TheTurk.Engine
     /// <summary>
     /// Defines Square coordinates as rank and file
     /// </summary>
-    public struct Coordinate
+    public readonly record struct Coordinate
     {
         #region Fields
 
@@ -17,27 +19,28 @@ namespace TheTurk.Engine
         public static readonly Coordinate[] allDirectionDelta;
 
         public static readonly Coordinate
-            a1 = new Coordinate(1, 1),
-            b1 = new Coordinate(1, 2),
-            c1 = new Coordinate(1, 3),
-            d1 = new Coordinate(1, 4),
-            e1 = new Coordinate(1, 5),
-            f1 = new Coordinate(1, 6),
-            g1 = new Coordinate(1, 7),
-            h1 = new Coordinate(1, 8),
-            a8 = new Coordinate(8, 1),
-            b8 = new Coordinate(8, 2),
-            c8 = new Coordinate(8, 3),
-            d8 = new Coordinate(8, 4),
-            e8 = new Coordinate(8, 5),
-            f8 = new Coordinate(8, 6),
-            g8 = new Coordinate(8, 7),
-            h8 = new Coordinate(8, 8);
+            a1 = new(1, 1),
+            b1 = new(1, 2),
+            c1 = new(1, 3),
+            d1 = new(1, 4),
+            e1 = new(1, 5),
+            f1 = new(1, 6),
+            g1 = new(1, 7),
+            h1 = new(1, 8),
+            a8 = new(8, 1),
+            b8 = new(8, 2),
+            c8 = new(8, 3),
+            d8 = new(8, 4),
+            e8 = new(8, 5),
+            f8 = new(8, 6),
+            g8 = new(8, 7),
+            h8 = new(8, 8);
 
-        private int file;
-        public int File { get { return file; } }
-        private int rank;
-        public int Rank { get { return rank; } }
+        public int File { get; init; }
+        public int Rank { get; init; }
+
+        public int Index { get; }
+
         static Coordinate()
         {
 
@@ -52,7 +55,7 @@ namespace TheTurk.Engine
         }
         public static class Directions
         {
-            public static readonly Coordinate 
+            public static readonly Coordinate
                 South = new(-1, 0),
                 North = new(1, 0),
                 West = new(0, -1),
@@ -68,15 +71,16 @@ namespace TheTurk.Engine
         public Coordinate(int rank, int file)
         {
 
-            this.rank = rank;
-            this.file = file;
-
-
+            Rank = rank;
+            File = file;
+            Index = (rank-1) * 8 + file - 1;
         }
         public bool IsOnboard()
         {
-            return rank >= 1 && rank <= 8 && file >= 1 && file <= 8;
+            return Rank >= 1 && Rank <= 8 && File >= 1 && File <= 8;
         }
+
+
         /// <summary>
         /// return square on spesified direction
         /// </summary>
@@ -84,10 +88,7 @@ namespace TheTurk.Engine
         /// <returns></returns>
         public Coordinate To(Coordinate direction)
         {
-            Coordinate to;
-            to.rank = rank + direction.rank;
-            to.file = file + direction.file;
-            return to;
+            return new Coordinate(Rank + direction.Rank, File + direction.File);
         }
         /// <summary>
         /// Determine whether this square is empty or not
@@ -113,30 +114,30 @@ namespace TheTurk.Engine
         }
         public bool Equals(Coordinate square)
         {
-            return rank == square.rank && file == square.file;
+            return Rank == square.Rank && File == square.File;
         }
         public bool IsEdgeOfBoard()
         {
-            return rank == 8 || rank == 1 || file == 8 || file == 1;
+            return Rank == 8 || Rank == 1 || File == 8 || File == 1;
         }
         public static Coordinate NotationToSquare(string notation)
         {
-            var coordinate = new Coordinate();
-            coordinate.rank = int.Parse(notation[1].ToString());
+            int rank = int.Parse(notation[1].ToString());
+            int file = 0;
             for (int i = 0; i < fileLetters.Length; i++)
             {
                 if (fileLetters[i] == notation[0])
-                    coordinate.file = ++i;
+                    file = i + 1;
             }
-            return coordinate;
+            return new Coordinate(rank, file);
         }
         public int VerticalDistance(Coordinate square)
         {
-            return Math.Abs(rank - square.rank);
+            return Math.Abs(Rank - square.Rank);
         }
         public int HorizontalDistance(Coordinate square)
         {
-            return Math.Abs(this.file - square.file);
+            return Math.Abs(this.File - square.File);
         }
         public bool IsNeighboreSquare(Coordinate square)
         {
@@ -241,11 +242,11 @@ namespace TheTurk.Engine
         /// <returns>return black mirror square for white square</returns>
         public Coordinate GetMirror()
         {
-            return new Coordinate(9 - rank, file);
+            return new Coordinate(9 - Rank, File);
         }
         public override string ToString()
         {
-            return fileLetters[file - 1] + rank.ToString();
+            return fileLetters[File - 1] + Rank.ToString();
         }
     }
 }
