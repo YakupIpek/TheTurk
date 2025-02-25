@@ -38,17 +38,14 @@ namespace TheTurk.Moves
 
         }
 
-        public static List<Move> AllPossiblePromotions(Board board, Piece piece, Coordinate square)
+        public static IEnumerable<Move> AllPossiblePromotions(Board board, Piece piece, Coordinate square)
         {
-            return new List<Move> 
-            { 
-                new Promote(board, piece, square, Promote.PromotionType.Queen),
-                new Promote(board, piece, square, Promote.PromotionType.Rook),
-                new Promote(board, piece, square, Promote.PromotionType.Bishop),
-                new Promote(board, piece, square, Promote.PromotionType.Knight)
-            };
-
+            yield return new Promote(board, piece, square, Promote.PromotionType.Queen);
+            yield return new Promote(board, piece, square, Promote.PromotionType.Rook);
+            yield return new Promote(board, piece, square, Promote.PromotionType.Bishop);
+            yield return new Promote(board, piece, square, Promote.PromotionType.Knight);
         }
+
         public override void MakeMove(Board board)
         {
             Piece.RemoveMe(board);

@@ -9,6 +9,13 @@ namespace TheTurk.Pieces
         public const int Id = 5;
         public const char Letter = 'K';
         const int pieceValue = 1000000;
+        public override int Number => Id;
+
+        public override bool Sliding => false;
+        public override char NotationLetter => Letter;
+        public override int PieceValue => Color == Color.White ? pieceValue : -pieceValue;
+        public override Coordinate[] PieceDirection => Coordinate.allDirectionDelta;
+        public override int[,] PieceSquareTable => pieceSquareTable;
         private static readonly int[,] pieceSquareTable;
         static King()
         {
@@ -23,63 +30,27 @@ namespace TheTurk.Pieces
                                             {  0,  20,  30, -30,   0, -20,  30,  20}
                                           };
         }
+
         public King(Coordinate from, Color color)
             : base(from, color)
         {
 
         }
-        public override bool Sliding
+
+        public override IEnumerable<Move> GenerateMoves(Board board)
         {
-            get
-            {
-                return false;
-            }
-        }
-        public override char NotationLetter
-        {
-            get { return Letter; }
+            return base.GenerateMoves(board).Concat(CreateCastleMoves(board));
         }
 
-        public override int PieceValue
+        IEnumerable<Move> CreateCastleMoves(Board board)
         {
-            get { return Color == Color.White ? pieceValue : -pieceValue; }
-        }
-        public override Coordinate[] PieceDirection
-        {
-            get
-            {
-                return Coordinate.allDirectionDelta;
-            }
-        }
-        public override List<Move> GenerateMoves(Board board)
-        {
-            var moves = base.GenerateMoves(board);
-
-            moves.AddRange(CreateCastleMoves(board));
-
-            return moves;
-        }
-        List<Move> CreateCastleMoves(Board board)
-        {
-            var moves = new List<Move>();
             var castleSide = this.Color == Pieces.Color.White ? board.WhiteCastle : board.BlackCastle;
             
             if ((castleSide == Castle.BothCastle || castleSide == Castle.ShortCastle) && ShortCastle.Available(board, this.Color))
-                moves.Add(new ShortCastle(this));
+                yield return new ShortCastle(this);
             
             if ((castleSide == Castle.BothCastle || castleSide == Castle.LongCastle) && LongCastle.Available(board, this.Color))
-                moves.Add(new LongCastle(this));
-            
-            return moves;
-        }
-        public override int[,] PieceSquareTable
-        {
-            get { return pieceSquareTable; }
-        }
-
-        public override int Number
-        {
-            get { return Id; }
+                yield return new LongCastle(this);
         }
     }
 }

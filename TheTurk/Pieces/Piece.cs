@@ -32,26 +32,26 @@ namespace TheTurk.Pieces
         /// </summary>
         /// <param name="board"></param>
         /// <returns></returns>
-        public virtual List<Move> GenerateMoves(Board board)
+        public virtual IEnumerable<Move> GenerateMoves(Board board)
         {
-            List<Move> moves = new List<Move>();
-
             foreach (var direction in this.PieceDirection)
             {
                 Coordinate destination = From;
-                
+
                 while ((destination = destination.To(direction)).IsOnboard())
                 {
-                    var piece = board[destination];
-                    if (piece != null && this.Color == piece.Color) break;
+                    var enemyPiece = board[destination];
 
-                    moves.Add(new Ordinary(board, this, destination));
+                    if (Color == enemyPiece?.Color)
+                        break;
 
-                    if (!Sliding || (piece != null && piece.Color != this.Color)) break;
+                    yield return new Ordinary(board, this, destination);
+
+                    if (!Sliding || (enemyPiece != null && enemyPiece.Color != this.Color))
+                        break;
 
                 }
             }
-            return moves;
         }
         public virtual int PieceSquareValue()
         {
@@ -105,6 +105,6 @@ namespace TheTurk.Pieces
         {
             return GetType().Name;
         }
-        public abstract int Number { get;  }
+        public abstract int Number { get; }
     }
 }

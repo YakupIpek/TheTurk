@@ -19,22 +19,22 @@ namespace TheTurk.Engine
         public static readonly Coordinate[] allDirectionDelta;
 
         public static readonly Coordinate
-            a1 = new(1, 1),
-            b1 = new(1, 2),
-            c1 = new(1, 3),
-            d1 = new(1, 4),
-            e1 = new(1, 5),
-            f1 = new(1, 6),
-            g1 = new(1, 7),
-            h1 = new(1, 8),
-            a8 = new(8, 1),
-            b8 = new(8, 2),
-            c8 = new(8, 3),
-            d8 = new(8, 4),
-            e8 = new(8, 5),
-            f8 = new(8, 6),
-            g8 = new(8, 7),
-            h8 = new(8, 8);
+                    a1 = new(1, 1),
+                    b1 = new(1, 2),
+                    c1 = new(1, 3),
+                    d1 = new(1, 4),
+                    e1 = new(1, 5),
+                    f1 = new(1, 6),
+                    g1 = new(1, 7),
+                    h1 = new(1, 8),
+                    a8 = new(8, 1),
+                    b8 = new(8, 2),
+                    c8 = new(8, 3),
+                    d8 = new(8, 4),
+                    e8 = new(8, 5),
+                    f8 = new(8, 6),
+                    g8 = new(8, 7),
+                    h8 = new(8, 8);
 
         public int File { get; }
         public int Rank { get; }
@@ -43,15 +43,9 @@ namespace TheTurk.Engine
 
         static Coordinate()
         {
-
             fourDirectionDelta = [Directions.East, Directions.West, Directions.South, Directions.North];
-
             crossFourDirectionDelta = [Directions.SouthEast, Directions.SouthWest, Directions.NorthWest, Directions.NorthEast];
-
             allDirectionDelta = fourDirectionDelta.Concat(crossFourDirectionDelta).ToArray();
-
-
-
         }
         public static class Directions
         {
@@ -70,19 +64,18 @@ namespace TheTurk.Engine
 
         public Coordinate(int rank, int file)
         {
-
             Rank = rank;
             File = file;
-            Index = (rank-1) * 8 + file - 1;
+            Index = (rank - 1) * 8 + file - 1;
         }
         public bool IsOnboard()
         {
-            return Rank >= 1 && Rank <= 8 && File >= 1 && File <= 8;
+            return Rank is >= 1 and <= 8 && File is >= 1 and <= 8;
         }
 
 
         /// <summary>
-        /// return square on spesified direction
+        /// return square on specified direction
         /// </summary>
         /// <param name="direction"></param>
         /// <returns></returns>
@@ -106,8 +99,7 @@ namespace TheTurk.Engine
         /// <returns>Piece on this square</returns>
         public Piece GetPiece(Board board)
         {
-
-                return board[this];
+            return board[this];
         }
         public bool Equals(Coordinate square)
         {
@@ -134,30 +126,29 @@ namespace TheTurk.Engine
         }
         public int HorizontalDistance(Coordinate square)
         {
-            return Math.Abs(this.File - square.File);
+            return Math.Abs(File - square.File);
         }
         public bool IsNeighboreSquare(Coordinate square)
         {
-            return this.HorizontalDistance(square) <= 1 && this.VerticalDistance(square) <= 1;
+            return HorizontalDistance(square) <= 1 && VerticalDistance(square) <= 1;
         }
         /// <summary>
-        /// Is square attacked by oppenent pieces
+        /// Is square attacked by opponent pieces
         /// </summary>
         /// <param name="board">Board</param>
         /// <param name="enemyColor">Enemy side color</param>
         /// <returns></returns>
         public bool IsAttackedSquare(Board board, Color enemyColor)
         {
-
-            foreach (var direction in Coordinate.crossFourDirectionDelta) //Check cross directions for queen and bishop
+            foreach (var direction in crossFourDirectionDelta) // Check cross directions for queen and bishop
             {
-                Coordinate to = this;
+                var to = this;
                 while ((to = to.To(direction)).IsOnboard())
                 {
                     var piece = to.GetPiece(board);
                     if (piece != null)
                     {
-                        if ((piece is Queen || piece is Bishop) && piece.Color == enemyColor)
+                        if ((piece is Queen or Bishop) && piece.Color == enemyColor)
                         {
                             return true;
                         }
@@ -165,15 +156,16 @@ namespace TheTurk.Engine
                     }
                 }
             }
-            foreach (var direction in Coordinate.fourDirectionDelta)//check horizonal and vertical directions for queen and rook
+
+            foreach (var direction in fourDirectionDelta) // Check horizontal and vertical directions for queen and rook
             {
-                Coordinate to = this;
+                var to = this;
                 while ((to = to.To(direction)).IsOnboard())
                 {
                     var piece = to.GetPiece(board);
                     if (piece != null)
                     {
-                        if ((piece is Queen || piece is Rook) && piece.Color == enemyColor)
+                        if ((piece is Queen or Rook) && piece.Color == enemyColor)
                         {
                             return true;
                         }
@@ -190,44 +182,62 @@ namespace TheTurk.Engine
                 {
                     var piece = to.GetPiece(board);
 
-                    if (piece != null && (piece is Knight) && piece.Color == enemyColor)
+                    if (piece != null && piece is Knight && piece.Color == enemyColor)
                     {
                         return true;
                     }
                 }
             }
 
-            var opponentking = enemyColor == Color.White ? board.WhiteKing : board.BlackKing;
+            var opponentKing = enemyColor == Color.White ? board.WhiteKing : board.BlackKing;
 
-            if (this.IsNeighboreSquare(opponentking.From)) //Check for oppenent king
+            if (IsNeighboreSquare(opponentKing.From)) // Check for opponent king
             {
                 return true;
             }
-            if (enemyColor == Color.Black) //Check for pawns
-            {
 
-                var piece = this.To(Coordinate.Directions.NorthEast).GetPiece(board);
-                if (piece != null && piece is Pawn && piece.Color == enemyColor)
+            if (enemyColor == Color.Black) // Check for white pawns
+            {
+                var to = this.To(Directions.NorthEast);
+                if (to.IsOnboard())
                 {
-                    return true;
+                    var piece = to.GetPiece(board);
+                    if (piece != null && piece is Pawn && piece.Color == enemyColor)
+                    {
+                        return true;
+                    }
                 }
-                piece = this.To(Coordinate.Directions.NorthWest).GetPiece(board);
-                if (piece != null && piece is Pawn && piece.Color == enemyColor)
+
+                to = this.To(Directions.NorthWest);
+                if (to.IsOnboard())
                 {
-                    return true;
+                    var piece = to.GetPiece(board);
+                    if (piece != null && piece is Pawn && piece.Color == enemyColor)
+                    {
+                        return true;
+                    }
                 }
             }
-            else // Black Pawns
+            else // Check for black pawns
             {
-                var piece = this.To(Coordinate.Directions.SouthEast).GetPiece(board);
-                if (piece != null && piece is Pawn && piece.Color == enemyColor)
+                var to = this.To(Directions.SouthEast);
+                if (to.IsOnboard())
                 {
-                    return true;
+                    var piece = to.GetPiece(board);
+                    if (piece != null && piece is Pawn && piece.Color == enemyColor)
+                    {
+                        return true;
+                    }
                 }
-                piece = this.To(Coordinate.Directions.SouthWest).GetPiece(board);
-                if (piece != null && piece is Pawn && piece.Color == enemyColor)
+
+                to = this.To(Directions.SouthWest);
+                if (to.IsOnboard())
                 {
-                    return true;
+                    var piece = to.GetPiece(board);
+                    if (piece != null && piece is Pawn && piece.Color == enemyColor)
+                    {
+                        return true;
+                    }
                 }
             }
 
