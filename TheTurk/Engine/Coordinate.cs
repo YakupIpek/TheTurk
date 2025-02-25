@@ -36,8 +36,8 @@ namespace TheTurk.Engine
             g8 = new(8, 7),
             h8 = new(8, 8);
 
-        public int File { get; init; }
-        public int Rank { get; init; }
+        public int File { get; }
+        public int Rank { get; }
 
         public int Index { get; }
 
@@ -106,11 +106,8 @@ namespace TheTurk.Engine
         /// <returns>Piece on this square</returns>
         public Piece GetPiece(Board board)
         {
-            if (IsOnboard())
-            {
+
                 return board[this];
-            }
-            return null;
         }
         public bool Equals(Coordinate square)
         {
