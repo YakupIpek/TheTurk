@@ -4,7 +4,7 @@ using TheTurk.Moves;
 
 namespace TheTurk.Engine;
 
-public class UCIProtocol : IProtocol
+public class UCIProtocol
 {
     private readonly ChessEngine engine;
 

@@ -62,6 +62,7 @@ namespace TheTurk.Engine
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
             bestLine = [];
+
             int infinity = int.MaxValue;
 
             int alpha = -infinity,
@@ -131,6 +132,7 @@ namespace TheTurk.Engine
                 return (Board.Draw, []);
 
             var moves = Board.GenerateMoves();
+
             if (!moves.Any())
                 return (-Board.GetCheckMateOrStaleMateScore(ply), []);
 
