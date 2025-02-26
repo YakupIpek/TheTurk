@@ -168,22 +168,34 @@ namespace TheTurk.Engine
 
             var sortedMoves = SortMoves(moves, depth);
 
+            var movesIndex = 0;
+
             foreach (var move in sortedMoves)
             {
                 var boardState = Board.GetState();
                 Board.MakeMove(move);
 
-                //#region Late Move Reduction
+                movesIndex++;
 
-                //var score = 0;
+                var score = 0;
 
-                //if (!Board.IsInCheck())
-                //{
-                //    score = -AlphaBeta(-alpha - 1, -alpha, ply - 2, depth + 1, localpv, true, ref nodeCount);
-                //}
-                //else score = alpha + 1;
+                var importantMove = Board.IsInCheck() && movesIndex < 5 && move is Ordinary o && o.CapturedPiece is not null;
 
-                //#endregion
+                var isGood = true;
+
+                if (!importantMove)
+                {
+                    score = -AlphaBeta(-beta, -alpha, ply - 2, depth + 1, localpv, false, ref nodeCount);
+
+                    isGood = score > alpha;
+                }
+
+
+                if(isGood)
+                {
+                    score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
+                }
+
                 //if (score > alpha)
                 //{
                 //    if (pvSearch)
@@ -202,7 +214,6 @@ namespace TheTurk.Engine
 
                 //}
 
-                var score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
 
                 Board.UndoMove(move, boardState);
 
