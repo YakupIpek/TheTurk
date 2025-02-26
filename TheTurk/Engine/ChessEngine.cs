@@ -75,6 +75,11 @@ namespace TheTurk.Engine
                 node = 0;
                 var (score, line) = AlphaBeta(alpha, beta, iterationPly, depth, false);
 
+                if ((!HaveTime() || ExitRequested) && iterationPly > 1) //time control and stop mode
+                {
+                    break;
+                }
+
                 if (score <= alpha || score >= beta)
                 {
                     // Make full window search again
@@ -84,19 +89,12 @@ namespace TheTurk.Engine
                     continue;
                 }
 
-                if ((!HaveTime() || ExitRequested) && iterationPly > 1) //time control and stop mode
-                {
-                    ExitRequested = false;
-                    break;
-                }
-
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
                 bestLine = line;
-                var result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line);
 
-                yield return result;
+                yield return new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line); ;
 
 
                 if (Math.Abs(score) >= Board.CheckMateValue || ExitRequested)
@@ -168,7 +166,7 @@ namespace TheTurk.Engine
                 movesIndex++;
 
                 var score = 0;
-                var importantMove = Board.IsInCheck() && movesIndex < 5 && move is Ordinary o && o.CapturedPiece is not null;
+                var importantMove = Board.IsInCheck() && movesIndex < 2 && move is Ordinary o && o.CapturedPiece is not null;
 
                 var line = Array.Empty<Move>();
 
