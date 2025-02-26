@@ -15,20 +15,10 @@ namespace TheTurk.Engine
         public int Depth { get; set; }
         public long HashKey { get; set; }
     }
-    public class SearchContext
-    {
-        public int BestScore { get; set; }
-        public List<Move> BestLine { get; set; } = [];
-        public int NodeCount { get; set; }
-    }
 
     public static class ResultExtensions
     {
-        public static (int score, Move[] line) Negate(this (int score, Move[] line) result)
-        {
-
-            return (-result.score, result.line);
-        }
+        public static (int score, Move[] line) Negate(this (int score, Move[] line) result) => (-result.score, result.line);
     }
     public partial class ChessEngine
     {
@@ -38,6 +28,7 @@ namespace TheTurk.Engine
         private int iterationPly;
         private long timeLimit;
         private Stopwatch elapsedTime;
+        int node;
         public bool ExitRequested { get; set; }
         public readonly Board Board;
         public readonly IProtocol Protocol;
@@ -64,13 +55,13 @@ namespace TheTurk.Engine
         /// <param name="maxDepth"></param>
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
-        public EngineResult Search(long timeLimit)
+        public EngineResult Search(long timeLimit, int maxDepth = int.MaxValue)
         {
             this.timeLimit = timeLimit;
 
             EngineResult previousResult = null;
             elapsedTime.Restart();
-            EngineResult result;
+            EngineResult result = null;
             var bestLine = Array.Empty<Move>();
             previousPV = [];
             ExitRequested = false;
@@ -81,16 +72,13 @@ namespace TheTurk.Engine
 
             int alpha = -infinity,
                 beta = infinity,
-                depth = 0,
-                nodesCount = 0;
+                depth = 0;
 
-            for (iterationPly = 1; ;)
+            for (iterationPly = 1; iterationPly <= maxDepth; )
             {
                 //transpositions = new(50000);
-
                 node = 0;
-
-                var (score,line) = AlphaBeta(alpha, beta, iterationPly, depth, false);
+                var (score, line) = AlphaBeta(alpha, beta, iterationPly, depth, false);
 
                 if (score <= alpha || score >= beta)
                 {
@@ -110,21 +98,20 @@ namespace TheTurk.Engine
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
-                
-                result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, line);
 
-                previousResult = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, bestLine);
+                result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line);
+
+                previousResult = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, bestLine);
 
                 bestLine = line;
 
-                if (result.BestLine.Any())
+                if (line.Any())
                     Protocol.WriteOutput(result);
 
                 if (Math.Abs(score) >= Board.CheckMateValue || ExitRequested)
                     break;
 
                 iterationPly++;
-                nodesCount = 0;
             }
 
             ExitRequested = false;
@@ -132,7 +119,6 @@ namespace TheTurk.Engine
             return result;
         }
 
-        int node;
 
         (int score, Move[] line) AlphaBeta(int alpha, int beta, int ply, int depth, bool nullMoveActive)
         {
@@ -242,7 +228,7 @@ namespace TheTurk.Engine
                     historyMoves.AddMove(move);
                     pvSearch = true;
 
-                    pv = [move, .. pv];
+                    pv = [move, .. line];
                 }
             }
 

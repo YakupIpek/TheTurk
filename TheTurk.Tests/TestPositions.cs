@@ -34,8 +34,8 @@ public class TestPositions
 
         board.SetUpBoard(fen);
 
-        var result = engine.Search(15_000);
+        var result = engine.Search(30_000, maxDepth: 8);
 
-        CollectionAssert.Contains(bestMoves, result.BestLine.First().ToString(), $"{id} position failed.");
+        CollectionAssert.Contains(bestMoves, result.BestLine.First().ToString());
     }
 }
