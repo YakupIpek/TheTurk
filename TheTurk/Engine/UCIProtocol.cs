@@ -10,7 +10,7 @@ public class UCIProtocol : IProtocol
 
     public UCIProtocol()
     {
-        engine = new ChessEngine(new Board(), this);
+        engine = new ChessEngine(new Board());
     }
 
     public async Task Start()
@@ -158,9 +158,19 @@ public class UCIProtocol : IProtocol
 
     private void HandleGo(int time)
     {
-        var result = engine.Search(time);
-        engine.Board.MakeMove(result.BestLine.First());
-        Console.WriteLine("bestmove " + result.BestLine.First().IONotation());
+        var results = engine.Search(time);
+
+        var bestLine = Array.Empty<Move>();
+
+        foreach (var result in results)
+        {
+            WriteOutput(result);
+            bestLine = result.BestLine;
+        }
+
+        engine.Board.MakeMove(bestLine.First());
+
+        Console.WriteLine("bestmove " + bestLine.First().IONotation());
     }
 
 

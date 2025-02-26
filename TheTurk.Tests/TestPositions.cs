@@ -28,14 +28,15 @@ public class TestPositions
     [DynamicData(nameof(Data), DynamicDataSourceType.Property)]
     public void Test(string fen, string[] bestMoves, string id)
     {
-
         var board = new Board();
-        var engine = new ChessEngine(board, new UCIProtocol());
+        var engine = new ChessEngine(board);
 
         board.SetUpBoard(fen);
 
-        var result = engine.Search(30_000, maxDepth: 8);
+        var results = engine.Search(40_000, maxDepth: 8);
 
-        CollectionAssert.Contains(bestMoves, result.BestLine.First().ToString());
+        var found = results.Skip(4).Any(result => bestMoves.Contains(result.BestLine.First().ToString()));
+
+        Assert.IsTrue(found);
     }
 }

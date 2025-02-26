@@ -24,27 +24,25 @@ namespace TheTurk.Engine
     {
         private KillerMoves killerMoves;
         private HistoryMoves historyMoves;
-        public List<Move> previousPV;
         private int iterationPly;
         private long timeLimit;
         private Stopwatch elapsedTime;
         int node;
         public bool ExitRequested { get; set; }
         public readonly Board Board;
-        public readonly IProtocol Protocol;
 
         Dictionary<long, TableEntry> transpositions;
+        private Move[] bestLine;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="board"></param>
         /// <param name="protocol">Protocol will be used to write output of bestline</param>
-        public ChessEngine(Board board, IProtocol protocol)
+        public ChessEngine(Board board)
         {
             ExitRequested = false;
             Board = board;
-            Protocol = protocol;
             elapsedTime = new Stopwatch();
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
@@ -55,19 +53,15 @@ namespace TheTurk.Engine
         /// <param name="maxDepth"></param>
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
-        public EngineResult Search(long timeLimit, int maxDepth = int.MaxValue)
+        public IEnumerable<EngineResult> Search(long timeLimit, int maxDepth = int.MaxValue)
         {
             this.timeLimit = timeLimit;
 
-            EngineResult previousResult = null;
             elapsedTime.Restart();
-            EngineResult result = null;
-            var bestLine = Array.Empty<Move>();
-            previousPV = [];
             ExitRequested = false;
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
-
+            bestLine = [];
             int infinity = int.MaxValue;
 
             int alpha = -infinity,
@@ -92,21 +86,17 @@ namespace TheTurk.Engine
                 if ((!HaveTime() || ExitRequested) && iterationPly > 1) //time control and stop mode
                 {
                     ExitRequested = false;
-                    return previousResult;
+                    break;
                 }
 
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
-
-                result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line);
-
-                previousResult = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, bestLine);
-
                 bestLine = line;
+                var result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line);
 
-                if (line.Any())
-                    Protocol.WriteOutput(result);
+                yield return result;
+
 
                 if (Math.Abs(score) >= Board.CheckMateValue || ExitRequested)
                     break;
@@ -115,8 +105,6 @@ namespace TheTurk.Engine
             }
 
             ExitRequested = false;
-
-            return result;
         }
 
 
@@ -300,7 +288,7 @@ namespace TheTurk.Engine
         /// <returns></returns>
         IEnumerable<Move> SortMoves(IEnumerable<Move> moves, int depth)
         {
-            var previousBestMove = (previousPV != null && previousPV.Count > depth) ? previousPV[depth] : null;
+            var previousBestMove = bestLine.ElementAtOrDefault(depth);
             var killer = killerMoves.BestMoves[depth];
             var bestHistoryMove = Board.Side == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
 
