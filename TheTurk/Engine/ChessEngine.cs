@@ -139,8 +139,6 @@ namespace TheTurk.Engine
             if (ply <= 0)
                 return (QuiescenceSearch(alpha, beta), []);
 
-            var pvSearch = false;
-
             if (nullMoveActive && !Board.IsInCheck() && ply > 2)
             {
                 int R = (ply > 6) ? 3 : 2; // Adaptive Null Move Reduction
@@ -160,7 +158,7 @@ namespace TheTurk.Engine
 
             var movesIndex = 0;
 
-            var pv = new Move[ply];
+            var pv = new Move[0];
 
             foreach (var move in sortedMoves)
             {
@@ -183,25 +181,13 @@ namespace TheTurk.Engine
 
                 if (importantMove)
                 {
-                    (score, line) = AlphaBeta(-beta, -alpha, ply - 1, depth + 1, true).Negate();
+                    (score, line) = AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, false).Negate();
+
+                    if (score > alpha && score < beta)
+                    {
+                        (score, line) = AlphaBeta(-beta, -alpha, ply - 1, depth + 1, false).Negate();
+                    }
                 }
-
-                //if (score > alpha)
-                //{
-                //    if (pvSearch)
-                //    {
-                //        score = -AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, localpv, false, ref nodeCount);
-
-                //        if (score > alpha && bestScore < beta)
-                //        {
-                //            score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, false, ref nodeCount);
-                //        }
-                //    }
-                //    else
-                //    {
-                //        score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
-                //    }
-                //}
 
                 Board.UndoMove(move, boardState);
 
@@ -216,7 +202,6 @@ namespace TheTurk.Engine
                 {
                     alpha = score;
                     historyMoves.AddMove(move);
-                    pvSearch = true;
 
                     pv = [move, .. line];
                 }
