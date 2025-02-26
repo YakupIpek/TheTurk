@@ -5,6 +5,7 @@ using TheTurk.Moves;
 using System.Linq;
 using TheTurk.Pieces;
 using System.Threading.Tasks.Sources;
+using System.Runtime.CompilerServices;
 
 namespace TheTurk.Engine
 {
@@ -14,7 +15,21 @@ namespace TheTurk.Engine
         public int Depth { get; set; }
         public long HashKey { get; set; }
     }
+    public class SearchContext
+    {
+        public int BestScore { get; set; }
+        public List<Move> BestLine { get; set; } = [];
+        public int NodeCount { get; set; }
+    }
 
+    public static class ResultExtensions
+    {
+        public static (int score, Move[] line) Negate(this (int score, Move[] line) result)
+        {
+
+            return (-result.score, result.line);
+        }
+    }
     public partial class ChessEngine
     {
         private KillerMoves killerMoves;
@@ -56,7 +71,7 @@ namespace TheTurk.Engine
             EngineResult previousResult = null;
             elapsedTime.Restart();
             EngineResult result;
-            var pv = new List<Move>();
+            var bestLine = Array.Empty<Move>();
             previousPV = [];
             ExitRequested = false;
             historyMoves = new HistoryMoves();
@@ -72,17 +87,16 @@ namespace TheTurk.Engine
             for (iterationPly = 1; ;)
             {
                 //transpositions = new(50000);
-                var copiedPV = pv.ToList();
 
-                var score = AlphaBeta(alpha, beta, iterationPly, depth, pv, false, ref nodesCount);
+                node = 0;
+
+                var (score,line) = AlphaBeta(alpha, beta, iterationPly, depth, false);
 
                 if (score <= alpha || score >= beta)
                 {
                     // Make full window search again
                     alpha = -infinity;
                     beta = infinity;
-
-                    pv = copiedPV;
 
                     continue;
                 }
@@ -96,14 +110,14 @@ namespace TheTurk.Engine
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
-                //Save principal variation for next iteration
-                previousPV = pv.ToList();
+                
+                result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, line);
 
-                result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, pv);
+                previousResult = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, bestLine);
 
-                previousResult = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodesCount, previousPV);
+                bestLine = line;
 
-                if (result.BestLine.Count > 0)
+                if (result.BestLine.Any())
                     Protocol.WriteOutput(result);
 
                 if (Math.Abs(score) >= Board.CheckMateValue || ExitRequested)
@@ -118,9 +132,12 @@ namespace TheTurk.Engine
             return result;
         }
 
-        int AlphaBeta(int alpha, int beta, int ply, int depth, List<Move> pv, bool nullMoveActive, ref int nodeCount)
+        int node;
+
+        (int score, Move[] line) AlphaBeta(int alpha, int beta, int ply, int depth, bool nullMoveActive)
         {
-            nodeCount++;
+
+            node++;
 
             //if (transpositions.TryGetValue(Board.Zobrist.ZobristKey, out var entry) && entry.Depth >= ply)
             //{
@@ -134,19 +151,18 @@ namespace TheTurk.Engine
 
             //if time out or exit requested after 1st iteration,so leave thinking.
             if ((!HaveTime() || ExitRequested) && iterationPly > 1)
-                return Board.Draw;
+                return (Board.Draw, []);
 
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
-                return Board.Draw;
+                return (Board.Draw, []);
 
             var moves = Board.GenerateMoves();
             if (!moves.Any())
-                return -Board.GetCheckMateOrStaleMateScore(ply);
+                return (-Board.GetCheckMateOrStaleMateScore(ply), []);
 
             if (ply <= 0)
-                return QuiescenceSearch(alpha, beta, ref nodeCount);
+                return (QuiescenceSearch(alpha, beta), []);
 
-            var localpv = new List<Move>();
             var pvSearch = false;
 
             if (nullMoveActive && !Board.IsInCheck() && ply > 2)
@@ -156,17 +172,19 @@ namespace TheTurk.Engine
                 var state = Board.GetState();
                 Board.MakeNullMove();
 
-                int nullMoveScore = -AlphaBeta(-beta, -beta + 1, ply - R, depth + 1, localpv, false, ref nodeCount);
+                var (score, _) = AlphaBeta(-beta, -beta + 1, ply - R, depth + 1, false).Negate();
 
                 Board.UndoNullMove(state);
 
-                if (nullMoveScore >= beta)
-                    return beta;
+                if (score >= beta)
+                    return (beta, []);
             }
 
             var sortedMoves = SortMoves(moves, depth);
 
             var movesIndex = 0;
+
+            var pv = new Move[ply];
 
             foreach (var move in sortedMoves)
             {
@@ -176,19 +194,20 @@ namespace TheTurk.Engine
                 movesIndex++;
 
                 var score = 0;
-
                 var importantMove = Board.IsInCheck() && movesIndex < 5 && move is Ordinary o && o.CapturedPiece is not null;
+
+                var line = Array.Empty<Move>();
 
                 if (!importantMove)
                 {
-                    score = -AlphaBeta(-beta, -alpha, ply - 2, depth + 1, localpv, false, ref nodeCount);
+                    (score, line) = AlphaBeta(-beta, -alpha, ply - 2, depth + 1, false).Negate();
 
                     importantMove = score > alpha;
                 }
 
-                if(importantMove)
+                if (importantMove)
                 {
-                    score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
+                    (score, line) = AlphaBeta(-beta, -alpha, ply - 1, depth + 1, true).Negate();
                 }
 
                 //if (score > alpha)
@@ -206,9 +225,7 @@ namespace TheTurk.Engine
                 //    {
                 //        score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
                 //    }
-
                 //}
-
 
                 Board.UndoMove(move, boardState);
 
@@ -216,7 +233,7 @@ namespace TheTurk.Engine
                 {
                     killerMoves.Add(move, depth);
 
-                    return beta; //beta cut-off
+                    return (beta, [move, .. line]); //beta cut-off
                 }
 
                 if (score > alpha)
@@ -225,9 +242,7 @@ namespace TheTurk.Engine
                     historyMoves.AddMove(move);
                     pvSearch = true;
 
-                    pv.Clear();
-                    pv.Add(move);
-                    pv.AddRange(localpv);
+                    pv = [move, .. pv];
                 }
             }
 
@@ -239,7 +254,7 @@ namespace TheTurk.Engine
             //    HashKey = Board.Zobrist.ZobristKey
             //};
 
-            return alpha;
+            return (alpha, pv);
         }
         /// <summary>
         /// Look for capture variations for horizon effect
@@ -248,9 +263,9 @@ namespace TheTurk.Engine
         /// <param name="beta"></param>
         /// <param name="nodeCount"></param>
         /// <returns></returns>
-        int QuiescenceSearch(int alpha, int beta, ref int nodeCount)
+        int QuiescenceSearch(int alpha, int beta)
         {
-            nodeCount++;
+            node++;
 
             var eval = Evaluation.Evaluate(Board);
 
@@ -269,7 +284,7 @@ namespace TheTurk.Engine
                 var boardState = Board.GetState();
                 Board.MakeMove(capture);
 
-                var score = -QuiescenceSearch(-beta, -alpha, ref nodeCount);
+                var score = -QuiescenceSearch(-beta, -alpha);
 
                 Board.UndoMove(capture, boardState);
 

@@ -166,13 +166,16 @@ public class UCIProtocol : IProtocol
 
     public void WriteOutput(EngineResult result)
     {
-        if (result.BestLine.Count > 0)
+        if (result.BestLine.Any())
         {
             var score = result.MateIn != 0 ? $"mate {result.MateIn}" : $"cp {result.Score}";
 
             Console.Write($"info depth {result.Ply} score {score} nodes {result.NodesCount} time {result.ElapsedTime} pv ");
 
-            result.BestLine.ForEach(move => Console.Write(move.IONotation() + " "));
+            foreach (var move in result.BestLine)
+            {
+                Console.Write(move.IONotation() + " ");
+            }
 
             Console.WriteLine();
         }

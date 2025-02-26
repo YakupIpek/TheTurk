@@ -10,12 +10,11 @@ public class EngineResult
     public int MateIn { get; }
     public long ElapsedTime { get; init; }
     public int NodesCount { get; init; }
-    public List<Move> BestLine { get; init; }
+    public Move[] BestLine { get; init; }
 
-
-    public EngineResult(int ply, int score, long rawElapsedTime, int nodesCount, List<Move> bestLine)
+    public EngineResult(int ply, int score, long rawElapsedTime, int nodesCount, Move[] bestLine)
     {
-        var depth = bestLine.Count;
+        var depth = bestLine.Length;
 
         Ply = ply;
         Score = score;
