@@ -52,12 +52,6 @@ namespace TheTurk.Engine
         public EngineResult Search(long timeLimit)
         {
             this.timeLimit = timeLimit;
-            int infinity = int.MaxValue;
-
-            int alpha = -infinity,
-                beta = infinity,
-                depth = 0,
-                nodesCount = 0;
 
             EngineResult previousResult = null;
             elapsedTime.Restart();
@@ -68,26 +62,30 @@ namespace TheTurk.Engine
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
 
+            int infinity = int.MaxValue;
+
+            int alpha = -infinity,
+                beta = infinity,
+                depth = 0,
+                nodesCount = 0;
+
             for (iterationPly = 1; ;)
             {
                 //transpositions = new(50000);
                 var copiedPV = pv.ToList();
 
-                alpha = -infinity;
-                beta = infinity;
-
                 var score = AlphaBeta(alpha, beta, iterationPly, depth, pv, false, ref nodesCount);
 
-                //if (score <= alpha || score >= beta)
-                //{
-                //    // Make full window search again
-                //    alpha = -infinity;
-                //    beta = infinity;
+                if (score <= alpha || score >= beta)
+                {
+                    // Make full window search again
+                    alpha = -infinity;
+                    beta = infinity;
 
-                //    pv = copiedPV;
+                    pv = copiedPV;
 
-                //    continue;
-                //}
+                    continue;
+                }
 
                 if ((!HaveTime() || ExitRequested) && iterationPly > 1) //time control and stop mode
                 {
@@ -95,8 +93,8 @@ namespace TheTurk.Engine
                     return previousResult;
                 }
 
-                //alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
-                //beta = score + Pawn.Piecevalue / 4;
+                alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
+                beta = score + Pawn.Piecevalue / 4;
 
                 //Save principal variation for next iteration
                 previousPV = pv.ToList();
@@ -163,7 +161,7 @@ namespace TheTurk.Engine
                 Board.UndoNullMove(state);
 
                 if (nullMoveScore >= beta)
-                    return beta; // Güvenli kesme
+                    return beta;
             }
 
             var sortedMoves = SortMoves(moves, depth);
@@ -181,17 +179,14 @@ namespace TheTurk.Engine
 
                 var importantMove = Board.IsInCheck() && movesIndex < 5 && move is Ordinary o && o.CapturedPiece is not null;
 
-                var isGood = true;
-
                 if (!importantMove)
                 {
                     score = -AlphaBeta(-beta, -alpha, ply - 2, depth + 1, localpv, false, ref nodeCount);
 
-                    isGood = score > alpha;
+                    importantMove = score > alpha;
                 }
 
-
-                if(isGood)
+                if(importantMove)
                 {
                     score = -AlphaBeta(-beta, -alpha, ply - 1, depth + 1, localpv, true, ref nodeCount);
                 }
