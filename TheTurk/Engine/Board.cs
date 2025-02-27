@@ -18,8 +18,11 @@ namespace TheTurk.Engine
         public ThreeFoldRepetition threeFoldRepetetion;
         public Zobrist Zobrist;
         private Piece[] pieces;
-        private int fiftyMovesRule, totalMoves;
+        public int FiftyMovesRule { get; private set; }
+        private int totalMoves;
 
+        private Lazy<bool> LazyIsInCheck = new(() => false, false);
+        public bool IsInCheck => LazyIsInCheck.Value;
         public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
@@ -50,13 +53,14 @@ namespace TheTurk.Engine
             set => pieces[square.Index] = value;
         }
 
-        public BoardState GetState()
+
+        public BoardState MakeMove(Move move)
         {
-            return new BoardState(EnPassantSquare, WhiteCastle, BlackCastle, fiftyMovesRule, Zobrist.ZobristKey);
-        }
-        public void MakeMove(Move move)
-        {
-            Piece movingPiece = move.Piece;
+            LazyIsInCheck = new(InCheck, false);
+
+            var state = new BoardState(this);
+
+            var movingPiece = move.Piece;
 
             if (Side == Color.Black) totalMoves++;
 
@@ -71,9 +75,9 @@ namespace TheTurk.Engine
                 EnPassantSquare = new Coordinate(0, 0);
 
             if (movingPiece is Pawn || (move is Ordinary m && m.CapturedPiece != null))
-                fiftyMovesRule = 0;
+                FiftyMovesRule = 0;
             else
-                fiftyMovesRule++;
+                FiftyMovesRule++;
 
 
             move.MakeMove(this);
@@ -154,14 +158,22 @@ namespace TheTurk.Engine
             ToggleSide();
             Zobrist.ZobristUpdate(move);
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
+
+            return state;
         }
 
-        public void MakeNullMove()
+        public BoardState MakeNullMove()
         {
+            LazyIsInCheck = new(InCheck, false);
+
+            var state = new BoardState { ZobristKey = Zobrist.ZobristKey, EnPassantSquare = EnPassantSquare };
+
             EnPassantSquare = new Coordinate(0, 0);
             ToggleSide();
-            
+
             Zobrist.ZobristUpdateForNullMove();
+
+            return state;
         }
 
         public void UndoNullMove(BoardState state)
@@ -178,7 +190,7 @@ namespace TheTurk.Engine
             EnPassantSquare = state.EnPassantSquare;
             WhiteCastle = state.WhiteCastle;
             BlackCastle = state.BlackCastle;
-            fiftyMovesRule = state.FiftyMovesRule;
+            FiftyMovesRule = state.FiftyMovesRule;
             Zobrist.ZobristKey = state.ZobristKey;
 
             move.UndoMove(this);
@@ -202,11 +214,10 @@ namespace TheTurk.Engine
                 {
                     foreach (var move in piece.GenerateMoves(this))
                     {
-                        var state = GetState();
-                        MakeMove(move);
+                        var state = MakeMove(move);
                         var result = king.From.IsAttackedSquare(this, king.OppenentColor);
                         UndoMove(move, state);
-                        
+
                         if (result)
                         {
                             continue;
@@ -218,7 +229,7 @@ namespace TheTurk.Engine
             }
         }
 
-        public bool IsInCheck()
+        private bool InCheck()
         {
             var king = Side == Color.White ? WhiteKing : BlackKing;
             return king.From.IsAttackedSquare(this, king.OppenentColor);
@@ -277,9 +288,9 @@ namespace TheTurk.Engine
                 EnPassantSquare = splitted[3] == "-" ? new Coordinate(0, 0) : Coordinate.NotationToSquare(splitted[3]);
 
                 if (splitted.Length > 4)
-                    fiftyMovesRule = Convert.ToInt32(splitted[4]);
+                    FiftyMovesRule = Convert.ToInt32(splitted[4]);
                 else
-                    fiftyMovesRule = 0;
+                    FiftyMovesRule = 0;
                 if (splitted.Length > 5)
                     totalMoves = Convert.ToInt32(splitted[5]);
                 else

@@ -9,3 +9,5 @@ bld/
 [Oo]bj/
 TheTurk/obj/x86/Debug/TheTurk.csproj.FileListAbsolute.txt
 .vs/
+/TheTurk/Properties/PublishProfiles/FolderProfile.pubxml
+/TheTurk/Properties/PublishProfiles/FolderProfile.pubxml.user

@@ -33,9 +33,9 @@ public class TestPositions
 
         board.SetUpBoard(fen);
 
-        var results = engine.Search(40_000, maxDepth: 10);
+        var results = engine.Search(10_000);
 
-        var found = results.Skip(4).Any(result => bestMoves.Contains(result.BestLine.First().ToString()));
+        var found = results.Take(10).Skip(4).Any(result => bestMoves.Contains(result.BestLine.First().ToString()));
 
         Assert.IsTrue(found);
     }

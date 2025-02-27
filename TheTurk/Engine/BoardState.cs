@@ -14,18 +14,23 @@ public enum Castle
 
 public class BoardState
 {
-    public Coordinate EnPassantSquare { get; private set; }
-    public Castle WhiteCastle { get; private set; }
-    public Castle BlackCastle { get; private set; }
-    public int FiftyMovesRule { get; private set; }
-    public ulong ZobristKey { get; private set; }
-    public BoardState(Coordinate enPassant, Castle whiteCastle, Castle blackCastle, int fiftyMovesRule, ulong zobristKey)
+    public Coordinate EnPassantSquare { get; init; }
+    public Castle WhiteCastle { get; init; }
+    public Castle BlackCastle { get; init; }
+    public int FiftyMovesRule { get; init; }
+    public ulong ZobristKey { get; init; }
+
+    public BoardState()
     {
-        EnPassantSquare = enPassant;
-        WhiteCastle = whiteCastle;
-        BlackCastle = blackCastle;
-        FiftyMovesRule = fiftyMovesRule;
-        ZobristKey = zobristKey;
+        
+    }
+    public BoardState(Board board)
+    {
+        EnPassantSquare = board.EnPassantSquare;
+        WhiteCastle = board.WhiteCastle;
+        BlackCastle = board.BlackCastle;
+        FiftyMovesRule = board.FiftyMovesRule;
+        ZobristKey = board.Zobrist.ZobristKey;
     }
 }
 

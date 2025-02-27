@@ -19,10 +19,7 @@ namespace TheTurk.Pieces
         public Coordinate From { get; protected set; }
         public virtual bool Sliding { get { return true; } }
         public Color Color { get; private set; }
-        public Color OppenentColor
-        {
-            get { return Color == Pieces.Color.White ? Pieces.Color.Black : Pieces.Color.White; }
-        }
+        public Color OppenentColor => Color == Color.White ? Color.Black : Color.White;
         public abstract char NotationLetter { get; }
         public abstract int PieceValue { get; }
         public abstract Coordinate[] PieceDirection { get; }

@@ -48,13 +48,9 @@ namespace TheTurk.Engine
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
         }
-        /// <summary>
-        /// Calculates best line in given depth
-        /// </summary>
-        /// <param name="maxDepth"></param>
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
-        public IEnumerable<EngineResult> Search(long timeLimit, int maxDepth = int.MaxValue)
+        public IEnumerable<EngineResult> Search(long timeLimit)
         {
             this.timeLimit = timeLimit;
 
@@ -74,16 +70,13 @@ namespace TheTurk.Engine
             //alpha = eval - Pawn.Piecevalue;
             //beta = beta + Pawn.Piecevalue;
 
-            for (iterationPly = 1; iterationPly <= maxDepth;)
+            iterationPly = 1;
+
+            while (HaveTime() && !ExitRequested)
             {
                 //transpositions = new(50000);
                 node = 0;
                 var (score, line) = AlphaBeta(alpha, beta, iterationPly, depth, false);
-
-                if (!HaveTime() || ExitRequested) //time control and stop mode
-                {
-                    break;
-                }
 
                 if (score <= alpha || score >= beta)
                 {
@@ -100,7 +93,6 @@ namespace TheTurk.Engine
                 bestLine = line;
 
                 yield return new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line.Reverse().ToArray());
-
 
                 if (Math.Abs(score) >= Board.CheckMateValue || ExitRequested)
                     break;
@@ -147,12 +139,12 @@ namespace TheTurk.Engine
 
             }
 
-            if (nullMoveActive && !Board.IsInCheck() && ply > 2 && isCapture)
+            if (nullMoveActive && !Board.IsInCheck && ply > 2 && isCapture)
             {
                 int R = (ply > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
-                var state = Board.GetState();
-                Board.MakeNullMove();
+
+                var state = Board.MakeNullMove();
 
                 var (score, _) = AlphaBeta(-beta, -beta + 1, ply - R, depth + 1, false).Negate();
 
@@ -171,14 +163,13 @@ namespace TheTurk.Engine
             foreach (var move in sortedMoves)
             {
 
-                var boardState = Board.GetState();
-                Board.MakeMove(move);
+                var state = Board.MakeMove(move);
                 movesIndex++;
 
                 var score = 0;
                 var isCaptureMove = move is Ordinary c && c.CapturedPiece is not null;
 
-                var importantMove = isCapture || (movesIndex < 2 && iterationPly > 1) || Board.IsInCheck();
+                var importantMove = isCapture || (movesIndex < 2 && iterationPly > 1) || Board.IsInCheck;
 
                 var line = Array.Empty<Move>();
 
@@ -195,13 +186,26 @@ namespace TheTurk.Engine
 
                     //if (score > alpha && score < beta)
                     //{
-                        var r = iterationPly > 2 && depth == iterationPly - 2 && (Board.IsInCheck() || isCapture) ? 0 : 1;
+                    var r = iterationPly > 2 && depth == iterationPly - 2 && (Board.IsInCheck || isCapture) ? 0 : 1;
 
-                        (score, line) = AlphaBeta(-beta, -alpha, ply - r, depth + 1, false, isCaptureMove).Negate();
+                    (score, line) = AlphaBeta(-beta, -alpha, ply - r, depth + 1, false, isCaptureMove).Negate();
                     //}
                 }
 
-                Board.UndoMove(move, boardState);
+                Board.UndoMove(move, state);
+
+
+                //if (ply > 2 && score >= alpha + Pawn.Piecevalue)
+                //{
+                //    // Diğer hamlelerle karşılaştırarak singular olup olmadığını kontrol et
+                //    int secondBestScore = TestSingularMove(sortedMoves, move, ply, depth, alpha);
+                //    if (score > secondBestScore + SingularMargin)
+                //    {
+                //        Board.MakeMove(move);
+                //        (score, line) = AlphaBeta(-beta, -alpha, ply, depth + 1, true).Negate(); // Derinlik +1
+                //        Board.UndoMove(move, boardState);
+                //    }
+                //}
 
                 if (score >= beta)
                 {
@@ -218,6 +222,19 @@ namespace TheTurk.Engine
                     pv = [.. line, move];
                 }
             }
+
+            //// Singular Extension: Hamle diğerlerinden çok iyiyse derinliği artır
+            //if (bestScore >= (alpha + Pawn.Piecevalue))
+            //{
+                
+            //    var state = Board.MakeMove(pv.Last());
+
+            //    var (score, line) = AlphaBeta(-beta, -alpha, ply, depth + 1, false, true).Negate();
+
+            //    Board.UndoMove(pv.Last(), state);
+
+            //    return (score, [.. pv, .. line]);
+            //}
 
             // Transposition Table'a ekle
             //transpositions[Board.Zobrist.ZobristKey] = new TableEntry
@@ -254,12 +271,11 @@ namespace TheTurk.Engine
 
             foreach (var capture in moves)
             {
-                var boardState = Board.GetState();
-                Board.MakeMove(capture);
+                var state = Board.MakeMove(capture);
 
                 var score = -QuiescenceSearch(-beta, -alpha);
 
-                Board.UndoMove(capture, boardState);
+                Board.UndoMove(capture, state);
 
                 if (score >= beta) // The move is too good
                     return beta;

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Threading.Channels;
 using TheTurk.Moves;
+using TheTurk.Pieces;
 
 namespace TheTurk.Engine;
 
@@ -128,7 +129,7 @@ public class UCIProtocol
 
             var board = engine.Board;
 
-            var king = board.Side == Pieces.Color.White ? board.WhiteKing : board.BlackKing;
+            var king = board.Side == Color.White ? board.WhiteKing : board.BlackKing;
 
             var move = from.GetPiece(engine.Board)
                            .GenerateMoves(engine.Board)
@@ -140,8 +141,7 @@ public class UCIProtocol
                 return;
             }
 
-            var state = board.GetState();
-            board.MakeMove(move);
+            var state = board.MakeMove(move);
 
             var attacked = king.From.IsAttackedSquare(board, king.OppenentColor);
 
