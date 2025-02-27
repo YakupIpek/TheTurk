@@ -6,6 +6,7 @@ using System.Linq;
 using TheTurk.Pieces;
 using System.Threading.Tasks.Sources;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace TheTurk.Engine
 {
@@ -69,13 +70,17 @@ namespace TheTurk.Engine
                 beta = infinity,
                 depth = 0;
 
-            for (iterationPly = 1; iterationPly <= maxDepth; )
+            //var eval = Evaluation.Evaluate(Board);
+            //alpha = eval - Pawn.Piecevalue;
+            //beta = beta + Pawn.Piecevalue;
+
+            for (iterationPly = 1; iterationPly <= maxDepth;)
             {
                 //transpositions = new(50000);
                 node = 0;
                 var (score, line) = AlphaBeta(alpha, beta, iterationPly, depth, false);
 
-                if ((!HaveTime() || ExitRequested) && iterationPly > 1) //time control and stop mode
+                if (!HaveTime() || ExitRequested) //time control and stop mode
                 {
                     break;
                 }
@@ -94,7 +99,7 @@ namespace TheTurk.Engine
 
                 bestLine = line;
 
-                yield return new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line); ;
+                yield return new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line.Reverse().ToArray());
 
 
                 if (Math.Abs(score) >= Board.CheckMateValue || ExitRequested)
@@ -107,9 +112,8 @@ namespace TheTurk.Engine
         }
 
 
-        (int score, Move[] line) AlphaBeta(int alpha, int beta, int ply, int depth, bool nullMoveActive)
+        (int score, Move[] line) AlphaBeta(int alpha, int beta, int ply, int depth, bool nullMoveActive, bool isCapture = false)
         {
-
             node++;
 
             //if (transpositions.TryGetValue(Board.Zobrist.ZobristKey, out var entry) && entry.Depth >= ply)
@@ -118,7 +122,7 @@ namespace TheTurk.Engine
             //        return alpha;
             //    if (entry.Score >= beta)
             //        return beta;
-
+            //
             //    return entry.Score;
             //}
 
@@ -135,9 +139,15 @@ namespace TheTurk.Engine
                 return (-Board.GetCheckMateOrStaleMateScore(ply), []);
 
             if (ply <= 0)
-                return (QuiescenceSearch(alpha, beta), []);
+            {
+                if (isCapture || true)
+                    return (QuiescenceSearch(alpha, beta), []);
+                else
+                    return (Evaluation.Evaluate(Board), []);
 
-            if (nullMoveActive && !Board.IsInCheck() && ply > 2)
+            }
+
+            if (nullMoveActive && !Board.IsInCheck() && ply > 2 && isCapture)
             {
                 int R = (ply > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
@@ -160,13 +170,15 @@ namespace TheTurk.Engine
 
             foreach (var move in sortedMoves)
             {
+
                 var boardState = Board.GetState();
                 Board.MakeMove(move);
-
                 movesIndex++;
 
                 var score = 0;
-                var importantMove = Board.IsInCheck() && movesIndex < 2 && move is Ordinary o && o.CapturedPiece is not null;
+                var isCaptureMove = move is Ordinary c && c.CapturedPiece is not null;
+
+                var importantMove = isCapture || (movesIndex < 2 && iterationPly > 1) || Board.IsInCheck();
 
                 var line = Array.Empty<Move>();
 
@@ -174,17 +186,19 @@ namespace TheTurk.Engine
                 {
                     (score, line) = AlphaBeta(-beta, -alpha, ply - 2, depth + 1, false).Negate();
 
-                    importantMove = score > alpha;
+                    importantMove = score > alpha && score < beta;
                 }
 
                 if (importantMove)
                 {
-                    (score, line) = AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, false).Negate();
+                    //(score, line) = AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, false).Negate();
 
-                    if (score > alpha && score < beta)
-                    {
-                        (score, line) = AlphaBeta(-beta, -alpha, ply - 1, depth + 1, false).Negate();
-                    }
+                    //if (score > alpha && score < beta)
+                    //{
+                        var r = iterationPly > 2 && depth == iterationPly - 2 && (Board.IsInCheck() || isCapture) ? 0 : 1;
+
+                        (score, line) = AlphaBeta(-beta, -alpha, ply - r, depth + 1, false, isCaptureMove).Negate();
+                    //}
                 }
 
                 Board.UndoMove(move, boardState);
@@ -193,7 +207,7 @@ namespace TheTurk.Engine
                 {
                     killerMoves.Add(move, depth);
 
-                    return (beta, [move, .. line]); //beta cut-off
+                    return (beta, [.. line, move]); //beta cut-off
                 }
 
                 if (score > alpha)
@@ -201,7 +215,7 @@ namespace TheTurk.Engine
                     alpha = score;
                     historyMoves.AddMove(move);
 
-                    pv = [move, .. line];
+                    pv = [.. line, move];
                 }
             }
 
@@ -283,7 +297,7 @@ namespace TheTurk.Engine
             // Add the sorting criteria only if they are not null
             if (previousBestMove != null)
             {
-                sortCriteria = sortCriteria.OrderByDescending(move => move.Equals(previousBestMove));
+                sortCriteria = moves.OrderBy(move => move.Equals(previousBestMove));
             }
 
             if (bestHistoryMove != null)
