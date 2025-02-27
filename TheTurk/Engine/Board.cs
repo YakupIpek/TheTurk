@@ -29,7 +29,7 @@ namespace TheTurk.Engine
         public Coordinate EnPassantSquare { get; private set; }
         public Castle WhiteCastle { get; private set; }
         public Castle BlackCastle { get; private set; }
-
+        public int StaticEvaluation { get; private set; }
 
         public Board()
         {
@@ -62,6 +62,10 @@ namespace TheTurk.Engine
 
             var movingPiece = move.Piece;
 
+            var capturedPiece = (move as Ordinary)?.CapturedPiece;
+
+            StaticEvaluation -= capturedPiece?.Evaluation() ?? 0;
+
             if (Side == Color.Black) totalMoves++;
 
             if (movingPiece is Pawn && Math.Abs((movingPiece.From.Rank - ((Ordinary)move).To.Rank)) == 2)
@@ -74,7 +78,7 @@ namespace TheTurk.Engine
             else
                 EnPassantSquare = new Coordinate(0, 0);
 
-            if (movingPiece is Pawn || (move is Ordinary m && m.CapturedPiece != null))
+            if (movingPiece is Pawn || capturedPiece is not null)
                 FiftyMovesRule = 0;
             else
                 FiftyMovesRule++;
@@ -195,6 +199,8 @@ namespace TheTurk.Engine
 
             move.UndoMove(this);
 
+            StaticEvaluation += (move as Ordinary)?.CapturedPiece?.Evaluation() ?? 0;
+
             threeFoldRepetetion.Remove(zobristKey);
 
             if (Side == Color.Black)
@@ -259,6 +265,7 @@ namespace TheTurk.Engine
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
+            StaticEvaluation = Evaluate();
         }
 
         private void SetFen(string value)
@@ -385,6 +392,11 @@ namespace TheTurk.Engine
         public IEnumerable<Piece> GetPieces()
         {
             return pieces.Cast<Piece>().Where(p => p != null);
+        }
+
+        private int Evaluate()
+        {
+            return GetPieces().Sum(p => p.Evaluation());
         }
     }
 }

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using TheTurk.Moves;
-using System.Linq;
 using TheTurk.Pieces;
-using System.Threading.Tasks.Sources;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 
 namespace TheTurk.Engine
 {
@@ -48,6 +42,7 @@ namespace TheTurk.Engine
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
         }
+
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
         public IEnumerable<EngineResult> Search(long timeLimit)
@@ -108,16 +103,6 @@ namespace TheTurk.Engine
         {
             node++;
 
-            //if (transpositions.TryGetValue(Board.Zobrist.ZobristKey, out var entry) && entry.Depth >= ply)
-            //{
-            //    if (entry.Score <= alpha)
-            //        return alpha;
-            //    if (entry.Score >= beta)
-            //        return beta;
-            //
-            //    return entry.Score;
-            //}
-
             //if time out or exit requested after 1st iteration,so leave thinking.
             if ((!HaveTime() || ExitRequested) && iterationPly > 1)
                 return (Board.Draw, []);
@@ -135,7 +120,7 @@ namespace TheTurk.Engine
                 if (isCapture || true)
                     return (QuiescenceSearch(alpha, beta), []);
                 else
-                    return (Evaluation.Evaluate(Board), []);
+                    return ((int)Board.Side * Board.StaticEvaluation, []);
 
             }
 
@@ -182,30 +167,15 @@ namespace TheTurk.Engine
 
                 if (importantMove)
                 {
-                    //(score, line) = AlphaBeta(-alpha - 1, -alpha, ply - 1, depth + 1, false).Negate();
-
-                    //if (score > alpha && score < beta)
-                    //{
                     var r = iterationPly > 2 && depth == iterationPly - 2 && (Board.IsInCheck || isCapture) ? 0 : 1;
 
                     (score, line) = AlphaBeta(-beta, -alpha, ply - r, depth + 1, false, isCaptureMove).Negate();
-                    //}
                 }
 
                 Board.UndoMove(move, state);
 
 
-                //if (ply > 2 && score >= alpha + Pawn.Piecevalue)
-                //{
-                //    // Diğer hamlelerle karşılaştırarak singular olup olmadığını kontrol et
-                //    int secondBestScore = TestSingularMove(sortedMoves, move, ply, depth, alpha);
-                //    if (score > secondBestScore + SingularMargin)
-                //    {
-                //        Board.MakeMove(move);
-                //        (score, line) = AlphaBeta(-beta, -alpha, ply, depth + 1, true).Negate(); // Derinlik +1
-                //        Board.UndoMove(move, boardState);
-                //    }
-                //}
+
 
                 if (score >= beta)
                 {
@@ -223,27 +193,6 @@ namespace TheTurk.Engine
                 }
             }
 
-            //// Singular Extension: Hamle diğerlerinden çok iyiyse derinliği artır
-            //if (bestScore >= (alpha + Pawn.Piecevalue))
-            //{
-                
-            //    var state = Board.MakeMove(pv.Last());
-
-            //    var (score, line) = AlphaBeta(-beta, -alpha, ply, depth + 1, false, true).Negate();
-
-            //    Board.UndoMove(pv.Last(), state);
-
-            //    return (score, [.. pv, .. line]);
-            //}
-
-            // Transposition Table'a ekle
-            //transpositions[Board.Zobrist.ZobristKey] = new TableEntry
-            //{
-            //    Score = bestScore,
-            //    Depth = ply,
-            //    HashKey = Board.Zobrist.ZobristKey
-            //};
-
             return (alpha, pv);
         }
         /// <summary>
@@ -257,7 +206,7 @@ namespace TheTurk.Engine
         {
             node++;
 
-            var eval = Evaluation.Evaluate(Board);
+            var eval = (int)Board.Side * Board.StaticEvaluation;
 
             if (eval >= beta)
                 return beta;
