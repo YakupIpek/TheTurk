@@ -8,6 +8,14 @@ namespace TheTurk.Pieces
     {
         White = 1, Black = -1
     }
+
+    public static class ColorExtensions
+    {
+        public static Color Oppenent(this Color color)
+        {
+            return color == Color.White ? Color.Black : Color.White;
+        }
+    }
     public abstract class Piece
     {
         protected Piece(Coordinate from, Color color)

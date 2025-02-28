@@ -174,7 +174,7 @@ public class UCIProtocol
     }
 
 
-    public void WriteOutput(EngineResult result)
+    public static void WriteOutput(EngineResult result)
     {
         if (result.BestLine.Any())
         {

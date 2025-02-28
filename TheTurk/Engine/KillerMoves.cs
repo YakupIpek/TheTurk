@@ -8,7 +8,7 @@ namespace TheTurk.Engine
 {
     class KillerMoves
     {
-        private const int Maxdepth = 25;
+        private const int Maxdepth = 40;
         private int[,,,,] killerMoves;///[depth,From.rank,From.file,To.rank,To.file] 
         private int[] bestMoveScores;
         public Move[] BestMoves;

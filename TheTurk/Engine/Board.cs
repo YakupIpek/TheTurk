@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Linq;
 using TheTurk.Moves;
 using TheTurk.Pieces;
@@ -11,9 +12,11 @@ namespace TheTurk.Engine
     {
         #region Fields and Properties
 
-        public const int CheckMateValue = short.MaxValue,
+        public const int CheckMateValue = 1_000_000,
                          StaleMateValue = 0,
                          Draw = 0;
+
+        private const string InitialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         public ThreeFoldRepetition threeFoldRepetetion;
         public Zobrist Zobrist;
@@ -22,7 +25,7 @@ namespace TheTurk.Engine
         private int totalMoves;
 
         private Lazy<bool> LazyIsInCheck = new(() => false, false);
-        public bool IsInCheck => LazyIsInCheck.Value;
+        private bool IsInCheck => LazyIsInCheck.Value;
         public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
@@ -30,15 +33,16 @@ namespace TheTurk.Engine
         public Castle WhiteCastle { get; private set; }
         public Castle BlackCastle { get; private set; }
 
-        public Board()
+        public Board(string fen = InitialFen)
         {
             pieces = new Piece[64];
             WhiteCastle = Castle.NoneCastle;
             BlackCastle = Castle.NoneCastle;
             Side = Color.White;
             EnPassantSquare = new Coordinate(0, 0);//means deactive
-            SetUpBoard();
+            SetUpBoard(fen);
         }
+
 
         #endregion
         /// <summary>
@@ -55,16 +59,15 @@ namespace TheTurk.Engine
 
         public BoardState MakeMove(Move move)
         {
-            LazyIsInCheck = new(InCheck, false);
+            //LazyIsInCheck = new(InCheck, false);
 
             var state = new BoardState(this);
 
             var movingPiece = move.Piece;
 
-
             if (Side == Color.Black) totalMoves++;
 
-            if (movingPiece is Pawn && Math.Abs((movingPiece.From.Rank - ((Ordinary)move).To.Rank)) == 2)
+            if (movingPiece is Pawn && Math.Abs(movingPiece.From.Rank - ((Ordinary)move).To.Rank) == 2)
             {
                 if (movingPiece.Color == Color.White)
                     EnPassantSquare = movingPiece.From.To(Coordinate.Directions.North);
@@ -165,7 +168,7 @@ namespace TheTurk.Engine
 
         public BoardState MakeNullMove()
         {
-            LazyIsInCheck = new(InCheck, false);
+            //LazyIsInCheck = new(InCheck, false);
 
             var state = new BoardState { ZobristKey = Zobrist.ZobristKey, EnPassantSquare = EnPassantSquare };
 
@@ -207,19 +210,19 @@ namespace TheTurk.Engine
 
         public IEnumerable<Move> GenerateMoves()
         {
-            var king = Side == Color.White ? WhiteKing : BlackKing;
+            var side = Side;
 
             foreach (var piece in pieces)
             {
-                if (piece != null && piece.Color == Side)
+                if (piece?.Color == Side)
                 {
                     foreach (var move in piece.GenerateMoves(this))
                     {
                         var state = MakeMove(move);
-                        var attacked = king.From.IsAttackedSquare(this, king.OppenentColor);
+                        var inCheck = InCheck(side);
                         UndoMove(move, state);
 
-                        if (attacked)
+                        if (inCheck)
                         {
                             continue;
                         }
@@ -230,23 +233,29 @@ namespace TheTurk.Engine
             }
         }
 
-        private bool InCheck()
-        {
-            var king = Side == Color.White ? WhiteKing : BlackKing;
-            return king.From.IsAttackedSquare(this, king.OppenentColor);
 
+        public bool InCheck() => InCheck(Side);
+
+        /// <summary>
+        /// Check if the specified side is in check
+        /// </summary>
+        /// <param name="sideIncheck">Side to check</param>
+        /// <returns>True if in check, otherwise false</returns>
+        private bool InCheck(Color sideIncheck)
+        {
+            var king = sideIncheck == Color.White ? WhiteKing : BlackKing;
+
+            return king.From.IsAttackedSquare(this, king.OppenentColor);
         }
 
         public int GetCheckMateOrStaleMateScore(int depth)
         {
-            var king = Side == Color.White ? WhiteKing : BlackKing;
-            var attacked = king.From.IsAttackedSquare(this, king.OppenentColor);
-            return attacked ? CheckMateValue + depth : StaleMateValue;
+            return InCheck() ? CheckMateValue - depth : StaleMateValue;
         }
 
         public void SetUpBoard()
         {
-            SetFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            SetFen(InitialFen);
 
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
