@@ -18,13 +18,9 @@ public class EvaluationTests
 
         board.SetUpBoard();
 
-        var eval = board.StaticEvaluation;
-
         foreach (var piece in board.GenerateMoves())
         {
-            // every move already made and undone in GenerateMoves method lazily. 
 
-            Assert.AreEqual(eval, board.StaticEvaluation);
         }
     }
 }

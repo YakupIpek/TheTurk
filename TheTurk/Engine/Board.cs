@@ -29,7 +29,6 @@ namespace TheTurk.Engine
         public Coordinate EnPassantSquare { get; private set; }
         public Castle WhiteCastle { get; private set; }
         public Castle BlackCastle { get; private set; }
-        public int StaticEvaluation { get; private set; }
 
         public Board()
         {
@@ -62,11 +61,6 @@ namespace TheTurk.Engine
 
             var movingPiece = move.Piece;
 
-            StaticEvaluation -= movingPiece.Evaluation();
-
-            var capturedPiece = (move as Ordinary)?.CapturedPiece;
-
-            StaticEvaluation -= capturedPiece?.Evaluation() ?? 0;
 
             if (Side == Color.Black) totalMoves++;
 
@@ -80,14 +74,14 @@ namespace TheTurk.Engine
             else
                 EnPassantSquare = new Coordinate(0, 0);
 
+            var capturedPiece = (move as Ordinary)?.CapturedPiece;
+
             if (movingPiece is Pawn || capturedPiece is not null)
                 FiftyMovesRule = 0;
             else
                 FiftyMovesRule++;
 
             move.MakeMove(this);
-
-            StaticEvaluation += movingPiece.Evaluation();
 
             if (movingPiece is King)
             {
@@ -200,12 +194,7 @@ namespace TheTurk.Engine
             FiftyMovesRule = state.FiftyMovesRule;
             Zobrist.ZobristKey = state.ZobristKey;
 
-            StaticEvaluation -= move.Piece.Evaluation();
-
             move.UndoMove(this);
-
-            StaticEvaluation += (move as Ordinary)?.CapturedPiece?.Evaluation() ?? 0;
-            StaticEvaluation += move.Piece.Evaluation();
 
             threeFoldRepetetion.Remove(zobristKey);
 
@@ -227,10 +216,10 @@ namespace TheTurk.Engine
                     foreach (var move in piece.GenerateMoves(this))
                     {
                         var state = MakeMove(move);
-                        var result = king.From.IsAttackedSquare(this, king.OppenentColor);
+                        var attacked = king.From.IsAttackedSquare(this, king.OppenentColor);
                         UndoMove(move, state);
 
-                        if (result)
+                        if (attacked)
                         {
                             continue;
                         }
@@ -271,7 +260,6 @@ namespace TheTurk.Engine
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
-            StaticEvaluation = Evaluate();
         }
 
         private void SetFen(string value)
@@ -402,7 +390,7 @@ namespace TheTurk.Engine
 
         public int Evaluate()
         {
-            return GetPieces().Sum(p => p.Evaluation());
+            return (int)Side * GetPieces().Sum(p => p.Evaluation());
         }
     }
 }

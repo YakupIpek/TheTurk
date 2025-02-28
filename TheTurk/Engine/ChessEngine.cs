@@ -117,8 +117,6 @@ namespace TheTurk.Engine
 
             if (ply <= 0)
             {
-                return ((int)Board.Side * Board.StaticEvaluation, []);
-
                 return (QuiescenceSearch(alpha, beta), []);
             }
 
@@ -201,7 +199,7 @@ namespace TheTurk.Engine
         {
             node++;
 
-            var eval = Board.StaticEvaluation;
+            var eval = Board.Evaluate();
 
             if (eval >= beta)
                 return beta;
