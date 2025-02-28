@@ -62,6 +62,8 @@ namespace TheTurk.Engine
 
             var movingPiece = move.Piece;
 
+            StaticEvaluation -= movingPiece.Evaluation();
+
             var capturedPiece = (move as Ordinary)?.CapturedPiece;
 
             StaticEvaluation -= capturedPiece?.Evaluation() ?? 0;
@@ -83,8 +85,9 @@ namespace TheTurk.Engine
             else
                 FiftyMovesRule++;
 
-
             move.MakeMove(this);
+
+            StaticEvaluation += movingPiece.Evaluation();
 
             if (movingPiece is King)
             {
@@ -197,9 +200,12 @@ namespace TheTurk.Engine
             FiftyMovesRule = state.FiftyMovesRule;
             Zobrist.ZobristKey = state.ZobristKey;
 
+            StaticEvaluation -= move.Piece.Evaluation();
+
             move.UndoMove(this);
 
             StaticEvaluation += (move as Ordinary)?.CapturedPiece?.Evaluation() ?? 0;
+            StaticEvaluation += move.Piece.Evaluation();
 
             threeFoldRepetetion.Remove(zobristKey);
 
@@ -394,7 +400,7 @@ namespace TheTurk.Engine
             return pieces.Cast<Piece>().Where(p => p != null);
         }
 
-        private int Evaluate()
+        public int Evaluate()
         {
             return GetPieces().Sum(p => p.Evaluation());
         }

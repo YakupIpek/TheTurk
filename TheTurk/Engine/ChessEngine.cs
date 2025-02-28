@@ -117,27 +117,25 @@ namespace TheTurk.Engine
 
             if (ply <= 0)
             {
-                if (isCapture || true)
-                    return (QuiescenceSearch(alpha, beta), []);
-                else
-                    return ((int)Board.Side * Board.StaticEvaluation, []);
+                return ((int)Board.Side * Board.StaticEvaluation, []);
 
+                return (QuiescenceSearch(alpha, beta), []);
             }
 
-            if (nullMoveActive && !Board.IsInCheck && ply > 2 && isCapture)
-            {
-                int R = (ply > 6) ? 3 : 2; // Adaptive Null Move Reduction
+            //if (nullMoveActive && !Board.IsInCheck && ply > 2 && isCapture)
+            //{
+            //    int R = (ply > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
 
-                var state = Board.MakeNullMove();
+            //    var state = Board.MakeNullMove();
 
-                var (score, _) = AlphaBeta(-beta, -beta + 1, ply - R, depth + 1, false).Negate();
+            //    var (score, _) = AlphaBeta(-beta, -beta + 1, ply - R, depth + 1, false).Negate();
 
-                Board.UndoNullMove(state);
+            //    Board.UndoNullMove(state);
 
-                if (score >= beta)
-                    return (beta, []);
-            }
+            //    if (score >= beta)
+            //        return (beta, []);
+            //}
 
             var sortedMoves = SortMoves(moves, depth);
 
@@ -158,24 +156,21 @@ namespace TheTurk.Engine
 
                 var line = Array.Empty<Move>();
 
-                if (!importantMove)
-                {
-                    (score, line) = AlphaBeta(-beta, -alpha, ply - 2, depth + 1, false).Negate();
+                //if (!importantMove)
+                //{
+                //    (score, line) = AlphaBeta(-beta, -alpha, ply - 2, depth + 1, false).Negate();
 
-                    importantMove = score > alpha && score < beta;
-                }
+                //    importantMove = score > alpha && score < beta;
+                //}
 
-                if (importantMove)
+                if (importantMove || true)
                 {
                     var r = iterationPly > 2 && depth == iterationPly - 2 && (Board.IsInCheck || isCapture) ? 0 : 1;
 
-                    (score, line) = AlphaBeta(-beta, -alpha, ply - r, depth + 1, false, isCaptureMove).Negate();
+                    (score, line) = AlphaBeta(-beta, -alpha, ply - 1, depth + 1, false, isCaptureMove).Negate();
                 }
 
                 Board.UndoMove(move, state);
-
-
-
 
                 if (score >= beta)
                 {
@@ -206,7 +201,7 @@ namespace TheTurk.Engine
         {
             node++;
 
-            var eval = (int)Board.Side * Board.StaticEvaluation;
+            var eval = Board.StaticEvaluation;
 
             if (eval >= beta)
                 return beta;
