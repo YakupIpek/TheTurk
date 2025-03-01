@@ -30,7 +30,7 @@ public class TestPositions
 
         board.SetUpBoard(fen);
 
-        var results = engine.Search(800_000);
+        var results = engine.Run(80_000);
 
         var result = results.Take(10).Skip(4).FirstOrDefault(result => bestMoves.Contains(result.BestLine.First().ToString()));
 

@@ -12,7 +12,7 @@ namespace TheTurk.Engine
     {
         #region Fields and Properties
 
-        public const int CheckMateValue = 1_000_000,
+        public const int CheckMateValue = 100_000_100,
                          StaleMateValue = 0,
                          Draw = 0;
 
@@ -23,9 +23,6 @@ namespace TheTurk.Engine
         private Piece[] pieces;
         public int FiftyMovesRule { get; private set; }
         private int totalMoves;
-
-        private Lazy<bool> LazyIsInCheck = new(() => false, false);
-        private bool IsInCheck => LazyIsInCheck.Value;
         public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
@@ -59,8 +56,6 @@ namespace TheTurk.Engine
 
         public BoardState MakeMove(Move move)
         {
-            //LazyIsInCheck = new(InCheck, false);
-
             var state = new BoardState(this);
 
             var movingPiece = move.Piece;
@@ -168,8 +163,6 @@ namespace TheTurk.Engine
 
         public BoardState MakeNullMove()
         {
-            //LazyIsInCheck = new(InCheck, false);
-
             var state = new BoardState { ZobristKey = Zobrist.ZobristKey, EnPassantSquare = EnPassantSquare };
 
             EnPassantSquare = new Coordinate(0, 0);

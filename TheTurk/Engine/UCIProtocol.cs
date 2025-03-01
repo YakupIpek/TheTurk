@@ -158,7 +158,7 @@ public class UCIProtocol
 
     private void HandleGo(int time)
     {
-        var results = engine.Search(time);
+        var results = engine.Run(time);
 
         var bestLine = Array.Empty<Move>();
 

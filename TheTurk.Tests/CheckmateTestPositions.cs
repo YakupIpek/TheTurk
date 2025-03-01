@@ -15,7 +15,7 @@ public class CheckmateTestPositions
 
         var engine = new ChessEngine(board);
 
-        var results = engine.Search(100_000).Take(10);
+        var results = engine.Run(100_000).Take(10);
 
         var found = results.Any(result =>
         {
