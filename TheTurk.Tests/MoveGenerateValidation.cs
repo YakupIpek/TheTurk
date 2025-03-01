@@ -1,6 +1,4 @@
 ﻿using TheTurk.Engine;
-using TheTurk.Moves;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TheTurk.Tests
 {
