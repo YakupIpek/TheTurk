@@ -6,7 +6,7 @@ namespace TheTurk.Pieces
     {
         public const int Id = 2;
         public const char Letter = 'B';
-        const int pieceValue = 325;
+        const int pieceValue = 330;
         public override int PieceValue => Color == Color.White ? pieceValue : -pieceValue;
         public override char NotationLetter => Letter;
         public override Coordinate[] PieceDirection => Coordinate.crossFourDirectionDelta;

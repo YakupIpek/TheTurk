@@ -8,7 +8,7 @@ namespace TheTurk.Pieces
     {
         public const int Id = 1;
         public const char Letter = 'N';
-        const int pieceValue = 325;
+        const int pieceValue = 320;
         public static readonly Coordinate[] Directions;
         private static readonly int[,] pieceSquareTable;
         public override int PieceValue => Color == Color.White ? pieceValue : -pieceValue;
