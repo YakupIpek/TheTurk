@@ -173,7 +173,6 @@ public class UCIProtocol
         Console.WriteLine("bestmove " + bestLine.First().IONotation());
     }
 
-
     public static void WriteOutput(EngineResult result)
     {
         if (result.BestLine.Any())

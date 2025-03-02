@@ -67,13 +67,18 @@ namespace TheTurk.Engine
 
             iterationPly = 1;
 
-            while (HaveTime() && !ExitRequested)
+            while (CanSearch())
             {
                 //transpositions = new(50000);
                 node = 0;
                 var (score, line) = Search(alpha, beta, iterationPly, depth, true);
 
-                if (score <= alpha || score >= beta)
+                if (!CanSearch())
+                    break;
+
+                var validScore = score > alpha && score < beta;
+
+                if (validScore is not true)
                 {
                     // Make full window search again
                     alpha = -Infinity;
@@ -98,13 +103,17 @@ namespace TheTurk.Engine
             ExitRequested = false;
         }
 
+        private bool CanSearch()
+        {
+            return HaveTime() && !ExitRequested;
+        }
 
         (int score, Move[] line) Search(int alpha, int beta, int plyLeft, int depth, bool nullMoveActive, bool isCapture = false)
         {
             node++;
 
             //if time out or exit requested after 1st iteration,so leave thinking.
-            if ((!HaveTime() || ExitRequested) && iterationPly > 1)
+            if (!CanSearch() && iterationPly > 1)
                 return (Board.Draw, []);
 
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
@@ -151,7 +160,7 @@ namespace TheTurk.Engine
 
                 var isCaptureMove = move is Ordinary c && c.CapturedPiece is not null;
 
-                var importantMove = isCapture || (movesIndex < 2 && iterationPly > 1) || Board.InCheck();
+                var importantMove = (movesIndex < 3) || Board.InCheck() || (isCapture && movesIndex < 4);
 
                 var line = Array.Empty<Move>();
 
@@ -165,7 +174,7 @@ namespace TheTurk.Engine
                 if (importantMove)
                 {
                     //var r = Board.InCheck() ? 0 : 1;
-                                        
+
                     (score, line) = Search(-beta, -alpha, plyLeft - 1, depth + 1, false, isCaptureMove).Negate();
                 }
 

@@ -23,19 +23,17 @@ public class TestPositions
     [DynamicData(nameof(Data), DynamicDataSourceType.Property)]
     public void Test(string fen, string[] bestMoves)
     {
-        var board = new Board();
+        var board = new Board(fen);
         var engine = new ChessEngine(board);
-
-        board.SetUpBoard(fen);
 
         var results = engine.Run(80_000);
 
-        var result = results.Take(10).Skip(4).FirstOrDefault(result => bestMoves.Contains(result.BestLine.First().ToString()));
+        var result = results
+            .Take(10)
+            .Skip(4)
+            .ForEach(UCIProtocol.WriteOutput)
+            .Any(result => bestMoves.Contains(result.BestLine.First().ToString()));
 
-        Assert.IsNotNull(result);
-
-        var bestline = string.Join(" ", result.BestLine.Select(m => m.ToString()));
-
-        Console.WriteLine($"nodes: {result.NodesCount}, score: {result.Score}, line: {bestline}");
+        Assert.IsTrue(result);
     }
 }
