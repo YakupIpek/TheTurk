@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Transactions;
 using TheTurk.Moves;
 using TheTurk.Pieces;
 
@@ -24,7 +26,7 @@ namespace TheTurk.Engine
         private Stopwatch elapsedTime;
         public bool ExitRequested { get; set; }
         public readonly Board Board;
-        const int Infinity = 1_000_000_000;
+        const int Infinity = int.MaxValue;
 
         int node;
 
@@ -108,6 +110,7 @@ namespace TheTurk.Engine
             return HaveTime() && !ExitRequested;
         }
 
+
         (int score, Move[] line) Search(int alpha, int beta, int plyLeft, int depth, bool nullMoveActive, bool isCapture = false)
         {
             node++;
@@ -126,7 +129,7 @@ namespace TheTurk.Engine
 
             if (plyLeft <= 0)
             {
-                return (QuiescenceSearch(alpha, beta), []);
+                return (QuiescenceSearch(alpha, beta, depth), []);
             }
 
             if (nullMoveActive && !Board.InCheck() && plyLeft > 2 && !isCapture)
@@ -151,7 +154,6 @@ namespace TheTurk.Engine
 
             foreach (var move in sortedMoves)
             {
-
                 var state = Board.MakeMove(move);
 
                 movesIndex++;
@@ -173,7 +175,7 @@ namespace TheTurk.Engine
 
                 if (importantMove)
                 {
-                    //var r = Board.InCheck() ? 0 : 1;
+                    var r = Board.InCheck() ? 0 : 1;
 
                     (score, line) = Search(-beta, -alpha, plyLeft - 1, depth + 1, false, isCaptureMove).Negate();
                 }
@@ -184,7 +186,8 @@ namespace TheTurk.Engine
                 {
                     killerMoves.Add(move, depth);
 
-                    return (beta, [.. line, move]); //beta cut-off
+                    return (beta, [.. line, move]);
+
                 }
 
                 if (score > alpha)
@@ -199,11 +202,11 @@ namespace TheTurk.Engine
             return (alpha, pv);
         }
 
-        int QuiescenceSearch(int alpha, int beta)
+        int QuiescenceSearch(int alpha, int beta, int depth)
         {
             node++;
 
-            var eval = Board.Evaluate();
+            var eval = Board.Evaluate(depth);
 
             if (eval >= beta)
                 return beta;
@@ -219,7 +222,7 @@ namespace TheTurk.Engine
             {
                 var state = Board.MakeMove(capture);
 
-                var score = -QuiescenceSearch(-beta, -alpha);
+                var score = -QuiescenceSearch(-beta, -alpha, depth + 1);
 
                 Board.UndoMove(capture, state);
 
@@ -240,7 +243,7 @@ namespace TheTurk.Engine
         /// <returns></returns>
         IEnumerable<Move> MVVLVASorting(IEnumerable<Move> moves)
         {
-            return moves.OfType<Ordinary>().Where(move => move.CapturedPiece != null).
+            return moves.Where(move => (move is Ordinary m && m.CapturedPiece != null) || (move is Promote p && (p.PromotedPiece is Queen or Knight))).
                 OrderByDescending(move => move.MovePriority());
         }
 

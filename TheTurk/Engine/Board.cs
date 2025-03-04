@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Linq;
+using System.Text;
 using TheTurk.Moves;
 using TheTurk.Pieces;
 
@@ -12,7 +14,7 @@ namespace TheTurk.Engine
     {
         #region Fields and Properties
 
-        public const int CheckMateValue = 100_000_100,
+        public const int CheckMateValue = 100_000_000,
                          StaleMateValue = 0,
                          Draw = 0;
 
@@ -354,32 +356,52 @@ namespace TheTurk.Engine
 
         public void ShowBoard()
         {
-            Coordinate square = new Coordinate(8, 1);
-            Console.WriteLine("----------------");
-            for (int rank = 0; rank < 8; rank++)
-            {
 
+            var symbols = new Dictionary<char, char>
+            {
+                {'K', '♔'}, // beyaz kral
+                {'Q', '♕'}, // beyaz vezir
+                {'R', '♖'}, // beyaz kale
+                {'B', '♗'}, // beyaz fil
+                {'N', '♘'}, // beyaz at
+                {'P', '♙'}, // beyaz piyon
+                {'k', '♚'}, // siyah kral
+                {'q', '♛'}, // siyah vezir
+                {'r', '♜'}, // siyah kale
+                {'b', '♝'}, // siyah fil
+                {'n', '♞'}, // siyah at
+                {'p', '♙'}  // siyah piyon
+            };
+
+            Console.WriteLine("+-----------------+");
+
+            for (int rank = 8; rank >= 1; rank--)
+            {
+                Console.Write("|");
                 for (int file = 1; file <= 8; file++)
                 {
-                    if (this[square] != null)
+                    var square = new Coordinate(rank, file);
+                    var piece = this[square];
+                    if (piece != null)
                     {
-                        Console.Write(" ");
-                        var letter = this[square].NotationLetter == ' ' ? 'P' : this[square].NotationLetter;
-                        letter = square.GetPiece(this).Color == Color.White ? letter : char.ToLower(letter);
-                        Console.Write(letter);
+                        var letter = piece.NotationLetter == ' ' ? 'P' : piece.NotationLetter;
+                        (letter, var color) = piece.Color == Color.White ? (letter, ConsoleColor.White) : (char.ToLower(letter), ConsoleColor.DarkGray);
+
+                        Console.ForegroundColor = color;
+                        Console.Write(" " + symbols[letter]);
+                        Console.ResetColor();
                     }
                     else
                     {
                         Console.Write(" -");
                     }
-                    square = new Coordinate(square.Rank, square.File + 1);
                 }
-                Console.WriteLine();
-                square = new Coordinate(square.Rank - 1, 1);
+                Console.WriteLine(" |" + rank);
             }
-            Console.WriteLine("----------------");
-        }
 
+            Console.WriteLine("+-----------------+");
+            Console.WriteLine("  a b c d e f g h");
+        }
         public void ToggleSide()
         {
             Side = Side == Color.White ? Color.Black : Color.White;
@@ -390,9 +412,9 @@ namespace TheTurk.Engine
             return squares.Cast<Piece>().Where(p => p != null);
         }
 
-        public int Evaluate()
+        public int Evaluate(int depth)
         {
-            return (int)Side * GetPieces().Sum(p => p.Evaluation());
+            return (int)Side * (GetPieces().Sum(p => p.Evaluation()) - depth * 5);
         }
     }
 }
