@@ -25,11 +25,11 @@ namespace TheTurk.Moves
             {
                 case PromotionType.Queen: PromotedPiece = new Queen(to, piece.Color);
                     break;
+                case PromotionType.Knight: PromotedPiece = new Knight(to, piece.Color);
+                    break;
                 case PromotionType.Rook: PromotedPiece = new Rook(to, piece.Color);
                     break;
                 case PromotionType.Bishop: PromotedPiece = new Bishop(to, piece.Color);
-                    break;
-                case PromotionType.Knight: PromotedPiece = new Knight(to, piece.Color);
                     break;
                 default:
                     break;
