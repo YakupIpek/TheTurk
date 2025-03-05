@@ -245,7 +245,7 @@ namespace TheTurk.Engine
 
         public int GetCheckMateOrStaleMateScore(int depth)
         {
-            return InCheck() ? CheckMateValue - depth : StaleMateValue;
+            return InCheck() ? -CheckMateValue + depth : StaleMateValue;
         }
 
         public void SetUpBoard()
@@ -414,7 +414,7 @@ namespace TheTurk.Engine
 
         public int Evaluate(int depth)
         {
-            return (int)Side * (GetPieces().Sum(p => p.Evaluation()) - depth * 5);
+            return (int)Side * (GetPieces().Sum(p => p.Evaluation())/* - depth * 5*/);
         }
     }
 }

@@ -73,7 +73,7 @@ namespace TheTurk.Engine
             {
                 //transpositions = new(50000);
                 node = 0;
-                var (score, line) = Search(alpha, beta, iterationPly, depth, true);
+                var (score, line) = Search(alpha, beta, iterationPly, depth, true, false, true);
 
                 if (!CanSearch())
                     break;
@@ -86,6 +86,7 @@ namespace TheTurk.Engine
                     alpha = -Infinity;
                     beta = Infinity;
 
+                    Console.WriteLine("Search failed. Full window search again");
                     continue;
                 }
 
@@ -96,7 +97,7 @@ namespace TheTurk.Engine
 
                 yield return result;
 
-                if (result.MateIn != 0 || ExitRequested)
+                if (result.MateIn != 0 && line.Length <= iterationPly)
                     break;
 
                 iterationPly++;
@@ -110,8 +111,9 @@ namespace TheTurk.Engine
             return HaveTime() && !ExitRequested;
         }
 
+        //public record MoveStack(Move Move, bool CollectPV, isCapture);
 
-        (int score, Move[] line) Search(int alpha, int beta, int plyLeft, int depth, bool nullMoveActive, bool isCapture = false)
+        (int score, Move[] line) Search(int alpha, int beta, int plyLeft, int depth, bool nullMoveActive, bool isCapture, bool collectPV)
         {
             node++;
 
@@ -125,7 +127,7 @@ namespace TheTurk.Engine
             var moves = Board.GenerateMoves();
 
             if (!moves.Any())
-                return (-Board.GetCheckMateOrStaleMateScore(depth), []);
+                return (Board.GetCheckMateOrStaleMateScore(depth), []);
 
             if (plyLeft <= 0)
             {
@@ -138,7 +140,7 @@ namespace TheTurk.Engine
 
                 var state = Board.MakeNullMove();
 
-                var (score, _) = Search(-beta, -beta + 1, plyLeft - R, depth + 1, false).Negate();
+                var (score, _) = Search(-beta, -beta + 1, plyLeft - R, depth + 1, false, false, false).Negate();
 
                 Board.UndoNullMove(state);
 
@@ -150,7 +152,7 @@ namespace TheTurk.Engine
 
             var movesIndex = 0;
 
-            var pv = new Move[0];
+            Move[] pv = [];
 
             foreach (var move in sortedMoves)
             {
@@ -162,22 +164,24 @@ namespace TheTurk.Engine
 
                 var isCaptureMove = move is Ordinary c && c.CapturedPiece is not null;
 
-                var importantMove = (movesIndex < 3) || Board.InCheck() || (isCapture && movesIndex < 4);
+                var inCheckLazy = new Lazy<bool>(Board.InCheck, false);
+
+                var importantMove = (movesIndex < 3) || plyLeft >= 3 || move is Promote or EnPassant|| (isCapture && movesIndex < 9) || inCheckLazy.Value;
 
                 var line = Array.Empty<Move>();
 
                 if (!importantMove)
                 {
-                    (score, line) = Search(-beta, -alpha, plyLeft - 3, depth + 1, isCapture).Negate();
+                    (score, line) = Search(-beta, -alpha, plyLeft - 3, depth + 1, false, isCapture, false).Negate();
 
                     importantMove = score > alpha && score < beta;
                 }
 
                 if (importantMove)
                 {
-                    var r = Board.InCheck() ? 0 : 1;
+                    var r = inCheckLazy.Value ? 0 : 1;
 
-                    (score, line) = Search(-beta, -alpha, plyLeft - 1, depth + 1, false, isCaptureMove).Negate();
+                    (score, line) = Search(-beta, -alpha, plyLeft - r, depth + 1, false, isCaptureMove, collectPV).Negate();
                 }
 
                 Board.UndoMove(move, state);
@@ -195,7 +199,10 @@ namespace TheTurk.Engine
                     alpha = score;
                     historyMoves.AddMove(move);
 
-                    pv = [.. line, move];
+                    if (collectPV)
+                    {
+                        pv = [.. line, move];
+                    }
                 }
             }
 

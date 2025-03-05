@@ -15,6 +15,11 @@ namespace TheTurk.Pieces
         {
             return color == Color.White ? Color.Black : Color.White;
         }
+
+        public static int AsInt(this Color color)
+        {
+            return color == Color.White ? 1 : -1;
+        }
     }
     public abstract class Piece
     {
