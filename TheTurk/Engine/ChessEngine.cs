@@ -94,12 +94,7 @@ namespace TheTurk.Engine
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
-                var line = new List<Move>();
-                do
-                {
-                    line.Add(pv.Value);
-                    pv = pv.Next;
-                } while (pv is not null);
+                var line = ToEnumerable(pv).ToList();
 
                 var result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line);
 
@@ -112,6 +107,14 @@ namespace TheTurk.Engine
             }
 
             ExitRequested = false;
+        }
+
+        private static IEnumerable<Move> ToEnumerable(Node<Move>? pv)
+        {
+            for (var current = pv; current != null; current = current.Next)
+            {
+                yield return current.Value;
+            }
         }
 
         private bool CanSearch()
