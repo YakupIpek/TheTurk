@@ -18,7 +18,7 @@ namespace TheTurk.Pieces
 
         public static int AsInt(this Color color)
         {
-            return color == Color.White ? 1 : -1;
+            return (int)color;
         }
     }
     public abstract class Piece

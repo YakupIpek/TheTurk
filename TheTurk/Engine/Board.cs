@@ -239,7 +239,6 @@ namespace TheTurk.Engine
         private bool InCheck(Color sideIncheck)
         {
             var king = sideIncheck == Color.White ? WhiteKing : BlackKing;
-
             return king.From.IsAttackedSquare(this, king.OppenentColor);
         }
 
@@ -305,43 +304,44 @@ namespace TheTurk.Engine
                 foreach (var letter in allLetters)
                 {
                     Color color = char.IsUpper(letter) ? Color.White : Color.Black;
-                    switch (char.ToUpper(letter))
+                    char upperLetter = char.ToUpper(letter);
+
+                    if (upperLetter == Queen.Letter)
                     {
-                        case Queen.Letter:
-                            this[square] = new Queen(square, color);
-                            break;
-                        case Rook.Letter:
-                            this[square] = new Rook(square, color);
-                            break;
-                        case Bishop.Letter:
-                            this[square] = new Bishop(square, color);
-                            break;
-                        case Knight.Letter:
-                            this[square] = new Knight(square, color);
-                            break;
-                        case 'P':
-                            this[square] = new Pawn(square, color);
-                            break;
-                        case King.Letter:
-                            {
-                                var king = new King(square, color);
-                                this[square] = king;
-                                if (color == Color.White) WhiteKing = king;
-                                else BlackKing = king;
+                        this[square] = new Queen(square, color);
+                    }
+                    else if (upperLetter == Rook.Letter)
+                    {
+                        this[square] = new Rook(square, color);
+                    }
+                    else if (upperLetter == Bishop.Letter)
+                    {
+                        this[square] = new Bishop(square, color);
+                    }
+                    else if (upperLetter == Knight.Letter)
+                    {
+                        this[square] = new Knight(square, color);
+                    }
+                    else if (upperLetter == 'P')
+                    {
+                        this[square] = new Pawn(square, color);
+                    }
+                    else if (upperLetter == King.Letter)
+                    {
+                        var king = new King(square, color);
+                        this[square] = king;
 
-
-                            }
-                            break;
-                        default:
-                            {
-                                for (int i = 1; i < int.Parse(letter.ToString()); i++)
-                                {
-                                    square = square.To(Coordinate.Directions.East);
-
-                                }
-
-                            }
-                            break;
+                        if (color == Color.White)
+                            WhiteKing = king;
+                        else
+                            BlackKing = king;
+                    }
+                    else
+                    {
+                        for (int i = 1; i < int.Parse(letter.ToString()); i++)
+                        {
+                            square = square.To(Coordinate.Directions.East);
+                        }
                     }
                     if (square.File == 8)
                     {
@@ -414,7 +414,7 @@ namespace TheTurk.Engine
 
         public int Evaluate(int depth)
         {
-            return (int)Side * (GetPieces().Sum(p => p.Evaluation())/* - depth * 5*/);
+            return Side.AsInt() * (GetPieces().Sum(p => p.Evaluation())/* - depth * 5*/);
         }
     }
 }
