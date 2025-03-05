@@ -160,7 +160,7 @@ public class UCIProtocol
     {
         var results = engine.Run(time);
 
-        var bestLine = Array.Empty<Move>();
+        var bestLine = new List<Move>();
 
         foreach (var result in results)
         {
