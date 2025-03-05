@@ -3,9 +3,13 @@
 
 #region Castle enum
 
+[Flags]
 public enum Castle
 {
-    ShortCastle, LongCastle, BothCastle, NoneCastle
+    NoneCastle = 0,
+    ShortCastle = 1,
+    LongCastle = 2,
+    BothCastle = ShortCastle | LongCastle // 3
 }
 
 #endregion

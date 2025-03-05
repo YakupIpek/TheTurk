@@ -10,7 +10,7 @@ using TheTurk.Pieces;
 
 namespace TheTurk.Engine
 {
-    public class Board
+    public partial class Board
     {
         #region Fields and Properties
 
@@ -34,11 +34,7 @@ namespace TheTurk.Engine
 
         public Board(string fen = InitialFen)
         {
-            squares = new Piece[64];
-            WhiteCastle = Castle.NoneCastle;
-            BlackCastle = Castle.NoneCastle;
-            Side = Color.White;
-            EnPassantSquare = new Coordinate(0, 0);//means deactive
+            SetFen(fen);
             SetUpBoard(fen);
         }
 
@@ -249,7 +245,6 @@ namespace TheTurk.Engine
 
         public void SetUpBoard()
         {
-            SetFen(InitialFen);
 
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
@@ -258,100 +253,10 @@ namespace TheTurk.Engine
 
         public void SetUpBoard(string fen)
         {
-            SetFen(fen);
 
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
-        }
-
-        private void SetFen(string value)
-        {
-
-            {
-                squares = new Piece[64];
-                var splitted = value.Trim().Split(' ');
-                var ranks = splitted[0].Split('/').Reverse().ToArray();
-                var allLetters = from rank in ranks
-                                 from letter in rank
-                                 select letter;
-                Side = splitted[1] == "w" ? Color.White : Color.Black;
-
-                var castles = splitted[2];
-
-                if (castles.Contains("KQ")) WhiteCastle = Castle.BothCastle;
-                else if (castles.Contains("K")) WhiteCastle = Castle.ShortCastle;
-                else if (castles.Contains("Q")) WhiteCastle = Castle.LongCastle;
-                else WhiteCastle = Castle.NoneCastle;
-
-                if (castles.Contains("kq")) BlackCastle = Castle.BothCastle;
-                else if (castles.Contains("k")) BlackCastle = Castle.ShortCastle;
-                else if (castles.Contains("q")) BlackCastle = Castle.LongCastle;
-                else BlackCastle = Castle.NoneCastle;
-
-                EnPassantSquare = splitted[3] == "-" ? new Coordinate(0, 0) : Coordinate.NotationToSquare(splitted[3]);
-
-                if (splitted.Length > 4)
-                    FiftyMovesRule = Convert.ToInt32(splitted[4]);
-                else
-                    FiftyMovesRule = 0;
-                if (splitted.Length > 5)
-                    totalMoves = Convert.ToInt32(splitted[5]);
-                else
-                    totalMoves = 1;
-
-                Coordinate square = Coordinate.a1;
-                foreach (var letter in allLetters)
-                {
-                    Color color = char.IsUpper(letter) ? Color.White : Color.Black;
-                    char upperLetter = char.ToUpper(letter);
-
-                    if (upperLetter == Queen.Letter)
-                    {
-                        this[square] = new Queen(square, color);
-                    }
-                    else if (upperLetter == Rook.Letter)
-                    {
-                        this[square] = new Rook(square, color);
-                    }
-                    else if (upperLetter == Bishop.Letter)
-                    {
-                        this[square] = new Bishop(square, color);
-                    }
-                    else if (upperLetter == Knight.Letter)
-                    {
-                        this[square] = new Knight(square, color);
-                    }
-                    else if (upperLetter == 'P')
-                    {
-                        this[square] = new Pawn(square, color);
-                    }
-                    else if (upperLetter == King.Letter)
-                    {
-                        var king = new King(square, color);
-                        this[square] = king;
-
-                        if (color == Color.White)
-                            WhiteKing = king;
-                        else
-                            BlackKing = king;
-                    }
-                    else
-                    {
-                        for (int i = 1; i < int.Parse(letter.ToString()); i++)
-                        {
-                            square = square.To(Coordinate.Directions.East);
-                        }
-                    }
-                    if (square.File == 8)
-                    {
-                        if (square.Rank == 8 && square.File == 8) break;
-                        square = new Coordinate(square.Rank + 1, 1);
-                        continue;
-                    }
-                    square = square.To(Coordinate.Directions.East);
-                }
-            }
         }
 
         public void ShowBoard()
