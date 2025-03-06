@@ -16,7 +16,7 @@ namespace TheTurk.Engine
 
     public static class ResultExtensions
     {
-        public static (int score, Node<Move> line) Negate(this (int score, Node<Move> line) result) => (-result.score, result.line);
+        public static (int score, Node<Move>? line) Negate(this (int score, Node<Move>? line) result) => (-result.score, result.line);
     }
     public partial class ChessEngine
     {
@@ -29,10 +29,10 @@ namespace TheTurk.Engine
         public readonly Board Board;
         const int Infinity = int.MaxValue;
 
-        int node;
+        int nodes;
 
         Dictionary<long, TableEntry> transpositions;
-        private Move[] bestLine;
+        private List<Move> bestLine;
 
         /// <summary>
         /// 
@@ -64,16 +64,12 @@ namespace TheTurk.Engine
                 beta = Infinity,
                 depth = 0;
 
-            //var eval = Evaluation.Evaluate(Board);
-            //alpha = eval - Pawn.Piecevalue;
-            //beta = beta + Pawn.Piecevalue;
-
             iterationPly = 1;
 
             while (CanSearch())
             {
                 //transpositions = new(50000);
-                node = 0;
+                nodes = 0;
                 var (score, pv) = Search(alpha, beta, iterationPly, depth, true, false, true);
 
                 if (!CanSearch())
@@ -86,21 +82,19 @@ namespace TheTurk.Engine
                     // Make full window search again
                     alpha = -Infinity;
                     beta = Infinity;
-
-                    Console.WriteLine("Search failed. Full window search again");
                     continue;
                 }
 
                 alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 4;
 
-                var line = ToEnumerable(pv).ToList();
+                bestLine = ToEnumerable(pv).ToList();
 
-                var result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, node, line);
+                var result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodes, bestLine);
 
                 yield return result;
 
-                if (result.MateIn != 0 && line.Count <= iterationPly)
+                if (result.MateIn != 0 && bestLine.Count <= iterationPly)
                     break;
 
                 iterationPly++;
@@ -124,7 +118,7 @@ namespace TheTurk.Engine
 
         (int score, Node<Move>? line) Search(int alpha, int beta, int plyLeft, int depth, bool nullMoveActive, bool isCapture, bool collectPV)
         {
-            node++;
+            nodes++;
 
             //if time out or exit requested after 1st iteration,so leave thinking.
             if (!CanSearch() && iterationPly > 1)
@@ -190,7 +184,19 @@ namespace TheTurk.Engine
                 {
                     var r = inCheckLazy.Value ? 0 : 1;
 
-                    (score, line) = Search(-beta, -alpha, plyLeft - r, depth + 1, false, isCaptureMove, collectPV).Negate();
+                    var fullWindowSearch = () => Search(-beta, -alpha, plyLeft - r, depth + 1, false, isCaptureMove, collectPV).Negate();
+
+                    if (movesIndex == 1 && bestLine.ElementAtOrDefault(depth)?.Equals(move) == true)
+                        (score, line) = fullWindowSearch();
+                    else
+                    {
+                        (score, line) = Search(-alpha-1, -alpha, plyLeft - r, depth + 1, false, isCaptureMove, collectPV).Negate();
+
+                        if (score > alpha && score < beta)
+                            (score, line) = fullWindowSearch();
+                    }
+
+
                 }
 
                 Board.UndoMove(move, state);
@@ -220,7 +226,7 @@ namespace TheTurk.Engine
 
         int QuiescenceSearch(int alpha, int beta, int depth)
         {
-            node++;
+            nodes++;
 
             var eval = Board.Evaluate(depth);
 
@@ -274,29 +280,22 @@ namespace TheTurk.Engine
             var killer = killerMoves.BestMoves.ElementAtOrDefault(depth);
             var bestHistoryMove = Board.Side == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
 
-            // List to hold sorting criteria, starting with MovePriority at the end
-            var sortCriteria = moves.OrderBy(m => false);
-
-            // Add the sorting criteria only if they are not null
-            if (previousBestMove != null)
+            return moves.OrderByDescending(move =>
             {
-                sortCriteria = moves.OrderBy(move => move.Equals(previousBestMove));
-            }
 
-            if (bestHistoryMove != null)
-            {
-                sortCriteria = sortCriteria.ThenByDescending(move => move.Equals(bestHistoryMove));
-            }
+                int priority = move.MovePriority();
 
-            if (killer != null)
-            {
-                sortCriteria = sortCriteria.ThenByDescending(move => move.Equals(killer));
-            }
+                if (previousBestMove?.Equals(move) == true)
+                    priority += 1000;
 
-            // Finally, add MovePriority sorting as the last criteria
-            sortCriteria = sortCriteria.ThenByDescending(move => move.MovePriority());
+                if (killer?.Equals(move) == true)
+                    priority += 700;
 
-            return sortCriteria;
+                if (bestHistoryMove?.Equals(move) == true)
+                    priority += 650;
+
+                return priority;
+            });
         }
 
 

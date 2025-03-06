@@ -34,7 +34,6 @@ namespace TheTurk.Engine
 
         public Board(string fen = InitialFen)
         {
-            SetFen(fen);
             SetUpBoard(fen);
         }
 
@@ -245,7 +244,7 @@ namespace TheTurk.Engine
 
         public void SetUpBoard()
         {
-
+            SetFen(InitialFen);
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
@@ -253,7 +252,7 @@ namespace TheTurk.Engine
 
         public void SetUpBoard(string fen)
         {
-
+            SetFen(fen);
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
