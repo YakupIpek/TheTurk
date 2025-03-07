@@ -173,7 +173,7 @@ namespace TheTurk.Engine
 
                 Node<Move>? line = null;
 
-                if (!importantMove)
+                if (!importantMove)// Late Move Reduction
                 {
                     (score, _) = Search(-beta, -alpha, plyLeft - 3, depth + 1, false, isCapture, false).Negate();
 
@@ -182,21 +182,21 @@ namespace TheTurk.Engine
 
                 if (importantMove)
                 {
-                    var r = inCheckLazy.Value ? 0 : 1;
+                    var r = inCheckLazy.Value || move is Promote or EnPassant ? 0 : 1;
 
-                    var fullWindowSearch = () => Search(-beta, -alpha, plyLeft - r, depth + 1, false, isCaptureMove, collectPV).Negate();
+                    var pvNode = movesIndex == 1 && bestLine.ElementAtOrDefault(depth)?.Equals(move) == true;
+                    var fullSearch = () => Search(-beta, -alpha, plyLeft - r, depth + 1, false, isCaptureMove, collectPV).Negate();
 
-                    if (movesIndex == 1 && bestLine.ElementAtOrDefault(depth)?.Equals(move) == true)
-                        (score, line) = fullWindowSearch();
+                    if (pvNode) // Principal Variation Search
+                        (score, line) = fullSearch();
                     else
                     {
-                        (score, line) = Search(-alpha-1, -alpha, plyLeft - r, depth + 1, false, isCaptureMove, collectPV).Negate();
+                        (score, _) = Search(-alpha - 1, -alpha, plyLeft - 1, depth + 1, false, isCaptureMove, false).Negate();
 
                         if (score > alpha && score < beta)
-                            (score, line) = fullWindowSearch();
+                            (score, line) = fullSearch();
+
                     }
-
-
                 }
 
                 Board.UndoMove(move, state);
