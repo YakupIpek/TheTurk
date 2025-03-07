@@ -9,22 +9,23 @@ namespace TheTurk.Engine
     class KillerMoves
     {
         private const int Maxdepth = 40;
-        private int[,,,,] killerMoves;///[depth,From.rank,From.file,To.rank,To.file] 
+        private int[,,] killerMoves;///[depth,From.Index,To.Index] 
         private int[] bestMoveScores;
         public Move[] BestMoves;
 
         public KillerMoves()
         {
-            int maxRankValue=9;
-            killerMoves=new int[Maxdepth, maxRankValue, maxRankValue, maxRankValue, maxRankValue];
+            killerMoves=new int[Maxdepth, 64, 64];
+            
             BestMoves=new Move[Maxdepth];
+            
             bestMoveScores= new int[Maxdepth];
         }
-        public void Add(Move move,int depth)
+        public void Add(Move move, int depth)
         {
-            int score = ++killerMoves[depth, move.From.Rank, move.From.File, move.To.Rank, move.To.File];
+            int score = ++killerMoves[depth, move.From.Index, move.To.Index];
 
-            if (score>bestMoveScores[depth])
+            if (score > bestMoveScores[depth])
             {
                 bestMoveScores[depth] = score;
                 BestMoves[depth] = move;
