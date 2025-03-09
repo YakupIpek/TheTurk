@@ -1,18 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using System.Transactions;
 using TheTurk.Moves;
 using TheTurk.Pieces;
 
 namespace TheTurk.Engine
 {
-    public class TableEntry
-    {
-        public int Score { get; set; }
-        public int Depth { get; set; }
-        public long HashKey { get; set; }
-    }
-    public record class Node<T>(T Value, Node<T> Next);
+    public record class Node<T>(T Value, Node<T>? Next = null);
 
     public static class ResultExtensions
     {
@@ -31,7 +28,7 @@ namespace TheTurk.Engine
 
         int nodes;
 
-        Dictionary<long, TableEntry> transpositions;
+        private TranspositionTable TranspositionTable;
         private List<Move> bestLine;
 
         /// <summary>
@@ -46,6 +43,7 @@ namespace TheTurk.Engine
             elapsedTime = new Stopwatch();
             historyMoves = new HistoryMoves();
             killerMoves = new KillerMoves();
+            TranspositionTable = new TranspositionTable(30);
         }
 
         /// <param name="timeLimit">Time limit in millisecond</param>
@@ -132,9 +130,14 @@ namespace TheTurk.Engine
             if (!moves.Any())
                 return (Board.GetCheckMateOrStaleMateScore(depth), null);
 
-            if (plyLeft <= 0)
+            if (plyLeft <= 0 )
             {
                 return (QuiescenceSearch(alpha, beta, depth), null);
+            }
+
+            if (TranspositionTable.TryGetBestMove(Board.ZobristKey, plyLeft, alpha, beta, out var tScore, out var tMove))
+            {
+                return (tScore, new(tMove));
             }
 
             if (nullMoveActive && !Board.InCheck() && plyLeft > 2 && !isCapture)
@@ -155,7 +158,9 @@ namespace TheTurk.Engine
 
             var movesIndex = 0;
 
-            Node<Move> pv = null;
+            Node<Move> bestMoveSoFar = null;
+
+            var entryType = HashEntryType.Alpha;
 
             foreach (var move in sortedMoves)
             {
@@ -195,7 +200,6 @@ namespace TheTurk.Engine
 
                         if (score > alpha && score < beta)
                             (score, line) = fullSearch();
-
                     }
                 }
 
@@ -205,23 +209,27 @@ namespace TheTurk.Engine
                 {
                     killerMoves.Add(move, depth);
 
-                    return (beta, null);
+                    TranspositionTable.Store(Board.ZobristKey, plyLeft, score, HashEntryType.Beta, move);
 
+                    return (beta, null);
                 }
 
                 if (score > alpha)
                 {
+                    entryType = HashEntryType.Exact;
                     alpha = score;
                     historyMoves.AddMove(move);
 
                     if (collectPV)
                     {
-                        pv = new Node<Move>(move, line);
+                        bestMoveSoFar = new Node<Move>(move, line);
                     }
                 }
             }
 
-            return (alpha, pv);
+            TranspositionTable.Store(Board.ZobristKey, plyLeft, alpha, entryType, bestMoveSoFar?.Value);
+
+            return (alpha, bestMoveSoFar);
         }
 
         int QuiescenceSearch(int alpha, int beta, int depth)

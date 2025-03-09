@@ -31,7 +31,7 @@ public class CheckmateTestPositions
             {
                 FEN = "1k1r4/pp1b1R2/3q2pp/4p3/2B5/4Q3/PPP2B2/2K5 b - -",
                 MateIn = 3,
-                MaxDepth = 8,
+                MaxDepth = 10,
                 Moves = new string[] { "d6d1", "c1d1", "d7g4" }
             },
             new

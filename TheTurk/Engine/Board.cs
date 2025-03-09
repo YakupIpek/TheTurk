@@ -22,6 +22,8 @@ namespace TheTurk.Engine
 
         public ThreeFoldRepetition threeFoldRepetetion;
         public Zobrist Zobrist;
+        public ulong ZobristKey => Zobrist.ZobristKey;
+
         private Piece[] squares;
         public int FiftyMovesRule { get; private set; }
         private int totalMoves;
