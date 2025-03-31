@@ -7,7 +7,7 @@ namespace TheTurk.Engine;
 
 public class UCIProtocol
 {
-    private readonly ChessEngine engine;
+    public readonly ChessEngine engine;
 
     public UCIProtocol()
     {
@@ -62,7 +62,7 @@ public class UCIProtocol
         }
     }
 
-    private void ProcessCommand(string[] command)
+    public void ProcessCommand(string[] command)
     {
         switch (command)
         {
@@ -121,7 +121,8 @@ public class UCIProtocol
         }
     }
 
-    private void ApplyMoves(string[] moves)
+    List<int> ints = new List<int>();
+    public void ApplyMoves(string[] moves)
     {
         foreach (var moveNotation in moves)
         {
@@ -143,6 +144,7 @@ public class UCIProtocol
 
             var state = board.MakeMove(move);
 
+            
             var attacked = king.From.IsAttackedSquare(board, king.OppenentColor);
 
 
@@ -153,6 +155,8 @@ public class UCIProtocol
                 board.UndoMove(move, state);
                 return;
             }
+
+            Console.WriteLine($"{move} - {board.ZobristKey}");
         }
     }
 
@@ -181,7 +185,7 @@ public class UCIProtocol
 
             Console.Write($"info depth {result.Ply} score {score} nodes {result.NodesCount} time {result.ElapsedTime} pv ");
 
-            foreach (var move in result.BestLine)
+            foreach (var move in result.BestLine ?? [])
             {
                 Console.Write(move.IONotation() + " ");
             }

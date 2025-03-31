@@ -7,7 +7,7 @@ namespace TheTurk.Engine
 {
     public class ThreeFoldRepetition
     {
-        private Dictionary<ulong, int> zobristKeys = [];
+        private readonly Dictionary<ulong, int> zobristKeys = [];
         private int counter;
         public bool IsThreeFoldRepetetion => counter > 0;
 

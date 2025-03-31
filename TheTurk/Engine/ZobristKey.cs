@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks.Sources;
 using TheTurk.Moves;
 using TheTurk.Pieces;
 
@@ -73,6 +74,7 @@ namespace TheTurk.Engine
             }
             ZobristKey ^= whiteCastle[(int)board.WhiteCastle];
             ZobristKey ^= blackCastle[(int)board.BlackCastle];
+
             ZobristKey ^= enPassant[board.EnPassantSquare.Rank, board.EnPassantSquare.File];
             ZobristKey ^= this.side;
         }
@@ -82,26 +84,26 @@ namespace TheTurk.Engine
             ZobristKey ^= this.side;
         }
 
-        public void ZobristUpdate(Move move)
+        public void ZobristUpdate(Move move, BoardState state)
         {
             var (movingSide, oppositeSide) = move.Piece.Color == Color.White ? (0, 1) : (1, 0);
 
-            // Remove moving piece from its original square
-            Update(movingSide, move.Piece.Number, move.From);
-
-            if (move is Ordinary ordinaryMove)
+            if (move is Promote promotionMove)
             {
-                if (ordinaryMove.CapturedPiece is not null)
-                {
-                    // Remove captured piece from the destination square.
-                    Update(oppositeSide, ordinaryMove.CapturedPiece.Number, ordinaryMove.CapturedPiece.From);
-                }
+                Update(movingSide, move.Piece.Number, move.From);
 
-                if (ordinaryMove is Promote promotionMove)
-                {
-                    // Add the promoted piece to the destination square.
-                    Update(movingSide, promotionMove.PromotedPiece.Number, move.To);
-                }
+                // Add the promoted piece to the destination square.
+                Update(movingSide, promotionMove.PromotedPiece.Number, move.To);
+            }
+            else
+            {
+                Update(movingSide, move.Piece.Number, move.From, move.To);
+            }
+
+            // Remove captured piece from the destination square.
+            if (move is Ordinary ordinaryMove && ordinaryMove.CapturedPiece is not null)
+            {
+                Update(oppositeSide, ordinaryMove.CapturedPiece.Number, ordinaryMove.CapturedPiece.From);
             }
             else if (move is ShortCastle)
             {
@@ -111,9 +113,7 @@ namespace TheTurk.Engine
                 var (from, to) = move.Piece.Color == Color.White ? (h1, f1) : (h8, f8);
 
                 // Remove rook from its original square.
-                Update(movingSide, Rook.Id, from);
-                // Add rook to its new square.
-                Update(movingSide, Rook.Id, to);
+                Update(movingSide, Rook.Id, from, to);
             }
             else if (move is LongCastle)
             {
@@ -123,20 +123,22 @@ namespace TheTurk.Engine
                 var (from, to) = move.Piece.Color == Color.White ? (a1, d1) : (a8, d8);
 
                 // Remove rook from its original square.
-                Update(movingSide, Rook.Id, from);
-                // Add rook to its new square.
-                Update(movingSide, Rook.Id, to);
+                Update(movingSide, Rook.Id, from, to);
             }
 
-            // Toggle side-to-move by XOR-ing with the side key.
-            ZobristKey ^= (ulong)movingSide;
+            
+            ZobristKey ^= this.side;
 
             // Add updated castling rights and en passant square to the hash.
             // (Assumes that the board state has already been updated with the move.)
-            ZobristKey ^= whiteCastle[(int)board.WhiteCastle];
-            ZobristKey ^= blackCastle[(int)board.BlackCastle];
 
-            if (board.EnPassantSquare.Rank != 0 && board.EnPassantSquare.File != 0)
+            if (board.WhiteCastle != state.WhiteCastle)
+                ZobristKey ^= whiteCastle[(int)board.WhiteCastle];
+
+            if (board.BlackCastle != state.BlackCastle)
+                ZobristKey ^= blackCastle[(int)board.BlackCastle];
+
+            if (board.EnPassantSquare.Rank != 0)
             {
                 ZobristKey ^= enPassant[board.EnPassantSquare.Rank, board.EnPassantSquare.File];
             }
@@ -145,6 +147,12 @@ namespace TheTurk.Engine
         private void Update(int side, int piece, Coordinate square)
         {
             ZobristKey ^= pieces[side, piece, square.Rank, square.File];
+        }
+
+        private void Update(int side, int piece, Coordinate from, Coordinate to)
+        {
+            Update(side, piece, from);
+            Update(side, piece, to);
         }
     }
 }

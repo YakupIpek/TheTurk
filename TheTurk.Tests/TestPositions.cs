@@ -25,11 +25,12 @@ public class TestPositions
         var board = new Board(fen);
         var engine = new ChessEngine(board);
 
-        var results = engine.Run(80_000);
+        var results = engine.Run(10_000);
 
         var result = results
             .ForEach(UCIProtocol.WriteOutput)
             .Take(10)
+            .Skip(4)
             .Any(result => bestMoves.Contains(result.BestLine.First().ToString()));
 
         Assert.IsTrue(result);

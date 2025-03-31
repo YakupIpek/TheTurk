@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.Pipelines;
-using System.Linq;
-using System.Text;
-using TheTurk.Moves;
+﻿using TheTurk.Moves;
 using TheTurk.Pieces;
 
 namespace TheTurk.Engine
@@ -14,7 +7,7 @@ namespace TheTurk.Engine
     {
         #region Fields and Properties
 
-        public const int CheckMateValue = 100_000_000,
+        public const int CheckMateValue = 1_000_000,
                          StaleMateValue = 0,
                          Draw = 0;
 
@@ -25,8 +18,9 @@ namespace TheTurk.Engine
         public ulong ZobristKey => Zobrist.ZobristKey;
 
         private Piece[] squares;
+
         public int FiftyMovesRule { get; private set; }
-        private int totalMoves;
+        public int TotalMoves { get; private set; }
         public Color Side { get; private set; }
         public King WhiteKing { get; private set; }
         public King BlackKing { get; private set; }
@@ -52,14 +46,13 @@ namespace TheTurk.Engine
             set => squares[square.Index] = value;
         }
 
-
         public BoardState MakeMove(Move move)
         {
             var state = new BoardState(this);
 
             var movingPiece = move.Piece;
 
-            if (Side == Color.Black) totalMoves++;
+            TotalMoves++;
 
             if (movingPiece is Pawn && Math.Abs(movingPiece.From.Rank - ((Ordinary)move).To.Rank) == 2)
             {
@@ -90,7 +83,6 @@ namespace TheTurk.Engine
                 {
                     BlackCastle = Castle.NoneCastle;
                 }
-
             }
             Piece piece;
             if (WhiteCastle != Castle.NoneCastle)
@@ -154,7 +146,8 @@ namespace TheTurk.Engine
             }
 
             ToggleSide();
-            Zobrist.ZobristUpdate(move);
+
+            Zobrist.ZobristUpdate(move,state);
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
 
             return state;
@@ -193,11 +186,9 @@ namespace TheTurk.Engine
 
             threeFoldRepetetion.Remove(zobristKey);
 
-            if (Side == Color.Black)
-                totalMoves--;
+            TotalMoves--;
 
             ToggleSide();
-
         }
 
         public IEnumerable<Move> GenerateMoves()
@@ -239,9 +230,10 @@ namespace TheTurk.Engine
             return king.From.IsAttackedSquare(this, king.OppenentColor);
         }
 
-        public int GetCheckMateOrStaleMateScore(int depth)
+        public int GetCheckMateOrStaleMateScore(int ply)
         {
-            return InCheck() ? -CheckMateValue + depth : StaleMateValue;
+            var mate = CheckMateValue - TotalMoves;
+            return InCheck() ? -mate : StaleMateValue;
         }
 
         public void SetUpBoard()
@@ -318,7 +310,7 @@ namespace TheTurk.Engine
             return squares.Cast<Piece>().Where(p => p != null);
         }
 
-        public int Evaluate(int depth)
+        public int Evaluate()
         {
             return Side.AsInt() * (GetPieces().Sum(p => p.Evaluation())/* - depth * 5*/);
         }

@@ -12,13 +12,19 @@ public class EngineResult
     public int NodesCount { get; init; }
     public List<Move> BestLine { get; init; }
 
-    public EngineResult(int ply,  int score, long rawElapsedTime, int nodesCount, List<Move> bestLine)
+    public EngineResult(int maxPly, int totalMoves, int score, long rawElapsedTime, int nodesCount, List<Move> bestLine)
     {
         var depth = bestLine.Count;
 
-        Ply = ply;
+        var isCheckmate = Board.CheckMateValue <= Math.Abs(score) + 2000;
+
+        var mateIn = Board.CheckMateValue - Math.Abs(score) - totalMoves;
+
+        mateIn = Math.Sign(score) * (mateIn);
+
+        Ply = maxPly;
         Score = score;
-        MateIn = Math.Abs(score) + depth == Board.CheckMateValue ? (int)Math.Ceiling(depth / 2.0) * Math.Sign(score) : 0;
+        MateIn = isCheckmate ? (int)Math.Ceiling(mateIn / 2.0): 0;
         ElapsedTime = rawElapsedTime;
         NodesCount = nodesCount;
         BestLine = bestLine;

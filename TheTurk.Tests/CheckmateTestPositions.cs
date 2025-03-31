@@ -1,4 +1,6 @@
-﻿using TheTurk.Engine;
+﻿using System.Net.Http.Headers;
+using System.Xml.XPath;
+using TheTurk.Engine;
 
 namespace TheTurk.Tests;
 
@@ -19,7 +21,6 @@ public class CheckmateTestPositions
             UCIProtocol.WriteOutput(result);
             return result.MateIn == mateIn;
         });
-
 
         CollectionAssert.AreEqual(moves, result.BestLine.Take(moves.Length).Select(m => m.IONotation()).ToArray());
     }

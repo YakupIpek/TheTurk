@@ -25,7 +25,7 @@ namespace TheTurk.Engine
             FiftyMovesRule = fenParts.Length > 4 ? Convert.ToInt32(fenParts[4]) : 0;
 
             // Parse fullmove number
-            totalMoves = fenParts.Length > 5 ? Convert.ToInt32(fenParts[5]) : 1;
+            TotalMoves = fenParts.Length > 5 ? Convert.ToInt32(fenParts[5]) : 1;
         }
 
         private void ParseBoardPosition(string boardFen)

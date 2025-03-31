@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
-using TheTurk.Moves;
+﻿using TheTurk.Moves;
 
 namespace TheTurk.Engine;
 
@@ -11,8 +6,8 @@ namespace TheTurk.Engine;
 public enum HashEntryType
 {
     Exact = 0,  // Exact score
-    Alpha = 1,  // Upper bound (fail low)
-    Beta = 2    // Lower bound (fail high)
+    LowerBound = 1,  // Upper bound (fail low)
+    UpperBound = 2    // Lower bound (fail high)
 }
 
 // Transposition table entry
@@ -23,7 +18,7 @@ public class TEntry
     public int Score { get; set; }         // Evaluation score
     public HashEntryType Flag { get; set; } // Entry type
     public int Age { get; set; }           // Age (which search iteration it was added)
-    public Move BestMove { get; set; }     // Best move from this position
+    public Node<Move> BestMove { get; set; }     // Best move from this position
 
     public static int SizeOf()
     {
@@ -71,7 +66,7 @@ public class TranspositionTable
     }
 
     // Store/update data in the table
-    public void Store(ulong hash, int depth, int score, HashEntryType flag, Move bestMove)
+    public void Store(ulong hash, int depth, int score, HashEntryType flag, Node<Move> bestMove)
     {
         var index = GetIndex(hash);
         var entry = table[index] ?? new();
@@ -86,7 +81,7 @@ public class TranspositionTable
         {
             entry.Hash = hash;
             entry.Depth = depth;
-            entry.Score = score;
+            entry.Score = score; //AdjustScoreForDepth(score, depth);
             entry.Flag = flag;
             entry.BestMove = bestMove;
             entry.Age = currentAge;
@@ -96,60 +91,51 @@ public class TranspositionTable
     }
 
     // Probe the table for an entry
-    public bool TryGetBestMove(ulong hash, int depth, int alpha, int beta, out int score, out Move bestMove)
+    public (bool Valid, int Score, Node<Move>? BestMove) TryGetBestMove(ulong hash, int depth, ref int alpha, ref int beta)
     {
         var index = GetIndex(hash);
         var entry = table[index];
 
-        bestMove = null;
-        score = 0;
-
-        if(entry is null)
-            return false;
+        if (entry is null)
+            return (false, 0, null);
 
         // No match found for this hash
         if (entry.Hash != hash)
-            return false;
+            return (false, 0, null);
 
-        // Always use the best move, even if depth is insufficient
-        bestMove = entry.BestMove;
 
         // Don't use score if depth is insufficient
         if (entry.Depth < depth)
-            return false;
+            return (false, 0, entry.BestMove);
 
-        score = entry.Score;
+        var score = entry.Score; // AdjustScoreForDepth(entry.Score, depth);
 
-        // EXACT: Direct hit, use score
         if (entry.Flag == HashEntryType.Exact)
-            return true;
-
-        // ALPHA: Upper bound (no beta cutoff occurred)
-        // Can use only if entry.score <= alpha for alpha cutoff
-        if (entry.Flag == HashEntryType.Alpha && score <= alpha)
         {
-            score = alpha;
-            return true;
+            return (true, score, entry.BestMove);
         }
 
-        // BETA: Lower bound (beta cutoff occurred)
-        // Can use only if entry.score >= beta for beta cutoff
-        if (entry.Flag == HashEntryType.Beta && score >= beta)
+        if (entry.Flag == HashEntryType.LowerBound)
         {
-            score = beta;
-            return true;
+            alpha = Math.Max(alpha, score);
+        }
+        else if (entry.Flag == HashEntryType.UpperBound)
+        {
+            beta = Math.Min(beta, score);
         }
 
-        return false;
+        return (alpha >= beta, score, entry.BestMove);
     }
 
-    // Clear the table
-    public void Clear()
+    private int AdjustScoreForDepth(int score, int depth)
     {
-        for (var i = 0ul; i < size; i++)
+        if (Math.Abs(score) + 1_000 >= Board.CheckMateValue)
         {
-            table[i].Hash = 0;
+            return score > 0
+                ? score - depth
+                : score + depth;
         }
-        currentAge = 0;
+
+        return score;
     }
 }
