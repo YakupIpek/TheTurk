@@ -7,7 +7,7 @@ namespace TheTurk.Engine;
 
 public class UCIProtocol
 {
-    public readonly ChessEngine engine;
+    public ChessEngine engine;
 
     public UCIProtocol()
     {
@@ -78,6 +78,7 @@ public class UCIProtocol
                 break;
 
             case ["ucinewgame"]:
+                engine = new ChessEngine(new Board());
                 engine.Board.SetUpBoard();
                 break;
 

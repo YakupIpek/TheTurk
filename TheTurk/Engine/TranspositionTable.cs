@@ -49,8 +49,6 @@ public class TranspositionTable
         size = (ulong)Math.Pow(2, Math.Floor(Math.Log(entriesCount, 2)));
 
         table = new TEntry[size];
-
-        currentAge = 0;
     }
 
     // Called when a new search begins
@@ -77,7 +75,7 @@ public class TranspositionTable
         // 3. If entry is old (from previous searches)
         // then replace the entry
         if (entry.Hash == 0 ||
-            entry.Hash == hash && depth >= entry.Depth /*|| currentAge - entry.Age > 2*/)
+            entry.Hash == hash && depth >= entry.Depth || currentAge - entry.Age > 2)
         {
             entry.Hash = hash;
             entry.Depth = depth;
@@ -102,7 +100,6 @@ public class TranspositionTable
         // No match found for this hash
         if (entry.Hash != hash)
             return (false, 0, null);
-
 
         // Don't use score if depth is insufficient
         if (entry.Depth < depth)

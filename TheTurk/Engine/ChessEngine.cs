@@ -67,6 +67,8 @@ namespace TheTurk.Engine
 
             iterationPly = 1;
 
+            TranspositionTable.IncrementAge();
+
             while (CanSearch())
             {
                 nodes = 0;
@@ -92,15 +94,30 @@ namespace TheTurk.Engine
 
                 var result = new EngineResult(iterationPly, Board.TotalMoves, score, elapsedTime.ElapsedMilliseconds, nodes, bestLine);
 
+                //StoreInTranspositions(result, iterationPly, pv);
                 yield return result;
 
-                //if (result.MateIn != 0 && Math.Abs(result.MateIn) + 2 <= iterationPly)
-                //    break;
+                if (result.MateIn != 0 && 2 * Math.Abs(result.MateIn) <= iterationPly)
+                    break;
 
                 iterationPly++;
             }
 
             ExitRequested = false;
+        }
+
+        private void StoreInTranspositions(EngineResult result, int depth, Node<Move> node)
+        {
+            if (node is null)
+                return;
+
+            TranspositionTable.Store(Board.ZobristKey, depth, result.Score, HashEntryType.Exact, node);
+
+            var state = Board.MakeMove(node.Value);
+
+            StoreInTranspositions(result, depth - 1, node.Next);
+
+            Board.UndoMove(node.Value, state);
         }
 
         private static IEnumerable<Move> ToEnumerable(Node<Move>? pv)
@@ -124,8 +141,14 @@ namespace TheTurk.Engine
             if (!CanSearch() && iterationPly > 1)
                 return (Board.Draw, null);
 
+
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
                 return (Board.Draw, null);
+
+            if (TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, ref alpha, ref beta) is { Valid: true, Score: var tScore, BestMove: var tMove })
+            {
+                return (tScore, tMove);
+            }
 
             var moves = Board.GenerateMoves();
 
@@ -138,10 +161,15 @@ namespace TheTurk.Engine
                 return (score, null);
             }
 
-            if (TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, ref alpha, ref beta) is { Valid: true, Score: var tScore, BestMove: var tMove })
-            {
-                return (tScore, tMove);
-            }
+            //Node<Move>? tMove = null;
+            //var result = TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, ref alpha, ref beta);
+            //if (result.Valid)
+            //{
+            //    (_, var tScore, tMove) = result;
+
+            //    return (tScore, tMove);
+            //}
+
 
             if (nullMoveActive && !Board.InCheck() && depth > 2 && !isCapture)
             {
@@ -154,17 +182,17 @@ namespace TheTurk.Engine
                 Board.UndoNullMove(state);
 
                 if (score >= beta)
-                    return (beta, null);
+                    return (score, null);
             }
 
-            var sortedMoves = SortMoves(moves, ply);
+            var sortedMoves = SortMoves(moves, ply, null);
 
             var movesIndex = 0;
 
-            Node<Move> bestMoveSoFar = null;
+            Node<Move> variation = null;
 
             var entryType = HashEntryType.UpperBound;
-            var bestScore = alpha;
+            var bestScore = -Infinity;
 
             foreach (var move in sortedMoves)
             {
@@ -211,31 +239,32 @@ namespace TheTurk.Engine
 
                 bestScore = Math.Max(score, bestScore);
 
-                if (score >= beta)
+                if (bestScore >= beta)
                 {
                     killerMoves.Add(move, ply);
 
-                    TranspositionTable.Store(Board.ZobristKey, depth, bestScore, HashEntryType.LowerBound, null);
+                    entryType = HashEntryType.LowerBound;
 
-                    return (beta, null);
+                    //variation = new Node<Move>(move, line);
+                    break;
                 }
 
-                if (score > alpha)
+                if (bestScore > alpha)
                 {
                     entryType = HashEntryType.Exact;
-                    alpha = score;
+                    alpha = bestScore;
                     historyMoves.AddMove(move);
 
                     if (collectPV)
                     {
-                        bestMoveSoFar = new Node<Move>(move, line);
+                        variation = new Node<Move>(move, line);
                     }
                 }
             }
 
-            TranspositionTable.Store(Board.ZobristKey, depth, bestScore, entryType, bestMoveSoFar);
+            TranspositionTable.Store(Board.ZobristKey, depth, bestScore, entryType, variation);
 
-            return (alpha, bestMoveSoFar);
+            return (bestScore, variation);
         }
 
         int QuiescenceSearch(int alpha, int beta, int depth)
@@ -288,10 +317,10 @@ namespace TheTurk.Engine
         /// </summary>
         /// 
         /// <returns></returns>
-        IEnumerable<Move> SortMoves(IEnumerable<Move> moves, int depth)
+        IEnumerable<Move> SortMoves(IEnumerable<Move> moves, int ply, Move? tMove)
         {
-            var previousBestMove = bestLine.ElementAtOrDefault(depth);
-            var killer = killerMoves.BestMoves.ElementAtOrDefault(depth);
+            var previousBestMove = bestLine.ElementAtOrDefault(ply);
+            var killer = killerMoves.BestMoves.ElementAtOrDefault(ply);
             var bestHistoryMove = Board.Side == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
 
             return moves.OrderByDescending(move =>
@@ -301,6 +330,9 @@ namespace TheTurk.Engine
 
                 if (previousBestMove?.Equals(move) == true)
                     priority += 1000;
+
+                //if (tMove?.Equals(move) == true)
+                //    priority += 500;
 
                 if (killer?.Equals(move) == true)
                     priority += 700;

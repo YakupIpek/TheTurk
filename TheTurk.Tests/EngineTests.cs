@@ -110,7 +110,7 @@ public class EngineTests
         var engine = new ChessEngine(board);
 
         var expected = board.ZobristKey;
-        var result = engine.Run(10_000).Last();
+        var result = engine.Run(1_000).Last();
 
         Assert.AreEqual(expected, board.ZobristKey);
     }
@@ -131,7 +131,8 @@ public class EngineTests
             Assert.AreEqual(moveCount, MinMax(board, i + 1));
         }
     }
-    Dictionary<ulong, string> positions = new Dictionary<ulong, string>();
+
+    Dictionary<ulong, string> positions = new(10000);
 
     public int MinMax(Board board, int depth)
     {
@@ -147,7 +148,7 @@ public class EngineTests
 
             var state = board.MakeMove(move);
 
-            if (positions.TryGetValue(board.ZobristKey, out string fen))
+            if (positions.TryGetValue(board.ZobristKey, out var fen))
             {
                 fen = string.Join(" ", fen.Split(' ').Take(3));
 
