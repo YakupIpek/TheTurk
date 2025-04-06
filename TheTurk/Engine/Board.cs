@@ -1,4 +1,5 @@
-﻿using TheTurk.Moves;
+﻿using System.Formats.Tar;
+using TheTurk.Moves;
 using TheTurk.Pieces;
 
 namespace TheTurk.Engine
@@ -147,7 +148,7 @@ namespace TheTurk.Engine
 
             ToggleSide();
 
-            Zobrist.ZobristUpdate(move,state);
+            Zobrist.ZobristUpdate(move, state);
             threeFoldRepetetion.Add(Zobrist.ZobristKey);
 
             return state;
@@ -232,7 +233,7 @@ namespace TheTurk.Engine
 
         public int GetCheckMateOrStaleMateScore(int ply)
         {
-            var mate = CheckMateValue - TotalMoves;
+            var mate = CheckMateValue - ply;
             return InCheck() ? -mate : StaleMateValue;
         }
 
@@ -313,6 +314,22 @@ namespace TheTurk.Engine
         public int Evaluate()
         {
             return Side.AsInt() * (GetPieces().Sum(p => p.Evaluation())/* - depth * 5*/);
+        }
+
+        public static (bool IsCheckmate, int MateIn, int Score) GetCheckmateInfo(int score)
+        {
+            var sign = Math.Sign(score);
+
+            score = sign * score; //abs()
+
+            var isMate = score + 2000 > CheckMateValue;
+
+            if (!isMate)
+                return (false, 0, 0);
+
+            var mateIn = CheckMateValue -  score;
+
+            return (true, sign * mateIn, sign * score);
         }
     }
 }

@@ -112,6 +112,10 @@ public class UCIProtocol
                 engine.Board.ShowBoard();
                 break;
 
+            case ["zobrist"]:
+                Console.WriteLine(engine.Board.ZobristKey);
+                break;
+
             case ["quit"]:
                 Environment.Exit(0);
                 break;
@@ -122,7 +126,6 @@ public class UCIProtocol
         }
     }
 
-    List<int> ints = new List<int>();
     public void ApplyMoves(string[] moves)
     {
         foreach (var moveNotation in moves)
@@ -145,9 +148,7 @@ public class UCIProtocol
 
             var state = board.MakeMove(move);
 
-            
             var attacked = king.From.IsAttackedSquare(board, king.OppenentColor);
-
 
             if (attacked)
             {
@@ -156,8 +157,6 @@ public class UCIProtocol
                 board.UndoMove(move, state);
                 return;
             }
-
-            Console.WriteLine($"{move} - {board.ZobristKey}");
         }
     }
 

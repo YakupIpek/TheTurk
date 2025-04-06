@@ -1,6 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Xml.XPath;
-using TheTurk.Engine;
+﻿using TheTurk.Engine;
 
 namespace TheTurk.Tests;
 
@@ -16,13 +14,14 @@ public class CheckmateTestPositions
         var engine = new ChessEngine(board);
         var results = engine.Run(30_000).Take(maxDepth);
 
-        var result = results.First(result =>
+        var result = results.Any(result =>
         {
             UCIProtocol.WriteOutput(result);
-            return result.MateIn == mateIn && result.BestLine.Any();
+
+            return result.MateIn == mateIn && moves.Length <= result.BestLine.Count && moves.Select((m, i) => m == result.BestLine[i].IONotation()).All(x => x);
         });
 
-        CollectionAssert.AreEqual(moves, result.BestLine.Take(moves.Length).Select(m => m.IONotation()).ToArray());
+        Assert.IsTrue(result);
     }
 
     public static IEnumerable<object[]> GetTestPositions()

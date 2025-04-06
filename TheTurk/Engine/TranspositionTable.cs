@@ -1,4 +1,5 @@
-﻿using TheTurk.Moves;
+﻿using System.Numerics;
+using TheTurk.Moves;
 
 namespace TheTurk.Engine;
 
@@ -64,7 +65,7 @@ public class TranspositionTable
     }
 
     // Store/update data in the table
-    public void Store(ulong hash, int depth, int score, HashEntryType flag, Node<Move> bestMove)
+    public void Store(ulong hash, int depth,int ply, int score, HashEntryType flag, Node<Move> bestMove)
     {
         var index = GetIndex(hash);
         var entry = table[index] ?? new();
@@ -77,9 +78,12 @@ public class TranspositionTable
         if (entry.Hash == 0 ||
             entry.Hash == hash && depth >= entry.Depth || currentAge - entry.Age > 2)
         {
+            if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
+                score += Math.Sign(score) * ply;
+
             entry.Hash = hash;
             entry.Depth = depth;
-            entry.Score = score; //AdjustScoreForDepth(score, depth);
+            entry.Score = score;
             entry.Flag = flag;
             entry.BestMove = bestMove;
             entry.Age = currentAge;
@@ -89,7 +93,7 @@ public class TranspositionTable
     }
 
     // Probe the table for an entry
-    public (bool Valid, int Score, Node<Move>? BestMove) TryGetBestMove(ulong hash, int depth, ref int alpha, ref int beta)
+    public (bool Valid, int Score, Node<Move>? BestMove) TryGetBestMove(ulong hash, int depth, int ply, ref int alpha, ref int beta)
     {
         var index = GetIndex(hash);
         var entry = table[index];
@@ -105,7 +109,10 @@ public class TranspositionTable
         if (entry.Depth < depth)
             return (false, 0, entry.BestMove);
 
-        var score = entry.Score; // AdjustScoreForDepth(entry.Score, depth);
+        var score = entry.Score;
+
+        if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
+            score -= Math.Sign(score) * ply;
 
         if (entry.Flag == HashEntryType.Exact)
         {
@@ -122,17 +129,5 @@ public class TranspositionTable
         }
 
         return (alpha >= beta, score, entry.BestMove);
-    }
-
-    private int AdjustScoreForDepth(int score, int depth)
-    {
-        if (Math.Abs(score) + 1_000 >= Board.CheckMateValue)
-        {
-            return score > 0
-                ? score - depth
-                : score + depth;
-        }
-
-        return score;
     }
 }
