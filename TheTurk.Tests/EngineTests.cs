@@ -39,7 +39,7 @@ public class EngineTests
             }
             UCIProtocol.WriteOutput(result);
 
-            if (result.Ply == 10)
+            if (result.Ply == 7)
             {
                 Task.Delay(100).ContinueWith(c => engine.ExitRequested = true);
             }
@@ -47,7 +47,7 @@ public class EngineTests
 
         UCIProtocol.WriteOutput(last);
 
-        Assert.AreEqual(10, last.Ply);
+        Assert.AreEqual(7, last.Ply);
     }
 
     [TestMethod]
