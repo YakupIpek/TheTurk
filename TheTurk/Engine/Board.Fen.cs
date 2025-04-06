@@ -68,9 +68,8 @@ namespace TheTurk.Engine
                 return;
             }
 
-
             var whiteCastles = new string(castles.TakeWhile(char.IsUpper).ToArray());
-            var blackCastles = new string(castles.SkipWhile(char.IsLower).ToArray());
+            var blackCastles = new string(castles.SkipWhile(char.IsUpper).ToArray());
 
             WhiteCastle = GetCastleRight(whiteCastles);
             BlackCastle = GetCastleRight(blackCastles);

@@ -237,15 +237,7 @@ namespace TheTurk.Engine
             return InCheck() ? -mate : StaleMateValue;
         }
 
-        public void SetUpBoard()
-        {
-            SetFen(InitialFen);
-            Zobrist = new Zobrist(this);
-            threeFoldRepetetion = new ThreeFoldRepetition();
-            threeFoldRepetetion.Add(Zobrist.ZobristKey);
-        }
-
-        public void SetUpBoard(string fen)
+        public void SetUpBoard(string fen = InitialFen)
         {
             SetFen(fen);
             Zobrist = new Zobrist(this);
@@ -300,6 +292,14 @@ namespace TheTurk.Engine
 
             Console.WriteLine("+-----------------+");
             Console.WriteLine("  a b c d e f g h");
+
+            Console.WriteLine();
+
+            Console.WriteLine($"Fen : {GetFen()}");
+            Console.WriteLine();
+            Console.WriteLine();
+
+
         }
         public void ToggleSide()
         {

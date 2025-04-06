@@ -96,7 +96,6 @@ public class UCIProtocol
                 break;
 
             case ["position", "startpos", "moves", .. var moves]:
-                engine.Board.SetUpBoard();
                 ApplyMoves(moves);
                 break;
 
@@ -133,7 +132,6 @@ public class UCIProtocol
             var from = Coordinate.NotationToSquare(moveNotation);//convert string notation coordinate
 
             var board = engine.Board;
-
             var king = board.Side == Color.White ? board.WhiteKing : board.BlackKing;
 
             var move = from.GetPiece(engine.Board)
