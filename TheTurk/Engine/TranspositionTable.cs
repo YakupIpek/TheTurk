@@ -19,7 +19,7 @@ public class TEntry
     public int Score { get; set; }         // Evaluation score
     public HashEntryType Flag { get; set; } // Entry type
     public int Age { get; set; }           // Age (which search iteration it was added)
-    public Node<Move> BestMove { get; set; }     // Best move from this position
+    public Move? BestMove { get; set; }     // Best move from this position
 
     public static int SizeOf()
     {
@@ -35,10 +35,9 @@ public class TEntry
 
 public class TranspositionTable
 {
-    private readonly TEntry[] table;
-    private readonly ulong size;
+    public readonly TEntry[] table;
+    private readonly ulong mask;
     private int currentAge;
-    public int savedCount = 0;
     public TranspositionTable(int sizeMB)
     {
         // Convert size from MB to entry count
@@ -47,9 +46,11 @@ public class TranspositionTable
         var entriesCount = (sizeMB * 1024 * 1024) / entrySize;
 
         // Round to nearest power of 2
-        size = (ulong)Math.Pow(2, Math.Floor(Math.Log(entriesCount, 2)));
+        var size = (ulong)Math.Pow(2, Math.Floor(Math.Log(entriesCount, 2)));
 
         table = new TEntry[size];
+
+        mask = size - 1; // Fast modulo for power of 2 sizes 2^n - 1
     }
 
     // Called when a new search begins
@@ -58,42 +59,40 @@ public class TranspositionTable
         currentAge++;
     }
 
+
     // Get table index from hash
-    private int GetIndex(ulong hash)
-    {
-        return (int)(hash & (size - 1)); // Fast modulo for power of 2 sizes
-    }
+    private int GetIndex(ulong hash) => (int)(hash & mask);
 
     // Store/update data in the table
-    public void Store(ulong hash, int depth,int ply, int score, HashEntryType flag, Node<Move> bestMove)
+    public void Store(ulong hash, int depth, int ply, int score, HashEntryType flag, Move? bestMove)
     {
         var index = GetIndex(hash);
         var entry = table[index] ?? new();
 
-        // Replacement strategy:
-        // 1. If entry is empty, or
-        // 2. If same hash but current search is deeper, or
-        // 3. If entry is old (from previous searches)
-        // then replace the entry
-        if (entry.Hash == 0 ||
-            entry.Hash == hash && depth >= entry.Depth || currentAge - entry.Age > 2)
-        {
-            if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
-                score += Math.Sign(score) * ply;
+        if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
+            score += Math.Sign(score) * ply;
 
-            entry.Hash = hash;
-            entry.Depth = depth;
-            entry.Score = score;
-            entry.Flag = flag;
-            entry.BestMove = bestMove;
-            entry.Age = currentAge;
+        entry.Hash = hash;
+        entry.Depth = depth;
+        entry.Score = score;
+        entry.Flag = flag;
+        entry.BestMove = bestMove;
+        entry.Age = currentAge;
 
-            table[index] = entry;
-        }
+        table[index] = entry;
     }
 
-    // Probe the table for an entry
-    public (bool Valid, int Score, Node<Move>? BestMove) TryGetBestMove(ulong hash, int depth, int ply, ref int alpha, ref int beta)
+    public Move? TryGetBestMove(ulong hash, int depth)
+    {
+        var index = GetIndex(hash);
+        var entry = table[index];
+
+        if (hash == entry?.Hash && entry?.Depth >= depth)
+            return entry.BestMove;
+
+        return null;
+    }
+    public (bool Valid, int Score, Move? BestMove) TryGetBestMove(ulong hash, int depth, int ply, ref int alpha, ref int beta)
     {
         var index = GetIndex(hash);
         var entry = table[index];
@@ -103,6 +102,9 @@ public class TranspositionTable
 
         // No match found for this hash
         if (entry.Hash != hash)
+            return (false, 0, null);
+
+        if (currentAge > entry.Age + 1)
             return (false, 0, null);
 
         // Don't use score if depth is insufficient
