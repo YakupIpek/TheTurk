@@ -6,9 +6,10 @@ namespace TheTurk.Engine;
 // Entry type flags for transposition table
 public enum HashEntryType
 {
-    Exact = 0,  // Exact score
-    LowerBound = 1,  // Upper bound (fail low)
-    UpperBound = 2    // Lower bound (fail high)
+    None,
+    Exact,  // Exact score
+    LowerBound,  // Upper bound (fail low)
+    UpperBound    // Lower bound (fail high)
 }
 
 // Transposition table entry
@@ -19,7 +20,7 @@ public class TEntry
     public int Score { get; set; }         // Evaluation score
     public HashEntryType Flag { get; set; } // Entry type
     public int Age { get; set; }           // Age (which search iteration it was added)
-    public Move? BestMove { get; set; }     // Best move from this position
+    public Node<Move>? BestMove { get; set; }     // Best move from this position
 
     public static int SizeOf()
     {
@@ -64,13 +65,13 @@ public class TranspositionTable
     private int GetIndex(ulong hash) => (int)(hash & mask);
 
     // Store/update data in the table
-    public void Store(ulong hash, int depth, int ply, int score, HashEntryType flag, Move? bestMove)
+    public void Store(ulong hash, int depth, int height, int score, HashEntryType flag, Node<Move>? bestMove)
     {
         var index = GetIndex(hash);
         var entry = table[index] ?? new();
 
         if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
-            score += Math.Sign(score) * ply;
+            score += Math.Sign(score) * height;
 
         entry.Hash = hash;
         entry.Depth = depth;
@@ -78,11 +79,10 @@ public class TranspositionTable
         entry.Flag = flag;
         entry.BestMove = bestMove;
         entry.Age = currentAge;
-
         table[index] = entry;
     }
 
-    public Move? TryGetBestMove(ulong hash, int depth)
+    public Node<Move>? TryGetBestMove(ulong hash, int depth)
     {
         var index = GetIndex(hash);
         var entry = table[index];
@@ -92,7 +92,7 @@ public class TranspositionTable
 
         return null;
     }
-    public (bool Valid, int Score, Move? BestMove) TryGetBestMove(ulong hash, int depth, int ply, ref int alpha, ref int beta)
+    public (bool Valid, int Score, Node<Move>? BestMove) TryGetBestMove(ulong hash, int depth, int height, bool isPvNode, int alpha, int beta)
     {
         var index = GetIndex(hash);
         var entry = table[index];
@@ -104,7 +104,7 @@ public class TranspositionTable
         if (entry.Hash != hash)
             return (false, 0, null);
 
-        if (currentAge > entry.Age + 1)
+        if (currentAge - entry.Age > 1)
             return (false, 0, null);
 
         // Don't use score if depth is insufficient
@@ -114,22 +114,16 @@ public class TranspositionTable
         var score = entry.Score;
 
         if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
-            score -= Math.Sign(score) * ply;
+            score -= Math.Sign(score) * height;
 
-        if (entry.Flag == HashEntryType.Exact)
-        {
-            return (true, score, entry.BestMove);
-        }
+        var result = (true, score, entry.BestMove);
 
-        if (entry.Flag == HashEntryType.LowerBound)
+        return entry.Flag switch
         {
-            alpha = Math.Max(alpha, score);
-        }
-        else if (entry.Flag == HashEntryType.UpperBound)
-        {
-            beta = Math.Min(beta, score);
-        }
-
-        return (alpha >= beta, score, entry.BestMove);
+            HashEntryType.Exact when !isPvNode => result,
+            HashEntryType.LowerBound when score >= beta => result,
+            HashEntryType.UpperBound when score <= alpha => result,
+            _ => (false, 0, entry.BestMove)
+        };
     }
 }
