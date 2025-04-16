@@ -68,7 +68,6 @@ namespace TheTurk.Engine
             TranspositionTable.IncrementAge();
 
             searchDepth = 1;
-
             do
             {
                 nodes = 0;
@@ -92,12 +91,9 @@ namespace TheTurk.Engine
                 //beta = score + Pawn.Piecevalue / 4;
 
                 bestLine = ToEnumerable(pv).ToList();
-
                 //bestLine = FixPartialPV(bestLine, searchDepth).Reverse().ToList();
 
                 var result = new EngineResult(searchDepth, score, elapsedTime.ElapsedMilliseconds, nodes, bestLine);
-
-                //StoreInTranspositions(result, iterationPly, pv);
 
                 yield return result;
 
@@ -138,19 +134,6 @@ namespace TheTurk.Engine
         //    }
         //}
 
-        //private void StoreInTranspositions(EngineResult result, int depth, Node<Move> node)
-        //{
-        //    if (node is null)
-        //        return;
-
-        //    TranspositionTable.Store(Board.ZobristKey, depth, result.Score, HashEntryType.Exact, node);
-
-        //    var state = Board.MakeMove(node.Value);
-
-        //    StoreInTranspositions(result, depth - 1, node.Next);
-
-        //    Board.UndoMove(node.Value, state);
-        //}
 
         private static IEnumerable<Move> ToEnumerable(Node<Move>? pv)
         {
@@ -176,9 +159,12 @@ namespace TheTurk.Engine
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
                 return (Board.Draw, null);
 
-            var isPvNode = alpha + 1 == beta;
+            var isPvNode = alpha + 1 != beta;
 
-            if (height != 0 && TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, height, isPvNode, alpha, beta) is { Valid: true, Score: var tScore, BestMove: var tMove })
+            var isRoot = height == 0;
+            var isLeaf = depth <= 0;
+
+            if (TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, height, isPvNode, alpha, beta) is { Valid: true, Score: var tScore, BestMove: var tMove })
             {
                 return (tScore, tMove);
             }
@@ -188,13 +174,13 @@ namespace TheTurk.Engine
             if (!moves.Any())
                 return (Board.GetCheckMateOrStaleMateScore(height), null);
 
-            if (depth <= 0)
+            if (isLeaf)
             {
                 var score = QuiescenceSearch(alpha, beta, height);
                 return (score, null);
             }
 
-            if (nullMoveActive && !Board.InCheck() && depth > 2 && !isCapture)
+            if (nullMoveActive && !isPvNode && !Board.InCheck() && depth > 2 && !isCapture)
             {
                 int R = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
@@ -252,6 +238,7 @@ namespace TheTurk.Engine
                         (score, line) = fullSearch(false);
                     else
                     {
+                        //PVS null window
                         (score, line) = Search(-alpha - 1, -alpha, depth - 1, height + 1, false, isCaptureMove, false).Negate();
 
                         if (score > alpha && score < beta)

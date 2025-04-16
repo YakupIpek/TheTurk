@@ -104,7 +104,7 @@ public class TranspositionTable
         if (entry.Hash != hash)
             return (false, 0, null);
 
-        if (currentAge - entry.Age > 1)
+        if (currentAge > entry.Age + 2)
             return (false, 0, null);
 
         // Don't use score if depth is insufficient
