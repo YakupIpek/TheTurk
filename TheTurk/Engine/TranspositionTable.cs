@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics.Metrics;
+using System.Numerics;
 using TheTurk.Moves;
 
 namespace TheTurk.Engine;
@@ -92,6 +93,7 @@ public class TranspositionTable
 
         return null;
     }
+
     public (bool Valid, int Score, Node<Move>? BestMove) TryGetBestMove(ulong hash, int depth, int height, bool isPvNode, int alpha, int beta)
     {
         var index = GetIndex(hash);
