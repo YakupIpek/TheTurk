@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
@@ -22,7 +23,7 @@ namespace TheTurk.Engine
     {
         private KillerMoves killerMoves;
         private HistoryMoves historyMoves;
-        private int iterationPly;
+        private int searchDepth;
         private long timeLimit;
         private Stopwatch elapsedTime;
         public bool ExitRequested { get; set; }
@@ -31,7 +32,7 @@ namespace TheTurk.Engine
 
         int nodes;
 
-        private TranspositionTable TranspositionTable;
+        public TranspositionTable TranspositionTable;
         private List<Move> bestLine;
 
         /// <summary>
@@ -61,20 +62,17 @@ namespace TheTurk.Engine
             killerMoves = new KillerMoves();
             bestLine = [];
 
-
             int alpha = -Infinity,
-                beta = Infinity,
-                depth = 0;
-
-            iterationPly = 1;
+                beta = Infinity;
 
             TranspositionTable.IncrementAge();
 
-            while (CanSearch())
+            searchDepth = 1;
+            do
             {
                 nodes = 0;
 
-                var (score, pv) = Search(alpha, beta, iterationPly, depth, true, false, true);
+                var (score, pv) = Search(alpha, beta, searchDepth, height: 0, nullMoveActive: true, isCapture: false, collectPV: true);
 
                 if (!CanSearch())
                     break;
@@ -89,39 +87,53 @@ namespace TheTurk.Engine
                     continue;
                 }
 
-                alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
-                beta = score + Pawn.Piecevalue / 4;
+                //alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
+                //beta = score + Pawn.Piecevalue / 4;
 
                 bestLine = ToEnumerable(pv).ToList();
+                //bestLine = FixPartialPV(bestLine, searchDepth).Reverse().ToList();
 
-                var result = new EngineResult(iterationPly, score, elapsedTime.ElapsedMilliseconds, nodes, bestLine);
-
-                //StoreInTranspositions(result, iterationPly, pv);
+                var result = new EngineResult(searchDepth, score, elapsedTime.ElapsedMilliseconds, nodes, bestLine);
 
                 yield return result;
 
-                if (Board.GetCheckmateInfo(score) is { IsCheckmate: true, MateIn: var mateIn } && Math.Abs(mateIn) + 1 <= iterationPly)
+                if (Board.GetCheckmateInfo(score) is { IsCheckmate: true, MateIn: var mateIn } && Math.Abs(mateIn) + 1 <= searchDepth)
                     break;
 
-                iterationPly++;
-            }
+                searchDepth++;
+            } while (CanSearch());
 
             ExitRequested = false;
         }
 
-        //private void StoreInTranspositions(EngineResult result, int depth, Node<Move> node)
+        //private IEnumerable<Move> FixPartialPV(List<Move> bestLine, int searchDepth)
         //{
-        //    if (node is null)
-        //        return;
+        //    var stack = new Stack<(Move, BoardState)>();
 
-        //    TranspositionTable.Store(Board.ZobristKey, depth, result.Score, HashEntryType.Exact, node);
+        //    var i = 0;
+        //    while (i < searchDepth)
+        //    {
+        //        var move = bestLine.ElementAtOrDefault(i);
 
-        //    var state = Board.MakeMove(node.Value);
+        //        if (move is null)
+        //            move = TranspositionTable.TryGetBestMove(Board.ZobristKey, searchDepth - i);
 
-        //    StoreInTranspositions(result, depth - 1, node.Next);
+        //        if (move is null)
+        //            break;
 
-        //    Board.UndoMove(node.Value, state);
+        //        var state = Board.MakeMove(move);
+        //        stack.Push((move, state));
+        //        i++;
+        //    }
+
+        //    foreach (var (move,state) in stack)
+        //    {
+        //        Board.UndoMove(move, state);
+
+        //        yield return move;
+        //    }
         //}
+
 
         private static IEnumerable<Move> ToEnumerable(Node<Move>? pv)
         {
@@ -133,21 +145,26 @@ namespace TheTurk.Engine
 
         private bool CanSearch()
         {
-            return HaveTime() && !ExitRequested;
+            return HaveTime() && !ExitRequested || !bestLine.Any();
         }
 
-        (int score, Node<Move>? line) Search(int alpha, int beta, int depth, int ply, bool nullMoveActive, bool isCapture, bool collectPV)
+        (int score, Node<Move>? line) Search(int alpha, int beta, int depth, int height, bool nullMoveActive, bool isCapture, bool collectPV)
         {
             nodes++;
 
             //if time out or exit requested after 1st iteration,so leave thinking.
-            if (!CanSearch() && iterationPly > 1)
+            if (!CanSearch())
                 return (Board.Draw, null);
 
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
                 return (Board.Draw, null);
 
-            if (TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, ply, ref alpha, ref beta) is { Valid: true, Score: var tScore, BestMove: var tMove })
+            var isPvNode = alpha + 1 != beta;
+
+            var isRoot = height == 0;
+            var isLeaf = depth <= 0;
+
+            if (TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, height, isPvNode, alpha, beta) is { Valid: true, Score: var tScore, BestMove: var tMove })
             {
                 return (tScore, tMove);
             }
@@ -155,31 +172,21 @@ namespace TheTurk.Engine
             var moves = Board.GenerateMoves();
 
             if (!moves.Any())
-                return (Board.GetCheckMateOrStaleMateScore(ply), null);
+                return (Board.GetCheckMateOrStaleMateScore(height), null);
 
-            if (depth <= 0)
+            if (isLeaf)
             {
-                var score = QuiescenceSearch(alpha, beta, ply);
+                var score = QuiescenceSearch(alpha, beta, height);
                 return (score, null);
             }
 
-            //Node<Move>? tMove = null;
-            //var result = TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, ref alpha, ref beta);
-            //if (result.Valid)
-            //{
-            //    (_, var tScore, tMove) = result;
-
-            //    return (tScore, tMove);
-            //}
-
-
-            if (nullMoveActive && !Board.InCheck() && depth > 2 && !isCapture)
+            if (nullMoveActive && !isPvNode && !Board.InCheck() && depth > 2 && !isCapture)
             {
                 int R = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
                 var state = Board.MakeNullMove();
 
-                var (score, _) = Search(-beta, -beta + 1, depth - R, ply + 1, false, false, false).Negate();
+                var (score, _) = Search(-beta, -beta + 1, depth - R, height + 1, false, false, false).Negate();
 
                 Board.UndoNullMove(state);
 
@@ -187,11 +194,12 @@ namespace TheTurk.Engine
                     return (score, null);
             }
 
-            var sortedMoves = SortMoves(moves, ply, null);
+            var sortedMoves = SortMoves(moves, height, null);
 
             var movesIndex = 0;
 
-            Node<Move> variation = null;
+            Node<Move>? variation = null;
+            Node<Move>? bestMove = null;
 
             var entryType = HashEntryType.UpperBound;
             var bestScore = -Infinity;
@@ -211,11 +219,10 @@ namespace TheTurk.Engine
                 var importantMove = (movesIndex < 3) || depth >= 3 || move is Promote or EnPassant || (isCapture && movesIndex < 9) || inCheckLazy.Value;
 
                 Node<Move>? line = null;
-                var node = nodes;
 
                 if (!importantMove)// Late Move Reduction
                 {
-                    (score, _) = Search(-beta, -alpha, depth - 3, ply + 1, true, isCapture, false).Negate();
+                    (score, line) = Search(-beta, -alpha, depth - 3, height + 1, true, isCapture, false).Negate();
 
                     importantMove = score > alpha && score < beta;
                 }
@@ -224,46 +231,54 @@ namespace TheTurk.Engine
                 {
                     var r = inCheckLazy.Value || move is Promote or EnPassant ? 0 : 1;
 
-                    var pvNode = movesIndex == 1 && bestLine.ElementAtOrDefault(ply)?.Equals(move) == true;
-                    (int score, Node<Move>? line) fullSearch(bool nullEnabled) => Search(-beta, -alpha, depth - r, ply + 1, nullEnabled, isCaptureMove, collectPV).Negate();
+                    var pvNode = movesIndex == 1 && bestLine.ElementAtOrDefault(height)?.Equals(move) == true;
+                    (int score, Node<Move>? line) fullSearch(bool nullEnabled) => Search(-beta, -alpha, depth - r, height + 1, nullEnabled, isCaptureMove, collectPV).Negate();
 
-                    if (pvNode) // Principal Variation Search
+                    if (pvNode) // Principal Variation Search in full
                         (score, line) = fullSearch(false);
                     else
                     {
-                        (score, _) = Search(-alpha - 1, -alpha, depth - 1, ply + 1, false, isCaptureMove, false).Negate();
+                        //PVS null window
+                        (score, line) = Search(-alpha - 1, -alpha, depth - 1, height + 1, false, isCaptureMove, false).Negate();
 
                         if (score > alpha && score < beta)
                             (score, line) = fullSearch(true);
                     }
                 }
 
+
                 Board.UndoMove(move, state);
 
-                bestScore = Math.Max(score, bestScore);
-
-                if (bestScore >= beta)
+                if (score > bestScore)
                 {
-                    killerMoves.Add(move, ply);
+                    bestScore = score;
+                    bestMove = new Node<Move>(move, line);
 
-                    entryType = HashEntryType.LowerBound;
-                    break;
-                }
 
-                if (bestScore > alpha)
-                {
-                    entryType = HashEntryType.Exact;
-                    alpha = bestScore;
-                    historyMoves.AddMove(move);
 
-                    if (collectPV)
+                    if (score > alpha)
                     {
+                        entryType = HashEntryType.Exact;
+                        alpha = score;
+                        historyMoves.AddMove(move);
+
                         variation = new Node<Move>(move, line);
+                        if (collectPV)
+                        {
+                        }
+
+                        if (alpha >= beta)
+                        {
+                            killerMoves.Add(move, height);
+
+                            entryType = HashEntryType.LowerBound;
+                            break;
+                        }
                     }
                 }
             }
 
-            TranspositionTable.Store(Board.ZobristKey, depth, ply, bestScore, entryType, variation);
+            TranspositionTable.Store(Board.ZobristKey, depth, height, bestScore, entryType, bestMove);
 
             return (bestScore, variation);
         }
@@ -318,10 +333,10 @@ namespace TheTurk.Engine
         /// </summary>
         /// 
         /// <returns></returns>
-        IEnumerable<Move> SortMoves(IEnumerable<Move> moves, int ply, Move? tMove)
+        IEnumerable<Move> SortMoves(IEnumerable<Move> moves, int height, Move? tMove)
         {
-            var previousBestMove = bestLine.ElementAtOrDefault(ply);
-            var killer = killerMoves.BestMoves.ElementAtOrDefault(ply);
+            var previousBestMove = bestLine.ElementAtOrDefault(height);
+            var killer = killerMoves.BestMoves.ElementAtOrDefault(height);
             var bestHistoryMove = Board.Side == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
 
             return moves.OrderByDescending(move =>
@@ -344,7 +359,6 @@ namespace TheTurk.Engine
                 return priority;
             });
         }
-
 
         bool HaveTime()
         {

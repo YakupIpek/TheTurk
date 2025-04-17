@@ -79,7 +79,6 @@ public class UCIProtocol
 
             case ["ucinewgame"]:
                 engine = new ChessEngine(new Board());
-                engine.Board.SetUpBoard();
                 break;
 
             case ["position", "fen", string f, string e, string n, string s, string t, string r, "moves", .. var moves]:
@@ -96,6 +95,7 @@ public class UCIProtocol
                 break;
 
             case ["position", "startpos", "moves", .. var moves]:
+                engine.Board.SetUpBoard();
                 ApplyMoves(moves);
                 break;
 

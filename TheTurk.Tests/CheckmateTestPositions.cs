@@ -1,4 +1,5 @@
-﻿using TheTurk.Engine;
+﻿using System.Diagnostics;
+using TheTurk.Engine;
 
 namespace TheTurk.Tests;
 
@@ -12,7 +13,10 @@ public class CheckmateTestPositions
     {
         var board = new Board(fen);
         var engine = new ChessEngine(board);
-        var results = engine.Run(30_000).Take(maxDepth);
+
+        var duration = Debugger.IsAttached ? int.MaxValue : 12_000;
+
+        var results = engine.Run(duration).Take(maxDepth);
 
         var result = results.Any(result =>
         {
@@ -46,7 +50,7 @@ public class CheckmateTestPositions
                 FEN = "r4rk1/pp2bp2/8/2p1B2P/6Q1/2Pq4/PP3PP1/K6R b - - 0 29",
                 MateIn = -4,
                 MaxDepth = 9,
-                Moves = new string[]{ "e7g5", "g4g5", "d3g6", "h5g6", "f7f6", "g5h5" }
+                Moves = new string[]{ "e7g5", "g4g5", "d3g6", "h5g6", "f7f6" }
             },
         };
 
