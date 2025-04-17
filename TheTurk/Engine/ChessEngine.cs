@@ -87,8 +87,8 @@ namespace TheTurk.Engine
                     continue;
                 }
 
-                //alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
-                //beta = score + Pawn.Piecevalue / 4;
+                alpha = score - Pawn.Piecevalue / 2; //Narrow Aspiration window
+                beta = score + Pawn.Piecevalue / 2;
 
                 bestLine = ToEnumerable(pv).ToList();
                 //bestLine = FixPartialPV(bestLine, searchDepth).Reverse().ToList();
