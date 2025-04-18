@@ -20,7 +20,6 @@ namespace TheTurk.Engine
 
         public void Add(ulong zobristKey, bool isInSearch)
         {
-
             var info = zobristKeys.GetValueOrDefault(zobristKey);
 
             if (info == null)
@@ -56,6 +55,9 @@ namespace TheTurk.Engine
                 info.InHistory--;
 
             IsThreeFoldRepetetion = false;
+
+            if(info is { InHistory: 0, InSearch: 0 })
+                zobristKeys.Remove(zobristKey);
         }
     }
 }
