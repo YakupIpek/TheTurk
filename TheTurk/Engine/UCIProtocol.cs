@@ -144,7 +144,7 @@ public class UCIProtocol
                 return;
             }
 
-            var state = board.MakeMove(move);
+            var state = board.MakeMove(move, isInSearch: false);
 
             var attacked = king.From.IsAttackedSquare(board, king.OppenentColor);
 
@@ -170,7 +170,7 @@ public class UCIProtocol
             bestLine = result.BestLine;
         }
 
-        engine.Board.MakeMove(bestLine.First());
+        engine.Board.MakeMove(bestLine.First(), isInSearch: false);
 
         Console.WriteLine("bestmove " + bestLine.First().IONotation());
     }

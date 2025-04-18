@@ -31,7 +31,7 @@ namespace TheTurk.Tests
             var nodes = 0;
             foreach (var move in moves)
             {
-                var state = board.MakeMove(move);
+                var state = board.MakeMove(move, isInSearch: true);
                 nodes += MinMax(board, ply - 1);
                 board.UndoMove(move, state);
             }

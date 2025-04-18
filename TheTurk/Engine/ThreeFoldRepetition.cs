@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -7,33 +8,54 @@ namespace TheTurk.Engine
 {
     public class ThreeFoldRepetition
     {
-        private readonly Dictionary<ulong, int> zobristKeys = [];
-        private int counter;
-        public bool IsThreeFoldRepetetion => counter > 0;
-
-        public void Add(ulong zobristKey)
+        public record class RepeatInfo
         {
-            var value = zobristKeys.GetValueOrDefault(zobristKey) + 1;
-            zobristKeys[zobristKey] =  value;
+            public int InHistory { get; set; }
 
-            if (value == 3)
-            {
-                counter++;
-            }
+            public int InSearch { get; set; }
         }
 
-        public void Remove(ulong zobristKey)
+        private readonly Dictionary<ulong, RepeatInfo> zobristKeys = new(1000);
+        public bool IsThreeFoldRepetetion { get; private set; }
+
+        public void Add(ulong zobristKey, bool isInSearch)
         {
-            var value = zobristKeys[zobristKey] -= 1;
 
-            if (value == 0)
-                zobristKeys.Remove(zobristKey);
+            var info = zobristKeys.GetValueOrDefault(zobristKey);
 
-            if (value == 2)
+            if (info == null)
             {
-                counter--;
+                info = new();
+                zobristKeys[zobristKey] = info;
             }
 
+            if (isInSearch)
+                info.InSearch++;
+            else
+                info.InHistory++;
+
+            IsThreeFoldRepetetion = (info.InHistory, info.InSearch) switch
+            {
+                //(0, 1) => false,
+                (0, 2) => true,
+                //(1, 0) => false,
+                (1, 1) => true,
+                //(2, 0) => false,
+                (2, 1) => true,
+                _ => false
+            };
+        }
+
+        public void Remove(ulong zobristKey, bool isInSearch)
+        {
+            var info = zobristKeys[zobristKey];
+
+            if (isInSearch)
+                info.InSearch--;
+            else
+                info.InHistory--;
+
+            IsThreeFoldRepetetion = false;
         }
     }
 }

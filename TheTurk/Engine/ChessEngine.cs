@@ -86,7 +86,7 @@ namespace TheTurk.Engine
                     beta = Infinity;
                     continue;
                 }
-
+                
                 alpha = score - Pawn.Piecevalue / 2; //Narrow Aspiration window
                 beta = score + Pawn.Piecevalue / 2;
 
@@ -206,7 +206,7 @@ namespace TheTurk.Engine
 
             foreach (var move in sortedMoves)
             {
-                var state = Board.MakeMove(move);
+                var state = Board.MakeMove(move, isInSearch: true);
 
                 movesIndex++;
 
@@ -301,7 +301,7 @@ namespace TheTurk.Engine
 
             foreach (var capture in moves)
             {
-                var state = Board.MakeMove(capture);
+                var state = Board.MakeMove(capture, isInSearch: true);
 
                 var score = -QuiescenceSearch(-beta, -alpha, depth + 1);
 

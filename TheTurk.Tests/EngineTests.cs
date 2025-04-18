@@ -146,7 +146,7 @@ public class EngineTests
         {
             var z = board.ZobristKey;
 
-            var state = board.MakeMove(move);
+            var state = board.MakeMove(move, isInSearch: true);
 
             if (positions.TryGetValue(board.ZobristKey, out var fen))
             {

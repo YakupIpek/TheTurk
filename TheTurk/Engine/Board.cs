@@ -47,7 +47,7 @@ namespace TheTurk.Engine
             set => squares[square.Index] = value;
         }
 
-        public BoardState MakeMove(Move move)
+        public BoardState MakeMove(Move move, bool isInSearch)
         {
             var state = new BoardState(this);
 
@@ -149,7 +149,7 @@ namespace TheTurk.Engine
             ToggleSide();
 
             Zobrist.ZobristUpdate(move, state);
-            threeFoldRepetetion.Add(Zobrist.ZobristKey);
+            threeFoldRepetetion.Add(Zobrist.ZobristKey, isInSearch);
 
             return state;
         }
@@ -185,7 +185,7 @@ namespace TheTurk.Engine
 
             move.UndoMove(this);
 
-            threeFoldRepetetion.Remove(zobristKey);
+            threeFoldRepetetion.Remove(zobristKey, isInSearch: true);
 
             TotalMoves--;
 
@@ -202,7 +202,7 @@ namespace TheTurk.Engine
                 {
                     foreach (var move in piece.GenerateMoves(this))
                     {
-                        var state = MakeMove(move);
+                        var state = MakeMove(move, isInSearch: true);
                         var inCheck = InCheck(side);
                         UndoMove(move, state);
 
@@ -242,7 +242,7 @@ namespace TheTurk.Engine
             SetFen(fen);
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
-            threeFoldRepetetion.Add(Zobrist.ZobristKey);
+            threeFoldRepetetion.Add(Zobrist.ZobristKey, isInSearch: false);
         }
 
         public void ShowBoard()
