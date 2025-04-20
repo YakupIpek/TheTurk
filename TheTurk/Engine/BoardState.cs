@@ -1,6 +1,5 @@
 ﻿namespace TheTurk.Engine;
 
-
 #region Castle enum
 
 [Flags]

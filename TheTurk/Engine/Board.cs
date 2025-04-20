@@ -47,7 +47,7 @@ namespace TheTurk.Engine
             set => squares[square.Index] = value;
         }
 
-        public BoardState MakeMove(Move move, bool isInSearch)
+        public BoardState MakeMove(Move move)
         {
             var state = new BoardState(this);
 
@@ -149,7 +149,10 @@ namespace TheTurk.Engine
             ToggleSide();
 
             Zobrist.ZobristUpdate(move, state);
-            threeFoldRepetetion.Add(Zobrist.ZobristKey, isInSearch);
+
+            var cancelThreeFold = move is LongCastle or ShortCastle || movingPiece is Pawn || capturedPiece is not null;
+            
+            threeFoldRepetetion.Add(Zobrist.ZobristKey, cancelThreeFold);
 
             return state;
         }
@@ -185,7 +188,7 @@ namespace TheTurk.Engine
 
             move.UndoMove(this);
 
-            threeFoldRepetetion.Remove(zobristKey, isInSearch: true);
+            threeFoldRepetetion.Remove(zobristKey);
 
             TotalMoves--;
 
@@ -202,7 +205,7 @@ namespace TheTurk.Engine
                 {
                     foreach (var move in piece.GenerateMoves(this))
                     {
-                        var state = MakeMove(move, isInSearch: true);
+                        var state = MakeMove(move);
                         var inCheck = InCheck(side);
                         UndoMove(move, state);
 
@@ -242,7 +245,7 @@ namespace TheTurk.Engine
             SetFen(fen);
             Zobrist = new Zobrist(this);
             threeFoldRepetetion = new ThreeFoldRepetition();
-            threeFoldRepetetion.Add(Zobrist.ZobristKey, isInSearch: false);
+            threeFoldRepetetion.Add(Zobrist.ZobristKey,false);
         }
 
         public void ShowBoard()

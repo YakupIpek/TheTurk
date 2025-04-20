@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using TheTurk.Moves;
 using TheTurk.Pieces;
@@ -144,7 +145,7 @@ public class UCIProtocol
                 return;
             }
 
-            var state = board.MakeMove(move, isInSearch: false);
+            var state = board.MakeMove(move);
 
             var attacked = king.From.IsAttackedSquare(board, king.OppenentColor);
 
@@ -155,6 +156,7 @@ public class UCIProtocol
                 board.UndoMove(move, state);
                 return;
             }
+
         }
     }
 
@@ -170,7 +172,7 @@ public class UCIProtocol
             bestLine = result.BestLine;
         }
 
-        engine.Board.MakeMove(bestLine.First(), isInSearch: false);
+        engine.Board.MakeMove(bestLine.First());
 
         Console.WriteLine("bestmove " + bestLine.First().IONotation());
     }

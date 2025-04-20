@@ -80,15 +80,12 @@ public class EngineTests
         var fen = board.GetFen();
 
         board.SetUpBoard();
-
         protocol.ApplyMoves(["e2e4", "b8c6", "g1f3"]);
 
         Assert.AreEqual(zobrist1, board.ZobristKey);
 
         Assert.AreNotEqual(fen, board.GetFen());
     }
-
-
 
     [TestMethod]
     public void ThreeFoldRepetition()
@@ -100,7 +97,7 @@ public class EngineTests
 
         Assert.AreEqual(0, result.Score);
 
-        Assert.AreEqual("e8h5 h7g8 h5e8 g8h7 e8h5 h7g8 h5e8 g8h7", string.Join(" ", result.BestLine.Select(m => m.IONotation())));
+        Assert.AreEqual("e8h5 h7g8 h5e8 g8h7", string.Join(" ", result.BestLine.Select(m => m.IONotation())));
     }
 
     [TestMethod]
@@ -146,7 +143,7 @@ public class EngineTests
         {
             var z = board.ZobristKey;
 
-            var state = board.MakeMove(move, isInSearch: true);
+            var state = board.MakeMove(move);
 
             if (positions.TryGetValue(board.ZobristKey, out var fen))
             {
