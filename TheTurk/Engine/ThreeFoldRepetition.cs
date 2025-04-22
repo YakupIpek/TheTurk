@@ -1,102 +1,131 @@
-﻿using System.Numerics;
+﻿using System.Collections;
 
 namespace TheTurk.Engine;
 
 public class ThreeFoldRepetition
 {
-    public record struct KeyInfo(ulong Key, int Count, bool Cancel);
+    public record struct KeyInfo(ulong Key, int Count, int PreCount);
 
-    private readonly Dictionary<ulong, KeyInfo> zobristKeys = new(1000);
+    private const ulong Size = 1 << 12; // 2 pow 12  == 4096 
+
     public bool IsThreeFoldRepetetion { get; private set; }
 
-    private KeyInfo[] keysPreSearch = [];
+    public KeyInfo[] keys = new KeyInfo[Size];
 
-    private ulong moduloMask;
-    public void Add(ulong zobristKey, bool cancelThreeFold)
+    private ulong moduloMask = Size - 1;
+
+    private SearchStack<(ulong Index, bool Cancel)> indexes = new(200);
+
+    public void Add(ulong key, bool cancel)
     {
-        var info = zobristKeys.GetValueOrDefault(zobristKey);
+        var (value, index) = AssignToEmptySlot(key);
 
-        info = new(zobristKey, info.Count + 1, cancelThreeFold);
+        value = new KeyInfo(key, value.Count + 1, value.PreCount);
 
-        zobristKeys[zobristKey] = info;
+        IsThreeFoldRepetetion = value.PreCount + value.Count > 1;
 
-        var preSearch = GetPreSearch(zobristKey);
+        keys[index] = value;
 
-        IsThreeFoldRepetetion = (preSearch.Count, info.Count) switch
-        {
-            //(0, 1) => false,
-            (0, 2) => true,
-            //(1, 0) => false,
-            (1, 1) => true,
-            //(2, 0) => false,
-            (2, 1) => true,
-            _ => false
-        };
+        indexes.Push((index, cancel));
     }
 
-    public void Remove(ulong zobristKey)
+    (KeyInfo value, ulong index) AssignToEmptySlot(ulong key)
     {
-        var info = zobristKeys[zobristKey];
+        var index = key & moduloMask;
+
+        var size = moduloMask + 1;
+
+        for (var i = 0ul; i < size; i++)
+        {
+            var value = keys[index];
+
+            if (value.Key == 0 || value.Key == key)
+            {
+                return (value, index);
+            }
+
+            if (++index > moduloMask)
+                index = 0;
+        }
+
+        throw new Exception("No empty slot found");
+    }
+
+    public void Remove()
+    {
+        var (index, _) = indexes.Pop();
+
+        var info = keys[index];
 
         info.Count--;
 
         IsThreeFoldRepetetion = false;
 
-        if (info.Count == 0)
-            zobristKeys.Remove(zobristKey);
+        if (info is { Count: 0, PreCount: 0 })
+            keys[index] = default;
+        else
+            keys[index] = info;
     }
-    private KeyInfo GetPreSearch(ulong key)
+
+    public void Migrate()
     {
-        if (moduloMask == 0)
-            return default;
-
-        var index = key & moduloMask;
-
-        var value = keysPreSearch[index];
-
-        if (value.Key == key)
-            return value;
-
-        return default;
-    }
-    public void AddPreSearchKeys()
-    {
-        var items = zobristKeys.Values.Reverse().TakeWhile(v => !v.Cancel).ToArray();
-        zobristKeys.Clear();
         IsThreeFoldRepetetion = false;
-        var size = BitOperations.RoundUpToPowerOf2((ulong)items.Length);
+        var deleteMode = false;
 
-        var done = false;
-
-        while (!done)
+        foreach (var (index, cancel) in indexes)
         {
-            size *= 2;
 
-            moduloMask = size - 1;
-            keysPreSearch = new KeyInfo[size];
-
-            done = true;
-
-            foreach (var item in items)
+            if (deleteMode)
             {
-                var index = item.Key & moduloMask;
-
-                var value = keysPreSearch[index];
-
-                if (value.Key == 0 || value.Key == item.Key)
-                {
-                    var info = new KeyInfo { Key = item.Key, Count = value.Count + 1 };
-                    keysPreSearch[index] = info;
-
-                    IsThreeFoldRepetetion = info.Count == 3;
-                    
-                }
-                else
-                {
-                    done = false;
-                    break;
-                }
+                keys[index] = default;
+                continue;
             }
+
+            if (cancel)
+            {
+                deleteMode = true;
+            }
+
+            var item = keys[index];
+            item.PreCount += item.Count;
+            item.Count = 0;
+
+            keys[index] = item;
         }
+
+        var (i, _) = indexes.Peek();
+
+        IsThreeFoldRepetetion = keys[i].PreCount >= 3;
+
+        indexes.Clear();
+    }
+}
+
+public class SearchStack<T>(int size) : IEnumerable<T>
+{
+    public T[] items = new T[size];
+    public int Count { get; private set; }
+    public void Push(T item) => items[Count++] = item;
+
+    public T Pop() => items[--Count];
+
+    public T Peek() => items[Count - 1];
+
+    public T this[int index] => items[index];
+
+    public void Clear()
+    {
+        Count = 0;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (var i = Count - 1; i >= 0; i--)
+            yield return items[i];
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

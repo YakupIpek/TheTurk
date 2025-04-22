@@ -21,7 +21,6 @@ namespace TheTurk.Engine
         public readonly Board Board;
         const int Infinity = int.MaxValue;
         int nodes;
-
         public TranspositionTable TranspositionTable;
         private List<Move> bestLine;
 
@@ -40,9 +39,21 @@ namespace TheTurk.Engine
             TranspositionTable = new TranspositionTable(100);
         }
 
+        public IEnumerable<EngineResult> Run(long timeLimit)
+        {
+            try
+            {
+                return RunInternal(timeLimit);
+            }
+            finally
+            {
+                ExitRequested = false;
+            }
+        }
+
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
-        public IEnumerable<EngineResult> Run(long timeLimit)
+        public IEnumerable<EngineResult> RunInternal(long timeLimit)
         {
             this.timeLimit = timeLimit;
 
@@ -57,12 +68,11 @@ namespace TheTurk.Engine
 
             TranspositionTable.IncrementAge();
 
-            Board.threeFoldRepetetion.AddPreSearchKeys();
+            Board.threeFoldRepetetion.Migrate();
 
             if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
             {
                 yield return new(0, Board.Draw, elapsedTime.ElapsedMilliseconds, 0, []);
-                ExitRequested = false;
                 yield break;
             }
 
@@ -75,7 +85,7 @@ namespace TheTurk.Engine
                 var (score, pv) = Search(alpha, beta, searchDepth, height: 0, nullMoveActive: true, isCapture: false, collectPV: true);
 
                 if (!CanSearch())
-                    break;
+                    yield break;
 
                 var validScore = score > alpha && score < beta;
 
@@ -97,12 +107,10 @@ namespace TheTurk.Engine
                 yield return result;
 
                 if (Board.GetCheckmateInfo(score) is { IsCheckmate: true, MateIn: var mateIn } && Math.Abs(mateIn) + 1 <= searchDepth)
-                    break;
+                    yield break;
 
                 searchDepth++;
             } while (CanSearch());
-
-            ExitRequested = false;
         }
 
         private static IEnumerable<Move> ToEnumerable(Node<Move>? pv)
@@ -134,11 +142,9 @@ namespace TheTurk.Engine
             var isRoot = height == 0;
             var isLeaf = depth <= 0;
 
-            Move? ttMove = null;
+            var (valid, tScore, tMove) = TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, height, isPvNode, alpha, beta);
 
-            var ttResult = TranspositionTable.TryGetBestMove(Board.ZobristKey, depth, height, isPvNode, alpha, beta);
-
-            if (ttResult is { Valid: true, Score: var tScore, BestMove: var tMove })
+            if (valid)
             {
                 return (tScore, tMove);
             }
@@ -150,7 +156,10 @@ namespace TheTurk.Engine
 
             if (isLeaf)
             {
+                Board.DisableThreeFoldRepetition = true;
                 var score = QuiescenceSearch(alpha, beta, height);
+                Board.DisableThreeFoldRepetition = false;
+
                 return (score, null);
             }
 
@@ -168,7 +177,7 @@ namespace TheTurk.Engine
                     return (score, null);
             }
 
-            var sortedMoves = SortMoves(moves, height, ttResult.BestMove?.Value);
+            var sortedMoves = SortMoves(moves, height, tMove?.Value);
 
             var movesIndex = -1;
 
