@@ -56,4 +56,23 @@ public class CheckmateTestPositions
 
         return positions.Select(p => new object[] { p.FEN, p.MateIn, p.MaxDepth, p.Moves });
     }
+
+
+
+    [TestMethod]
+    public void Search2TimesForTranspositionTable()
+    {
+        var board = new Board("r4rk1/pp2bp2/8/2p1B2P/6Q1/2Pq4/PP3PP1/K6R b - - 0 29");
+
+        var engine = new ChessEngine(board);
+
+        var result = engine.Run(20_000).ForEach(result => UCIProtocol.WriteOutput(result)).Last();
+
+        board.MakeMove(result.BestLine[0]);
+
+        foreach (var item in engine.Run(20_000))
+        {
+            UCIProtocol.WriteOutput(item);
+        }
+    }
 }

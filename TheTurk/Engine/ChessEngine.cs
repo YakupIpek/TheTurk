@@ -53,7 +53,7 @@ namespace TheTurk.Engine
 
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
-        public IEnumerable<EngineResult> RunInternal(long timeLimit)
+        private IEnumerable<EngineResult> RunInternal(long timeLimit)
         {
             this.timeLimit = timeLimit;
 
@@ -68,9 +68,9 @@ namespace TheTurk.Engine
 
             TranspositionTable.IncrementAge();
 
-            Board.threeFoldRepetetion.Migrate();
+            Board.ThreeFoldRepetetion.Migrate();
 
-            if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
+            if (Board.ThreeFoldRepetetion.IsThreeFoldRepetetion)
             {
                 yield return new(0, Board.Draw, elapsedTime.ElapsedMilliseconds, 0, []);
                 yield break;
@@ -97,8 +97,8 @@ namespace TheTurk.Engine
                     continue;
                 }
 
-                alpha = score - Pawn.Piecevalue / 2; //Narrow Aspiration window
-                beta = score + Pawn.Piecevalue / 2;
+                alpha = score - Pawn.Piecevalue / 4; //Narrow Aspiration window
+                beta = score + Pawn.Piecevalue / 4;
 
                 bestLine = ToEnumerable(pv).ToList();
 
@@ -134,7 +134,7 @@ namespace TheTurk.Engine
             if (!CanSearch())
                 return (Board.Draw, null);
 
-            if (Board.threeFoldRepetetion.IsThreeFoldRepetetion)
+            if (Board.ThreeFoldRepetetion.IsThreeFoldRepetetion)
                 return (Board.Draw, null);
 
             var isPvNode = alpha + 1 != beta;

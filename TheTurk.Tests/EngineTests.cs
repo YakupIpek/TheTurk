@@ -106,7 +106,7 @@ public class EngineTests
 
         foreach (var item in detector.keys.Where(k => k.Count > 0 || k.PreCount > 0))
             Console.WriteLine($"key: {item.Key}, {item.PreCount}, {item.Count}");
-            
+
         Assert.IsTrue(detector.IsThreeFoldRepetetion);
 
         detector.Remove();
@@ -200,4 +200,5 @@ public class EngineTests
         }
         return nodes;
     }
+
 }
