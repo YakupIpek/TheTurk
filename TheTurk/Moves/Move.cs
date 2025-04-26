@@ -36,7 +36,7 @@ namespace TheTurk.Moves
         {
             return Piece.NotationLetter.ToString().Trim();
         }
-        public virtual bool Equals(Move move)
+        public virtual bool Equals(Move? move)
         {
             return null != move && move.Piece == Piece && move.GetType() == GetType() && move.From.Equals(From);
         }

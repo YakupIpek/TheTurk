@@ -14,7 +14,7 @@ namespace TheTurk.Engine
 
         private const string InitialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-        public ThreeFoldRepetition threeFoldRepetetion;
+        public ThreeFoldRepetition ThreeFoldRepetetion;
         public Zobrist Zobrist;
         public ulong ZobristKey => Zobrist.ZobristKey;
 
@@ -28,6 +28,8 @@ namespace TheTurk.Engine
         public Coordinate EnPassantSquare { get; private set; }
         public Castle WhiteCastle { get; private set; }
         public Castle BlackCastle { get; private set; }
+
+        public bool DisableThreeFoldRepetition { get; set; }
 
         public Board(string fen = InitialFen)
         {
@@ -149,7 +151,13 @@ namespace TheTurk.Engine
             ToggleSide();
 
             Zobrist.ZobristUpdate(move, state);
-            threeFoldRepetetion.Add(Zobrist.ZobristKey);
+
+            if (!DisableThreeFoldRepetition)
+            {
+                var cancelThreeFold = move is LongCastle or ShortCastle || movingPiece is Pawn || capturedPiece is not null;
+
+                ThreeFoldRepetetion.Add(Zobrist.ZobristKey, cancelThreeFold);
+            }
 
             return state;
         }
@@ -185,7 +193,10 @@ namespace TheTurk.Engine
 
             move.UndoMove(this);
 
-            threeFoldRepetetion.Remove(zobristKey);
+            if (!DisableThreeFoldRepetition)
+            {
+                ThreeFoldRepetetion.Remove();
+            }
 
             TotalMoves--;
 
@@ -241,8 +252,8 @@ namespace TheTurk.Engine
         {
             SetFen(fen);
             Zobrist = new Zobrist(this);
-            threeFoldRepetetion = new ThreeFoldRepetition();
-            threeFoldRepetetion.Add(Zobrist.ZobristKey);
+            ThreeFoldRepetetion = new ThreeFoldRepetition();
+            ThreeFoldRepetetion.Add(Zobrist.ZobristKey, false);
         }
 
         public void ShowBoard()

@@ -80,7 +80,6 @@ public class EngineTests
         var fen = board.GetFen();
 
         board.SetUpBoard();
-
         protocol.ApplyMoves(["e2e4", "b8c6", "g1f3"]);
 
         Assert.AreEqual(zobrist1, board.ZobristKey);
@@ -88,7 +87,40 @@ public class EngineTests
         Assert.AreNotEqual(fen, board.GetFen());
     }
 
+    [TestMethod]
+    public void TestThreeFoldRepetitionBehavior()
+    {
+        var detector = new ThreeFoldRepetition();
 
+        detector.Add(1, false);
+        detector.Add(2, false);
+        detector.Add(1, false);
+        detector.Add(1, false);
+        detector.Migrate();
+
+        Assert.IsTrue(detector.IsThreeFoldRepetetion);
+
+        detector.Add(3, true);
+        detector.Add(4, false);
+        detector.Add(3, false);
+
+        foreach (var item in detector.keys.Where(k => k.Count > 0 || k.PreCount > 0))
+            Console.WriteLine($"key: {item.Key}, {item.PreCount}, {item.Count}");
+
+        Assert.IsTrue(detector.IsThreeFoldRepetetion);
+
+        detector.Remove();
+
+        Assert.IsFalse(detector.IsThreeFoldRepetetion);
+
+        detector.Add(4, false);
+
+        Assert.IsTrue(detector.IsThreeFoldRepetetion);
+
+        foreach (var item in detector.keys.Where(k => k.Count > 0 || k.PreCount > 0))
+            Console.WriteLine($"key: {item.Key}, {item.PreCount}, {item.Count}");
+
+    }
 
     [TestMethod]
     public void ThreeFoldRepetition()
@@ -96,11 +128,11 @@ public class EngineTests
         var board = new Board("4Q3/6pk/8/8/8/5K2/1q6/q7 w - - 0 1");
         var engine = new ChessEngine(board);
 
-        var result = engine.Run(20_000).ForEach(result => UCIProtocol.WriteOutput(result)).ElementAt(7);
+        var result = engine.Run(2_000).ForEach(result => UCIProtocol.WriteOutput(result)).ElementAt(4);
 
         Assert.AreEqual(0, result.Score);
 
-        Assert.AreEqual("e8h5 h7g8 h5e8 g8h7 e8h5 h7g8 h5e8 g8h7", string.Join(" ", result.BestLine.Select(m => m.IONotation())));
+        Assert.AreEqual("e8h5 h7g8 h5e8 g8h7", string.Join(" ", result.BestLine.Select(m => m.IONotation())));
     }
 
     [TestMethod]
@@ -168,4 +200,5 @@ public class EngineTests
         }
         return nodes;
     }
+
 }
