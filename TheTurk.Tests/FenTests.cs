@@ -1,4 +1,5 @@
-﻿using TheTurk.Engine;
+﻿using TheTurk.Bitboards;
+using TheTurk.Engine;
 
 namespace TheTurk.Tests;
 
@@ -15,7 +16,7 @@ public class FenTests
 
     public void TestFen(string fen)
     {
-        var board = new Board(fen);
-        Assert.AreEqual(fen, board.GetFen());
+        var board = Notation.GetBoardState(fen);
+        Assert.AreEqual(fen, Notation.GetFen(board));
     }
 }

@@ -1,4 +1,5 @@
-﻿using TheTurk.Engine;
+﻿using TheTurk.Bitboards;
+using TheTurk.Engine;
 
 namespace TheTurk.Tests;
 
@@ -22,7 +23,8 @@ public class TestPositions
     [DynamicData(nameof(Data), DynamicDataSourceType.Property)]
     public void Test(string fen, string[] bestMoves)
     {
-        var board = new Board(fen);
+        var board = Notation.GetBoardState(fen);
+
         var engine = new ChessEngine(board);
 
         var results = engine.Run(10_000);

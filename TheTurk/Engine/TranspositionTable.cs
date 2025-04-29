@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.Metrics;
-using System.Numerics;
-using TheTurk.Moves;
+﻿using TheTurk.Bitboards;
 
 namespace TheTurk.Engine;
 
@@ -71,7 +69,7 @@ public class TranspositionTable
         var index = GetIndex(hash);
         var entry = table[index] ?? new();
 
-        if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
+        if (ChessEngine.GetCheckmateInfo(score) is { IsCheckmate: true })
             score += Math.Sign(score) * height;
 
         entry.Hash = hash;
@@ -115,7 +113,7 @@ public class TranspositionTable
 
         var score = entry.Score;
 
-        if (Board.GetCheckmateInfo(score) is { IsCheckmate: true })
+        if (ChessEngine.GetCheckmateInfo(score) is { IsCheckmate: true })
             score -= Math.Sign(score) * height;
 
         var result = (true, score, entry.BestMove);

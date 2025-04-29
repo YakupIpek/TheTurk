@@ -1,4 +1,5 @@
-﻿using TheTurk.Engine;
+﻿using TheTurk.Bitboards;
+using TheTurk.Engine;
 
 namespace TheTurk.Tests
 {
@@ -11,9 +12,7 @@ namespace TheTurk.Tests
         [DataRow("Test Position 2", "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -", new int[] { 14, 191, 2812, 43238, 674624, 11030083 }, 5)]
         public void PerftTest(string testName, string fen, int[] movesCount, int depth)
         {
-            var board = new Board();
-
-            board.SetUpBoard(fen);
+            var board = Notation.GetBoardState(fen);
 
             foreach (var (i, moveCount) in movesCount.Index())
             {
@@ -21,19 +20,22 @@ namespace TheTurk.Tests
             }
         }
 
-        public static int MinMax(Board board, int ply)
+        public static int MinMax(BoardState boardCurrent, int ply)
         {
             if (ply == 0)
                 return 1;
 
-            var moves = board.GenerateMoves();
+            var moves = new MoveGen(boardCurrent).Collect();
 
             var nodes = 0;
             foreach (var move in moves)
             {
-                var state = board.MakeMove(move);
+                var board = boardCurrent.Clone();
+
+                if (!board.Play(move))
+                    continue;
+
                 nodes += MinMax(board, ply - 1);
-                board.UndoMove(move, state);
             }
             return nodes;
         }

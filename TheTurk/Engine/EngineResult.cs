@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using TheTurk.Moves;
+using TheTurk.Bitboards;
 
 namespace TheTurk.Engine;
 
@@ -12,9 +12,9 @@ public class EngineResult
     public int NodesCount { get; init; }
     public List<Move> BestLine { get; init; }
 
-    public EngineResult(int iterationPly, int score, long rawElapsedTime, int nodesCount, List<Move> bestLine)
+    public EngineResult( int iterationPly, int score, long rawElapsedTime, int nodesCount, List<Move> bestLine)
     {
-        var (isMate, mateIn, _) = Board.GetCheckmateInfo(score);
+        var (isMate, mateIn, _) = ChessEngine.GetCheckmateInfo(score);
 
         Ply = iterationPly;
         Score = score;

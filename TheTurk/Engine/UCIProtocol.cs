@@ -1,8 +1,6 @@
 ﻿using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Channels;
-using TheTurk.Moves;
-using TheTurk.Pieces;
+using TheTurk.Bitboards;
 
 namespace TheTurk.Engine;
 
@@ -12,7 +10,7 @@ public class UCIProtocol
 
     public UCIProtocol()
     {
-        engine = new ChessEngine(new Board());
+        engine = new ChessEngine(new BoardState());
     }
 
     public async Task Start()
@@ -24,7 +22,6 @@ public class UCIProtocol
         var handler = CommandHandlerAsync(channel.Reader);
 
         await Task.WhenAll(listener, handler);
-
     }
 
     public async Task CommandListener(ChannelWriter<string[]> writer)
@@ -79,24 +76,31 @@ public class UCIProtocol
                 break;
 
             case ["ucinewgame"]:
-                engine = new ChessEngine(new Board());
+                engine = new ChessEngine(new BoardState());
                 break;
 
             case ["position", "fen", string f, string e, string n, string s, string t, string r, "moves", .. var moves]:
-                engine.Board.SetUpBoard(string.Join(' ', f, e, n, s, t, r));
+
+                engine.Board = Notation.GetBoardState(string.Join(' ', f, e, n, s, t, r));
+
                 ApplyMoves(moves);
+
                 break;
 
             case ["position", "fen", .. var fen]:
-                engine.Board.SetUpBoard(string.Join(' ', fen));
+
+                engine.Board = Notation.GetBoardState(string.Join(' ', fen));
+
                 break;
 
             case ["position", "startpos"]:
-                engine.Board.SetUpBoard();
+                engine.Board = Notation.GetStartingPosition();
+
                 break;
 
             case ["position", "startpos", "moves", .. var moves]:
-                engine.Board.SetUpBoard();
+                engine.Board = Notation.GetStartingPosition();
+
                 ApplyMoves(moves);
                 break;
 
@@ -109,11 +113,11 @@ public class UCIProtocol
                 break;
 
             case ["show"]:
-                engine.Board.ShowBoard();
+                //engine.Board.ShowBoard();
                 break;
 
             case ["zobrist"]:
-                Console.WriteLine(engine.Board.ZobristKey);
+                //Console.WriteLine(engine.Board.ZobristKey);
                 break;
 
             case ["quit"]:
@@ -130,33 +134,17 @@ public class UCIProtocol
     {
         foreach (var moveNotation in moves)
         {
-            var from = Coordinate.NotationToSquare(moveNotation);//convert string notation coordinate
+            var from = Notation.GetSquare(moveNotation);//convert string notation coordinate
 
             var board = engine.Board;
-            var king = board.Side == Color.White ? board.WhiteKing : board.BlackKing;
 
-            var move = from.GetPiece(engine.Board)
-                           .GenerateMoves(engine.Board)
-                           .FirstOrDefault(m => m.IONotation() == moveNotation);
+            var move = Notation.GetMoveUci(board, moveNotation);
 
-            if (move is null)
+            if (!board.Play(move))
             {
                 Console.WriteLine("illegal move : " + moveNotation);
                 return;
             }
-
-            var state = board.MakeMove(move);
-
-            var attacked = king.From.IsAttackedSquare(board, king.OppenentColor);
-
-            if (attacked)
-            {
-                Console.WriteLine($"illegal move : {moveNotation} - Reason : King exposed to check.");
-
-                board.UndoMove(move, state);
-                return;
-            }
-
         }
     }
 
@@ -172,9 +160,7 @@ public class UCIProtocol
             bestLine = result.BestLine;
         }
 
-        engine.Board.MakeMove(bestLine.First());
-
-        Console.WriteLine("bestmove " + bestLine.First().IONotation());
+        Console.WriteLine("bestmove " + bestLine.First());
     }
 
     public static void WriteOutput(EngineResult result)
@@ -187,7 +173,7 @@ public class UCIProtocol
 
             foreach (var move in result.BestLine ?? [])
             {
-                Console.Write(move.IONotation() + " ");
+                Console.Write(move + " ");
             }
 
             Console.WriteLine();

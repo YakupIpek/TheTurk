@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TheTurk.Bitboards;
 using TheTurk.Engine;
 
 namespace TheTurk.Tests;
@@ -10,11 +11,9 @@ public class EngineTests
     [TestMethod]
     public void MoveGeneration()
     {
-        var board = new Board();
+        var board = Notation.GetStartingPosition();
 
-        board.SetUpBoard();
-
-        foreach (var piece in board.GenerateMoves())
+        foreach (var piece in new MoveGen(board).Collect())
         {
 
         }
@@ -23,7 +22,9 @@ public class EngineTests
     [TestMethod]
     public void StopEngine()
     {
-        var engine = new ChessEngine(new Board());
+        var board = Notation.GetStartingPosition();
+
+        var engine = new ChessEngine(board);
 
         var results = engine.Run(12_000);
 
@@ -60,10 +61,9 @@ public class EngineTests
 
         var zobrist1 = board.ZobristKey;
 
-        board.SetUpBoard();
+        protocol = new UCIProtocol();
 
         protocol.ApplyMoves(["d2d4", "e7e5", "e2e4"]);
-
 
         Assert.AreEqual(zobrist1, board.ZobristKey);
     }
@@ -77,14 +77,15 @@ public class EngineTests
         protocol.ApplyMoves(["g1f3", "b8c6", "e2e4"]);
 
         var zobrist1 = board.ZobristKey;
-        var fen = board.GetFen();
+        var fen = Notation.GetFen(board);
 
-        board.SetUpBoard();
+        protocol = new UCIProtocol();
+
         protocol.ApplyMoves(["e2e4", "b8c6", "g1f3"]);
 
         Assert.AreEqual(zobrist1, board.ZobristKey);
 
-        Assert.AreNotEqual(fen, board.GetFen());
+        Assert.AreNotEqual(fen, Notation.GetFen(board));
     }
 
     [TestMethod]
@@ -125,20 +126,22 @@ public class EngineTests
     [TestMethod]
     public void ThreeFoldRepetition()
     {
-        var board = new Board("4Q3/6pk/8/8/8/5K2/1q6/q7 w - - 0 1");
+        var board = Notation.GetBoardState("4Q3/6pk/8/8/8/5K2/1q6/q7 w - - 0 1");
+
         var engine = new ChessEngine(board);
 
         var result = engine.Run(2_000).ForEach(result => UCIProtocol.WriteOutput(result)).ElementAt(4);
 
         Assert.AreEqual(0, result.Score);
 
-        Assert.AreEqual("e8h5 h7g8 h5e8 g8h7", string.Join(" ", result.BestLine.Select(m => m.IONotation())));
+        Assert.AreEqual("e8h5 h7g8 h5e8 g8h7", string.Join(" ", result.BestLine.Select(m => m.ToString())));
     }
 
     [TestMethod]
     public void ZobristTest()
     {
-        var board = new Board();
+        var board = Notation.GetStartingPosition();
+
         var engine = new ChessEngine(board);
 
         var expected = board.ZobristKey;
@@ -150,13 +153,14 @@ public class EngineTests
     [TestMethod]
     public void ZobristTestInDepth()
     {
-        var board = new Board();
+        var board = Notation.GetStartingPosition();
+
         MinMax(board, 5);
     }
 
     public void PerftTest(string testName, string fen, int[] movesCount, int depth)
     {
-        var board = new Board(fen);
+        var board = Notation.GetBoardState(fen);
 
         foreach (var (i, moveCount) in movesCount.Index())
         {
@@ -166,37 +170,39 @@ public class EngineTests
 
     Dictionary<ulong, string> positions = new(10000);
 
-    public int MinMax(Board board, int depth)
+    public int MinMax(BoardState boardCurrent, int depth)
     {
         if (depth == 0)
             return 1;
 
-        var moves = board.GenerateMoves();
+        var moves = new MoveGen(boardCurrent).Collect();
 
         var nodes = 0;
         foreach (var move in moves)
         {
+            var board = boardCurrent;
+
             var z = board.ZobristKey;
 
-            var state = board.MakeMove(move);
+            if (!board.Play(move))
+                continue;
 
             if (positions.TryGetValue(board.ZobristKey, out var fen))
             {
                 fen = string.Join(" ", fen.Split(' ').Take(3));
 
-                if (fen != board.GetFen()[..fen.Length])
+                if (fen != Notation.GetFen(board)[..fen.Length])
                 {
-                    Assert.AreEqual(fen, board.GetFen()[..fen.Length]);
+                    Assert.AreEqual(fen, Notation.GetFen(board)[..fen.Length]);
                 }
             }
             else
             {
-                fen = board.GetFen();
+                fen = Notation.GetFen(board);
                 positions.Add(board.ZobristKey, fen);
             }
 
             nodes += MinMax(board, depth - 1);
-            board.UndoMove(move, state);
         }
         return nodes;
     }

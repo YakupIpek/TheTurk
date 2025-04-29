@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using TheTurk.Bitboards;
 using TheTurk.Engine;
 
 namespace TheTurk.Tests;
@@ -11,7 +12,7 @@ public class CheckmateTestPositions
     [DynamicData(nameof(GetTestPositions), DynamicDataSourceType.Method)]
     public void TestPosition(string fen, int mateIn, int maxDepth, string[] moves)
     {
-        var board = new Board(fen);
+        var board = Notation.GetBoardState(fen);
         var engine = new ChessEngine(board);
 
         var duration = Debugger.IsAttached ? int.MaxValue : 12_000;
@@ -22,7 +23,7 @@ public class CheckmateTestPositions
         {
             UCIProtocol.WriteOutput(result);
 
-            return result.MateIn == mateIn && moves.Length <= result.BestLine.Count && moves.Select((m, i) => m == result.BestLine[i].IONotation()).All(x => x);
+            return result.MateIn == mateIn && moves.Length <= result.BestLine.Count && moves.Select((m, i) => m == result.BestLine[i].ToString()).All(x => x);
         });
 
         Assert.IsTrue(result);
@@ -62,13 +63,13 @@ public class CheckmateTestPositions
     [TestMethod]
     public void Search2TimesForTranspositionTable()
     {
-        var board = new Board("r4rk1/pp2bp2/8/2p1B2P/6Q1/2Pq4/PP3PP1/K6R b - - 0 29");
+        var board = Notation.GetBoardState("r4rk1/pp2bp2/8/2p1B2P/6Q1/2Pq4/PP3PP1/K6R b - - 0 29");
 
         var engine = new ChessEngine(board);
 
         var result = engine.Run(20_000).ForEach(result => UCIProtocol.WriteOutput(result)).Last();
 
-        board.MakeMove(result.BestLine[0]);
+        board.Play(result.BestLine[0]);
 
         foreach (var item in engine.Run(20_000))
         {
