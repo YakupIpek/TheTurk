@@ -168,11 +168,12 @@ public class BoardState
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Play(Move move)
     {
         //To play a move and update the hash we need a copy of the previous position
         //if this isn't provided we have to temporarily create one
-        return Play(this, ref move);
+        return Play(this.Clone(), ref move);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
