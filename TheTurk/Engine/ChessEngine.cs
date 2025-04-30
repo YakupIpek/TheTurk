@@ -177,7 +177,7 @@ namespace TheTurk.Engine
             //}
 
             var moveGen = new MoveGen(board);
-            var moves = moveGen.Collect();
+            var moves = moveGen.GenerateMoves();
 
             //if (isLeaf)
             //{

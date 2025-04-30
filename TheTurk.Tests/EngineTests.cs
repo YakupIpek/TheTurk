@@ -13,7 +13,7 @@ public class EngineTests
     {
         var board = Notation.GetStartingPosition();
 
-        foreach (var piece in new MoveGen(board).Collect())
+        foreach (var piece in new MoveGen(board).GenerateMoves())
         {
 
         }
@@ -175,7 +175,7 @@ public class EngineTests
         if (depth == 0)
             return 1;
 
-        var moves = new MoveGen(boardCurrent).Collect();
+        var moves = new MoveGen(boardCurrent).GenerateMoves();
 
         var nodes = 0;
         foreach (var move in moves)

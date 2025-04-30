@@ -67,7 +67,7 @@ public struct MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IEnumerable<Move> Collect()
+    public IEnumerable<Move> GenerateMoves()
     {
         if (board.SideToMove == Color.White)
         {

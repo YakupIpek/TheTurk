@@ -61,7 +61,7 @@ public class MyBenchmark
         if (ply == 0)
             return 1;
 
-        var moves = new MoveGen(boardCurrent).Collect();
+        var moves = new MoveGen(boardCurrent).GenerateMoves();
 
         var nodes = 0;
         foreach (var move in moves)

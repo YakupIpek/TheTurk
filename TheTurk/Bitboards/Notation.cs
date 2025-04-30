@@ -312,7 +312,7 @@ public static class Notation
     private static Move SelectMove(BoardState boardCurrent, Piece moving, int toSquare, Piece promotion, char? fileOrRank = null)
     {
 
-        foreach (var move in new MoveGen(boardCurrent).Collect())
+        foreach (var move in new MoveGen(boardCurrent).GenerateMoves())
         {
             var board = boardCurrent;
 
@@ -356,7 +356,7 @@ public static class Notation
 
     private static Move SelectMove(BoardState boardCurrent, int fromSquare, int toSquare, Piece promo)
     {
-        foreach (var move in new MoveGen(boardCurrent).Collect())
+        foreach (var move in new MoveGen(boardCurrent).GenerateMoves())
         {
             if (move.ToSquare != toSquare)
                 continue;
