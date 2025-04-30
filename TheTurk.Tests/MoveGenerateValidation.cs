@@ -20,22 +20,22 @@ namespace TheTurk.Tests
             }
         }
 
-        public static int MinMax(BoardState boardCurrent, int ply)
+        public static int MinMax(BoardState board, int ply)
         {
             if (ply == 0)
                 return 1;
 
-            var moves = new MoveGen(boardCurrent).GenerateMoves();
+            var moves = new MoveGen(board).GenerateMoves();
 
             var nodes = 0;
             foreach (var move in moves)
             {
-                var board = boardCurrent.Clone();
+                var nextPosition = new BoardState();
 
-                if (!board.Play(move))
+                if (!nextPosition.Play(board, move))
                     continue;
 
-                nodes += MinMax(board, ply - 1);
+                nodes += MinMax(nextPosition, ply - 1);
             }
             return nodes;
         }

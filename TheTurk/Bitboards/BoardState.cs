@@ -36,17 +36,17 @@ public class BoardState
 
     public int Evaulate()
     {
-        return BitOperations.PopCount(Pawns | White) - BitOperations.PopCount(Pawns | Black) +
-               BitOperations.PopCount(Knights | White) - BitOperations.PopCount(Knights | Black) +
-               BitOperations.PopCount(Bishops | White) - BitOperations.PopCount(Bishops | Black) +
-               BitOperations.PopCount(Rooks | White) - BitOperations.PopCount(Rooks | Black) +
-               BitOperations.PopCount(Queens | White) - BitOperations.PopCount(Queens | Black);
+        return (Move.Order(Piece.Pawn) * (BitOperations.PopCount(Pawns & White) - BitOperations.PopCount(Pawns & Black)) +
+               Move.Order(Piece.Knight) * (BitOperations.PopCount(Knights & White) - BitOperations.PopCount(Knights & Black)) +
+               Move.Order(Piece.Bishop) * (BitOperations.PopCount(Bishops & White) - BitOperations.PopCount(Bishops & Black)) +
+               Move.Order(Piece.Rook) * (BitOperations.PopCount(Rooks & White) - BitOperations.PopCount(Rooks & Black)) +
+               Move.Order(Piece.Queen) * (BitOperations.PopCount(Queens & White) - BitOperations.PopCount(Queens & Black))) * 100;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BoardState Clone()
     {
-        return (BoardState)this.MemberwiseClone();
+        return (BoardState)MemberwiseClone();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,7 +148,7 @@ public class BoardState
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Play(BoardState from, ref Move move)
+    public bool Play(BoardState from, Move move)
     {
         if (from.SideToMove == Color.White)
         {
@@ -173,7 +173,7 @@ public class BoardState
     {
         //To play a move and update the hash we need a copy of the previous position
         //if this isn't provided we have to temporarily create one
-        return Play(this.Clone(), ref move);
+        return Play(this.Clone(), move);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -10,7 +10,7 @@ public class UCIProtocol
 
     public UCIProtocol()
     {
-        engine = new ChessEngine(new BoardState());
+        engine = new ChessEngine(Notation.GetStartingPosition());
     }
 
     public async Task Start()

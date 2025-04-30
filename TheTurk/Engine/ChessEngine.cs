@@ -48,7 +48,10 @@ namespace TheTurk.Engine
         {
             try
             {
-                return RunInternal(timeLimit);
+                foreach (var result in RunInternal(timeLimit))
+                {
+                    yield return result;
+                }
             }
             finally
             {
@@ -72,9 +75,9 @@ namespace TheTurk.Engine
             return (true, sign * mateIn, sign * score);
         }
 
-        public static int GetCheckMateOrStaleMateScore(BoardState board, int ply)
+        public static int GetCheckMateOrStaleMateScore(BoardState board, int height)
         {
-            var mate = CheckMateValue - ply;
+            var mate = CheckMateValue - height;
             return board.InCheck() ? -mate : StaleMateValue;
         }
 
@@ -133,8 +136,8 @@ namespace TheTurk.Engine
 
                 yield return result;
 
-                //if (Board.GetCheckmateInfo(score) is { IsCheckmate: true, MateIn: var mateIn } && Math.Abs(mateIn) + 1 <= searchDepth)
-                //    yield break;
+                if (GetCheckmateInfo(score) is { IsCheckmate: true, MateIn: var mateIn } && Math.Abs(mateIn) + 1 <= searchDepth)
+                    yield break;
 
                 searchDepth++;
             } while (CanSearch());
@@ -179,14 +182,12 @@ namespace TheTurk.Engine
             var moveGen = new MoveGen(board);
             var moves = moveGen.GenerateMoves();
 
-            //if (isLeaf)
-            //{
-            //    Board.DisableThreeFoldRepetition = true;
-            //    var score = QuiescenceSearch(alpha, beta, height);
-            //    Board.DisableThreeFoldRepetition = false;
+            if (isLeaf)
+            {
+                var score = QuiescenceSearch(board,alpha, beta, height);
 
-            //    return (score, null);
-            //}
+                return (score, null);
+            }
 
             //if (nullMoveActive && !isPvNode && !Board.InCheck() && depth > 2 && !isCapture)
             //{
@@ -215,9 +216,9 @@ namespace TheTurk.Engine
 
             foreach (var move in moves)
             {
-                var nextPosition = board;
+                var nextPosition = new BoardState();
 
-                if (!nextPosition.Play(move))
+                if (!nextPosition.Play(board, move))
                     continue;
 
                 movesIndex++;
@@ -226,7 +227,7 @@ namespace TheTurk.Engine
 
                 var isCaptureMove = move.CapturedPieceType() is not Piece.None;
 
-                var inCheckLazy = new Lazy<bool>(Board.InCheck, false);
+                var inCheckLazy = new Lazy<bool>(board.InCheck, false);
 
                 var importantMove = (movesIndex < 3) || depth >= 3 || move.IsPromotion() || move.IsEnPassant() || (isCapture && movesIndex < 8) || inCheckLazy.Value;
 
@@ -285,7 +286,7 @@ namespace TheTurk.Engine
                 }
             }
 
-            if(movesIndex == 0)
+            if(movesIndex == -1)
                 return (GetCheckMateOrStaleMateScore(board, height), null);
 
             //TranspositionTable.Store(Board.ZobristKey, depth, height, bestScore, entryType, bestMove);
@@ -297,7 +298,7 @@ namespace TheTurk.Engine
         {
             nodes++;
 
-            var eval = board.Evaulate();
+            var eval = (int)board.SideToMove * board.Evaulate();
 
             if (eval >= beta)
                 return beta;
@@ -311,9 +312,9 @@ namespace TheTurk.Engine
 
             foreach (var move in moves)
             {
-                var nextPosition = board;
+                var nextPosition = new BoardState();
 
-                if(!nextPosition.Play(move))
+                if(!nextPosition.Play(board,move))
                     continue;
 
                 var score = -QuiescenceSearch(nextPosition, -beta, -alpha, depth + 1);

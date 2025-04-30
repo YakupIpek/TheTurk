@@ -56,22 +56,22 @@ public class MyBenchmark
         }
     }
 
-    public static int MinMax(BoardState boardCurrent, int ply)
+    public static int MinMax(BoardState board, int ply)
     {
         if (ply == 0)
             return 1;
 
-        var moves = new MoveGen(boardCurrent).GenerateMoves();
+        var moves = new MoveGen(board).GenerateMoves();
 
         var nodes = 0;
         foreach (var move in moves)
         {
-            var board = boardCurrent.Clone();
+            var next = new BoardState();
 
-            if (!board.Play(move))
+            if (!next.Play(board, move))
                 continue;
 
-            nodes += MinMax(board, ply - 1);
+            nodes += MinMax(next, ply - 1);
         }
         return nodes;
     }
