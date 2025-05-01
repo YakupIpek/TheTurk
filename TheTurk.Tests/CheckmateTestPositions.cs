@@ -13,11 +13,11 @@ public class CheckmateTestPositions
     public void TestPosition(string fen, int mateIn, int maxDepth, string[] moves)
     {
         var board = Notation.GetBoardState(fen);
-        var engine = new ChessEngine(board);
+        var engine = new ChessEngine();
 
         var duration = Debugger.IsAttached ? int.MaxValue : 12_000;
 
-        var results = engine.Run(duration).Take(maxDepth);
+        var results = engine.Run(board, duration).Take(maxDepth);
 
         var result = results.Any(result =>
         {
@@ -65,13 +65,15 @@ public class CheckmateTestPositions
     {
         var board = Notation.GetBoardState("r4rk1/pp2bp2/8/2p1B2P/6Q1/2Pq4/PP3PP1/K6R b - - 0 29");
 
-        var engine = new ChessEngine(board);
+        var engine = new ChessEngine();
 
-        var result = engine.Run(20_000).ForEach(result => UCIProtocol.WriteOutput(result)).Last();
+        var result = engine.Run(board, 20_000).ForEach(result => UCIProtocol.WriteOutput(result)).Last();
 
-        board.Play(result.BestLine[0]);
+        var next = new BoardState();
 
-        foreach (var item in engine.Run(20_000))
+        next.Play(board, result.BestLine[0]);
+
+        foreach (var item in engine.Run(next, 20_000))
         {
             UCIProtocol.WriteOutput(item);
         }

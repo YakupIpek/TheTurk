@@ -67,6 +67,12 @@ public readonly struct Move
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsWhiteMove()
+    {
+        // White renk kontrolü
+        return (Flags & Piece.ColorMask) == Piece.White;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int MvvLvaScore()
     {
         //Most valuable Victim, Least valuable Attacker

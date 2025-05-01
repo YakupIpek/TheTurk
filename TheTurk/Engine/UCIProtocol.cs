@@ -7,10 +7,12 @@ namespace TheTurk.Engine;
 public class UCIProtocol
 {
     public ChessEngine engine;
+    public BoardState board;
 
     public UCIProtocol()
     {
-        engine = new ChessEngine(Notation.GetStartingPosition());
+        engine = new ChessEngine();
+        board = Notation.GetStartingPosition();
     }
 
     public async Task Start()
@@ -76,30 +78,32 @@ public class UCIProtocol
                 break;
 
             case ["ucinewgame"]:
-                engine = new ChessEngine(new BoardState());
+                engine = new ChessEngine(); //? remove or keep it ?
+                board = Notation.GetStartingPosition();
+                ApplyMoves([]);
                 break;
 
             case ["position", "fen", string f, string e, string n, string s, string t, string r, "moves", .. var moves]:
 
-                engine.Board = Notation.GetBoardState(string.Join(' ', f, e, n, s, t, r));
-
+                board = Notation.GetBoardState(string.Join(' ', f, e, n, s, t, r));
                 ApplyMoves(moves);
 
                 break;
 
             case ["position", "fen", .. var fen]:
 
-                engine.Board = Notation.GetBoardState(string.Join(' ', fen));
+                board = Notation.GetBoardState(string.Join(' ', fen));
+                ApplyMoves([]);
 
                 break;
 
             case ["position", "startpos"]:
-                engine.Board = Notation.GetStartingPosition();
-
+                board = Notation.GetStartingPosition();
+                ApplyMoves([]);
                 break;
 
             case ["position", "startpos", "moves", .. var moves]:
-                engine.Board = Notation.GetStartingPosition();
+                board = Notation.GetStartingPosition();
 
                 ApplyMoves(moves);
                 break;
@@ -117,7 +121,7 @@ public class UCIProtocol
                 break;
 
             case ["zobrist"]:
-                //Console.WriteLine(engine.Board.ZobristKey);
+                Console.WriteLine(board.ZobristKey);
                 break;
 
             case ["quit"]:
@@ -132,25 +136,33 @@ public class UCIProtocol
 
     public void ApplyMoves(string[] moves)
     {
+        engine.RepetitionDetector.Add(board.ZobristKey, false);
+
         foreach (var moveNotation in moves)
         {
             var from = Notation.GetSquare(moveNotation);//convert string notation coordinate
 
-            var board = engine.Board;
-
             var move = Notation.GetMoveUci(board, moveNotation);
 
-            if (!board.Play(move))
+            var next = new BoardState();
+
+            if (!next.Play(board, move))
             {
                 Console.WriteLine("illegal move : " + moveNotation);
                 return;
             }
+
+            var cancel = move.CapturedPieceType() is Piece.None || move.MovingPieceType() is Piece.Pawn;
+
+            engine.RepetitionDetector.Add(next.ZobristKey, cancel);
+
+            board = next;
         }
     }
 
     private void HandleGo(int time)
     {
-        var results = engine.Run(time);
+        var results = engine.Run(board, time);
 
         var bestLine = new List<Move>();
 

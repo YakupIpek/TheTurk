@@ -5,7 +5,7 @@ namespace TheTurk.Engine
 {
     public record class Node<T>(T Value, Node<T>? Next = null);
 
-    
+
     public static class ResultExtensions
     {
         public static (int score, Node<Move>? line) Negate(this (int score, Node<Move>? line) result) => (-result.score, result.line);
@@ -16,17 +16,17 @@ namespace TheTurk.Engine
                          StaleMateValue = 0,
                          Draw = 0;
 
-        //private KillerMoves killerMoves;
-        //private HistoryMoves historyMoves;
+        private KillerMoves killerMoves;
+        private HistoryMoves historyMoves;
         private int searchDepth;
         private long timeLimit;
         private Stopwatch elapsedTime;
         public bool ExitRequested { get; set; }
-        public BoardState Board { get; set; }
 
         const int Infinity = int.MaxValue;
         int nodes;
         public TranspositionTable TranspositionTable;
+        public RepetitionDetector RepetitionDetector;
         private List<Move> bestLine;
 
         /// <summary>
@@ -34,21 +34,19 @@ namespace TheTurk.Engine
         /// </summary>
         /// <param name="board"></param>
         /// <param name="protocol">Protocol will be used to write output of bestline</param>
-        public ChessEngine(BoardState board)
+        public ChessEngine()
         {
             ExitRequested = false;
-            Board = board;
             elapsedTime = new Stopwatch();
-            //historyMoves = new HistoryMoves();
-            //killerMoves = new KillerMoves();
             TranspositionTable = new TranspositionTable(100);
+            RepetitionDetector = new RepetitionDetector();
         }
 
-        public IEnumerable<EngineResult> Run(long timeLimit)
+        public IEnumerable<EngineResult> Run(BoardState board, long timeLimit)
         {
             try
             {
-                foreach (var result in RunInternal(timeLimit))
+                foreach (var result in RunInternal(board, timeLimit))
                 {
                     yield return result;
                 }
@@ -83,14 +81,14 @@ namespace TheTurk.Engine
 
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
-        private IEnumerable<EngineResult> RunInternal(long timeLimit)
+        private IEnumerable<EngineResult> RunInternal(BoardState board, long timeLimit)
         {
             this.timeLimit = timeLimit;
 
             elapsedTime.Restart();
             ExitRequested = false;
-            //historyMoves = new HistoryMoves();
-            //killerMoves = new KillerMoves();
+            historyMoves = new HistoryMoves();
+            killerMoves = new KillerMoves();
             bestLine = [];
 
             var alpha = -Infinity;
@@ -98,13 +96,13 @@ namespace TheTurk.Engine
 
             TranspositionTable.IncrementAge();
 
-            //Board.ThreeFoldRepetetion.Migrate();
+            RepetitionDetector.Migrate();
 
-            //if (Board.ThreeFoldRepetetion.IsThreeFoldRepetetion)
-            //{
-            //    yield return new(0, Board.Draw, elapsedTime.ElapsedMilliseconds, 0, []);
-            //    yield break;
-            //}
+            if (RepetitionDetector.IsRepetition)
+            {
+                yield return new(0, Draw, elapsedTime.ElapsedMilliseconds, 0, []);
+                yield break;
+            }
 
             searchDepth = 1;
 
@@ -112,7 +110,7 @@ namespace TheTurk.Engine
             {
                 nodes = 0;
 
-                var (score, pv) = Search(Board, alpha, beta, searchDepth, height: 0, nullMoveActive: true, isCapture: false, collectPV: true);
+                var (score, pv) = Search(board, alpha, beta, searchDepth, height: 0, nullMoveActive: true, isCapture: false, collectPV: true);
 
                 if (!CanSearch())
                     yield break;
@@ -127,8 +125,9 @@ namespace TheTurk.Engine
                     continue;
                 }
 
-                alpha = score - 25; //Narrow Aspiration window
-                beta = score + 25;
+                var window = 20;
+                alpha = score - window; //Narrow Aspiration window
+                beta = score + window;
 
                 bestLine = ToEnumerable(pv).ToList();
 
@@ -159,18 +158,18 @@ namespace TheTurk.Engine
         (int score, Node<Move>? line) Search(BoardState board, int alpha, int beta, int depth, int height, bool nullMoveActive, bool isCapture, bool collectPV)
         {
             nodes++;
-
+            
             //if time out or exit requested after 1st iteration,so leave thinking.
             if (!CanSearch())
                 return (Draw, null);
 
-            //if (Board.ThreeFoldRepetetion.IsThreeFoldRepetetion)
-            //    return (Draw, null);
-
-            var isPvNode = alpha + 1 != beta;
+            if (RepetitionDetector.IsRepetition)
+                return (Draw, null);
 
             var isRoot = height == 0;
             var isLeaf = depth <= 0;
+
+            var isPvNode = alpha + 1 != beta;
 
             //var (valid, tScore, tMove) = TranspositionTable.TryGetBestMove(board.ZobristKey, depth, height, isPvNode, alpha, beta);
 
@@ -184,26 +183,25 @@ namespace TheTurk.Engine
 
             if (isLeaf)
             {
-                var score = QuiescenceSearch(board,alpha, beta, height);
+                var score = QuiescenceSearch(board, alpha, beta, height);
 
                 return (score, null);
             }
 
-            //if (nullMoveActive && !isPvNode && !Board.InCheck() && depth > 2 && !isCapture)
-            //{
-            //    int R = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
+            if (nullMoveActive && !isPvNode && !board.InCheck() && depth > 2 && !isCapture)
+            {
+                int R = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
-            //    var state = Board.MakeNullMove();
+                var nextPosition = new BoardState();
+                nextPosition.PlayNullMove(board);
 
-            //    var (score, _) = Search(-beta, -beta + 1, depth - R, height + 1, false, false, false).Negate();
+                var (score, _) = Search(board, -beta, -beta + 1, depth - R, height + 1, false, false, false).Negate();
 
-            //    Board.UndoNullMove(state);
+                if (score >= beta)
+                    return (score, null);
+            }
 
-            //    if (score >= beta)
-            //        return (score, null);
-            //}
-
-            //var sortedMoves = SortMoves(moves, height, tMove?.Value);
+            var sortedMoves = SortMoves(board, moves, height, null /*tMove?.Value*/);
 
             var movesIndex = -1;
 
@@ -213,8 +211,7 @@ namespace TheTurk.Engine
             var entryType = HashEntryType.UpperBound;
             var bestScore = -Infinity;
 
-
-            foreach (var move in moves)
+            foreach (var move in sortedMoves)
             {
                 var nextPosition = new BoardState();
 
@@ -222,6 +219,8 @@ namespace TheTurk.Engine
                     continue;
 
                 movesIndex++;
+
+                RepetitionDetector.Add(nextPosition.ZobristKey, false);
 
                 var score = 0;
 
@@ -245,19 +244,21 @@ namespace TheTurk.Engine
                     var r = inCheckLazy.Value || move.IsPromotion() || move.IsEnPassant() ? 0 : 1;
 
                     var pvNode = movesIndex == 0 && move.Equals(bestLine.ElementAtOrDefault(height));
-                    (int score, Node<Move>? line) fullSearch(bool nullEnabled) => Search(nextPosition,-beta, -alpha, depth - r, height + 1, nullEnabled, isCaptureMove, collectPV).Negate();
+                    (int score, Node<Move>? line) fullSearch(bool nullEnabled) => Search(nextPosition, -beta, -alpha, depth - r, height + 1, nullEnabled, isCaptureMove, collectPV).Negate();
 
                     if (pvNode) // Principal Variation Search in full
                         (score, line) = fullSearch(false);
                     else
                     {
                         //PVS null window
-                        (score, line) = Search(nextPosition,-alpha - 1, -alpha, depth - 1, height + 1, false, isCaptureMove, false).Negate();
+                        (score, line) = Search(nextPosition, -alpha - 1, -alpha, depth - 1, height + 1, false, isCaptureMove, false).Negate();
 
                         if (score > alpha && score < beta)
                             (score, line) = fullSearch(true);
                     }
                 }
+
+                RepetitionDetector.Remove();
 
                 if (score > bestScore)
                 {
@@ -268,7 +269,7 @@ namespace TheTurk.Engine
                     {
                         entryType = HashEntryType.Exact;
                         alpha = score;
-                        //historyMoves.AddMove(move);
+                        historyMoves.AddMove(move);
 
                         if (collectPV)
                         {
@@ -277,7 +278,7 @@ namespace TheTurk.Engine
 
                         if (alpha >= beta)
                         {
-                            //killerMoves.Add(move, height);
+                            killerMoves.Add(move, height);
 
                             entryType = HashEntryType.LowerBound;
                             break;
@@ -286,7 +287,7 @@ namespace TheTurk.Engine
                 }
             }
 
-            if(movesIndex == -1)
+            if (movesIndex == -1)
                 return (GetCheckMateOrStaleMateScore(board, height), null);
 
             //TranspositionTable.Store(Board.ZobristKey, depth, height, bestScore, entryType, bestMove);
@@ -314,7 +315,7 @@ namespace TheTurk.Engine
             {
                 var nextPosition = new BoardState();
 
-                if(!nextPosition.Play(board,move))
+                if (!nextPosition.PlayWithoutHashAndEval(board, move))
                     continue;
 
                 var score = -QuiescenceSearch(nextPosition, -beta, -alpha, depth + 1);
@@ -335,28 +336,28 @@ namespace TheTurk.Engine
         /// </summary>
         /// 
         /// <returns></returns>
-        //IEnumerable<Move> SortMoves(IEnumerable<Move> moves, int height, Move? tMove)
-        //{
-        //    var killer = killerMoves.BestMoves.ElementAtOrDefault(height);
-        //    var bestHistoryMove = Board.Side == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
+        IEnumerable<Move> SortMoves(BoardState board, IEnumerable<Move> moves, int height, Move? tMove)
+        {
+            var killer = killerMoves.BestMoves.ElementAtOrDefault(height);
+            var bestHistoryMove = board.SideToMove == Color.White ? historyMoves.WhiteBestMove : historyMoves.BlackBestMove;
 
-        //    return moves.OrderByDescending(move =>
-        //    {
+            return moves.OrderByDescending(move =>
+            {
 
-        //        int priority = move.MvvLvaScore();
+                int priority = move.MvvLvaScore();
 
-        //        if (tMove?.Equals(move) == true)
-        //            priority += 2000;
+                if (tMove?.Equals(move) == true)
+                    priority += 2000;
 
-        //        if (killer?.Equals(move) == true)
-        //            priority += 700;
+                if (move.Equals(killer))
+                    priority += 700;
 
-        //        if (bestHistoryMove?.Equals(move) == true)
-        //            priority += 650;
+                if (move.Equals(bestHistoryMove))
+                    priority += 650;
 
-        //        return priority;
-        //    });
-        //}
+                return priority;
+            });
+        }
 
         bool HaveTime()
         {

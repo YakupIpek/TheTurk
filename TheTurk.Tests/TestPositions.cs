@@ -25,9 +25,9 @@ public class TestPositions
     {
         var board = Notation.GetBoardState(fen);
 
-        var engine = new ChessEngine(board);
+        var engine = new ChessEngine();
 
-        var results = engine.Run(10_000);
+        var results = engine.Run(board, 10_000);
 
         var result = results
             .ForEach(UCIProtocol.WriteOutput)

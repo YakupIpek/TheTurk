@@ -2,13 +2,11 @@
 
 namespace TheTurk.Engine;
 
-public class ThreeFoldRepetition
+public class RepetitionDetector
 {
     public record struct KeyInfo(ulong Key, int Count, int PreCount);
 
     private const ulong Size = 1 << 12; // 2 pow 12  == 4096 
-
-    public bool IsThreeFoldRepetetion { get; private set; }
 
     public KeyInfo[] keys = new KeyInfo[Size];
 
@@ -16,17 +14,21 @@ public class ThreeFoldRepetition
 
     private SearchStack<(ulong Index, bool Cancel)> indexes = new(200);
 
-    public void Add(ulong key, bool cancel)
+    public bool IsRepetition { get; private set; }
+
+    public bool Add(ulong key, bool cancel)
     {
         var (value, index) = AssignToEmptySlot(key);
 
         value = new KeyInfo(key, value.Count + 1, value.PreCount);
 
-        IsThreeFoldRepetetion = value.PreCount + value.Count > 1;
-
         keys[index] = value;
 
         indexes.Push((index, cancel));
+
+        IsRepetition = value.PreCount + value.Count > 1;
+
+        return IsRepetition;
     }
 
     (KeyInfo value, ulong index) AssignToEmptySlot(ulong key)
@@ -59,17 +61,16 @@ public class ThreeFoldRepetition
 
         info.Count--;
 
-        IsThreeFoldRepetetion = false;
-
         if (info is { Count: 0, PreCount: 0 })
             keys[index] = default;
         else
             keys[index] = info;
+
+        IsRepetition = false;
     }
 
     public void Migrate()
     {
-        IsThreeFoldRepetetion = false;
         var deleteMode = false;
 
         foreach (var (index, cancel) in indexes)
@@ -95,9 +96,9 @@ public class ThreeFoldRepetition
 
         var (i, _) = indexes.Peek();
 
-        IsThreeFoldRepetetion = keys[i].PreCount >= 3;
-
         indexes.Clear();
+
+        IsRepetition = keys[i].PreCount >= 3;
     }
 }
 

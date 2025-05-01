@@ -93,7 +93,7 @@ public static class Notation
         if (fields[2].IndexOf("K", StringComparison.Ordinal) > -1)
             result.CastleFlags |= BoardState.WhiteKingsideRookBit;
 
-        if (fields[2].IndexOf("Q", StringComparison.Ordinal) > -1)
+        if (fields[2].IndexOf('Q') > -1)
             result.CastleFlags |= BoardState.WhiteQueensideRookBit;
 
         if (fields[2].IndexOf("k", StringComparison.Ordinal) > -1)
