@@ -82,7 +82,6 @@ public static class PieceSqures
 
     public static int Evaluate(BoardState board)
     {
-
         var score = 0;
 
         score += Evaluate(board.White & board.Pawns, true, PawnMidgame);
@@ -106,7 +105,6 @@ public static class PieceSqures
         return score;
     }
 
-
     public static int Evaluate(ulong bitboard, bool isWhite, int[] table)
     {
         int score = 0;
@@ -115,7 +113,6 @@ public static class PieceSqures
         {
             int square = BitOperations.TrailingZeroCount(bitboard);
 
-            
             int index = isWhite ? square : square ^ 56;
 
             score += table[index];

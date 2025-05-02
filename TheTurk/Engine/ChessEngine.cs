@@ -44,9 +44,6 @@ namespace TheTurk.Engine
 
         public IEnumerable<EngineResult> Run(BoardState board, long timeLimit)
         {
-            if(RepetitionDetector.Indexes.Count == 0)
-                RepetitionDetector.Add(board.ZobristKey, false);
-
             try
             {
                 foreach (var result in RunInternal(board, timeLimit))
@@ -98,6 +95,9 @@ namespace TheTurk.Engine
             var beta = Infinity;
 
             TranspositionTable.IncrementAge();
+
+            if (RepetitionDetector.Indexes.Count == 0)
+                RepetitionDetector.Add(board.ZobristKey, false);
 
             RepetitionDetector.Migrate();
 
@@ -161,13 +161,13 @@ namespace TheTurk.Engine
         (int score, Node<Move>? line) Search(BoardState board, int alpha, int beta, int depth, int height, bool nullMoveActive, bool isCapture, bool collectPV)
         {
             nodes++;
-            
+
             //if time out or exit requested after 1st iteration,so leave thinking.
             if (!CanSearch())
                 return (Draw, null);
 
-            if (RepetitionDetector.IsRepetition)
-                return (Draw, null);
+            //if (RepetitionDetector.IsRepetition)
+            //    return (Draw, null);
 
             var isRoot = height == 0;
             var isLeaf = depth <= 0;
@@ -184,9 +184,6 @@ namespace TheTurk.Engine
             var moveGen = new MoveGen(board);
             var moves = moveGen.GenerateMoves();
 
-            //if (board.InCheck() && !moves.Any(move => new BoardState().PlayWithoutHashAndEval(board, move)))
-            //    return (GetCheckMateOrStaleMateScore(board, height), null);
-
             if (isLeaf)
             {
                 var score = QuiescenceSearch(board, alpha, beta, height);
@@ -198,10 +195,10 @@ namespace TheTurk.Engine
             {
                 var r = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
-                var nextPosition = new BoardState();
-                nextPosition.PlayNullMove(board);
+                var next = new BoardState();
+                next.PlayNullMove(board);
 
-                var (score, _) = Search(board, -beta, -beta + 1, depth - r, height + 1, false, false, false).Negate();
+                var (score, _) = Search(next, -beta, -beta + 1, depth - r, height + 1, false, false, false).Negate();
 
                 if (score >= beta)
                     return (score, null);
@@ -219,8 +216,8 @@ namespace TheTurk.Engine
 
             foreach (var move in sortedMoves)
             {
-                var nextPosition = new BoardState();
 
+                var nextPosition = new BoardState();
                 if (!nextPosition.Play(board, move))
                     continue;
 
@@ -306,7 +303,7 @@ namespace TheTurk.Engine
             var eval = (int)board.SideToMove * board.Evaulate();
 
             if (eval >= beta)
-                return beta;
+                return eval;
 
             if (eval > alpha)
             {
@@ -325,7 +322,7 @@ namespace TheTurk.Engine
                 var score = -QuiescenceSearch(nextPosition, -beta, -alpha, depth + 1);
 
                 if (score >= beta) // The move is too good
-                    return beta;
+                    return eval;
 
                 if (score > alpha)// Best move so far
                     alpha = score;

@@ -5,6 +5,7 @@ namespace TheTurk.Bitboards;
 public readonly struct Move
 {
     static readonly int[] pieceValues = [0, 100, 300, 320, 500, 900, 0];
+
     public readonly static Move BlackCastlingShort = new(Piece.BlackKing | Piece.CastleShort, 60, 62, Piece.None);//e8g8
     public readonly static Move BlackCastlingLong = new(Piece.BlackKing | Piece.CastleLong, 60, 58, Piece.None);//e8c8
     public readonly static Move WhiteCastlingShort = new(Piece.WhiteKing | Piece.CastleShort, 4, 6, Piece.None);//e1g1
