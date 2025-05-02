@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
+using TheTurk.Engine;
 using static TheTurk.Bitboards.Bitboard;
 
 namespace TheTurk.Bitboards;
@@ -21,6 +22,8 @@ public class BoardState
     public Color SideToMove;
     public byte HalfmoveClock;
 
+    public bool? inCheck;
+    
     public const ulong BlackQueensideRookBit = 0x0100000000000000UL;//1UL << Notation.ToSquare("a8");
     public const ulong BlackKingsideRookBit = 0x8000000000000000UL;//1UL << Notation.ToSquare("h8");
     public const ulong BlackCastlingBits = BlackQueensideRookBit | BlackKingsideRookBit;
@@ -36,11 +39,16 @@ public class BoardState
 
     public int Evaulate()
     {
-        return (Move.Order(Piece.Pawn) * (BitOperations.PopCount(Pawns & White) - BitOperations.PopCount(Pawns & Black)) +
-               Move.Order(Piece.Knight) * (BitOperations.PopCount(Knights & White) - BitOperations.PopCount(Knights & Black)) +
-               Move.Order(Piece.Bishop) * (BitOperations.PopCount(Bishops & White) - BitOperations.PopCount(Bishops & Black)) +
-               Move.Order(Piece.Rook) * (BitOperations.PopCount(Rooks & White) - BitOperations.PopCount(Rooks & Black)) +
-               Move.Order(Piece.Queen) * (BitOperations.PopCount(Queens & White) - BitOperations.PopCount(Queens & Black))) * 100;
+        var score = 0;
+
+        score += Move.GetPieceValue(Piece.Pawn) * (BitOperations.PopCount(Pawns & White) - BitOperations.PopCount(Pawns & Black));
+        score += Move.GetPieceValue(Piece.Knight) * (BitOperations.PopCount(Knights & White) - BitOperations.PopCount(Knights & Black));
+        score += Move.GetPieceValue(Piece.Bishop) * (BitOperations.PopCount(Bishops & White) - BitOperations.PopCount(Bishops & Black));
+        score += Move.GetPieceValue(Piece.Rook) * (BitOperations.PopCount(Rooks & White) - BitOperations.PopCount(Rooks & Black));
+        score += Move.GetPieceValue(Piece.Queen) * (BitOperations.PopCount(Queens & White) - BitOperations.PopCount(Queens & Black));
+
+        score += PieceSqures.Evaluate(this);
+        return score;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -393,10 +401,9 @@ public class BoardState
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool InCheck()
     {
-        if (SideToMove == Color.White)
-            return IsAttackedByBlack(LSB(Kings & White));
-        else
-            return IsAttackedByWhite(LSB(Kings & Black));
+        inCheck ??= SideToMove == Color.White ? IsAttackedByBlack(LSB(Kings & White)) : IsAttackedByWhite(LSB(Kings & Black));
+
+        return inCheck.Value;
     }
 
 

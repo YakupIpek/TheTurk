@@ -128,8 +128,6 @@ public class EngineTests
 
         var engine = new ChessEngine();
 
-        engine.RepetitionDetector.Add(board.ZobristKey, false);
-
         var result = engine.Run(board, 2_000).ForEach(result => UCIProtocol.WriteOutput(result)).ElementAt(4);
 
         Assert.AreEqual(0, result.Score);

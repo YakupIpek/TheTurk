@@ -44,6 +44,9 @@ namespace TheTurk.Engine
 
         public IEnumerable<EngineResult> Run(BoardState board, long timeLimit)
         {
+            if(RepetitionDetector.Indexes.Count == 0)
+                RepetitionDetector.Add(board.ZobristKey, false);
+
             try
             {
                 foreach (var result in RunInternal(board, timeLimit))
@@ -171,15 +174,18 @@ namespace TheTurk.Engine
 
             var isPvNode = alpha + 1 != beta;
 
-            //var (valid, tScore, tMove) = TranspositionTable.TryGetBestMove(board.ZobristKey, depth, height, isPvNode, alpha, beta);
+            var (valid, tScore, tMove) = TranspositionTable.TryGetBestMove(board.ZobristKey, depth, height, isPvNode, alpha, beta);
 
-            //if (valid)
-            //{
-            //    return (tScore, tMove);
-            //}
+            if (valid)
+            {
+                return (tScore, tMove);
+            }
 
             var moveGen = new MoveGen(board);
             var moves = moveGen.GenerateMoves();
+
+            //if (board.InCheck() && !moves.Any(move => new BoardState().PlayWithoutHashAndEval(board, move)))
+            //    return (GetCheckMateOrStaleMateScore(board, height), null);
 
             if (isLeaf)
             {
@@ -190,18 +196,18 @@ namespace TheTurk.Engine
 
             if (nullMoveActive && !isPvNode && !board.InCheck() && depth > 2 && !isCapture)
             {
-                int R = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
+                var r = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
                 var nextPosition = new BoardState();
                 nextPosition.PlayNullMove(board);
 
-                var (score, _) = Search(board, -beta, -beta + 1, depth - R, height + 1, false, false, false).Negate();
+                var (score, _) = Search(board, -beta, -beta + 1, depth - r, height + 1, false, false, false).Negate();
 
                 if (score >= beta)
                     return (score, null);
             }
 
-            var sortedMoves = SortMoves(board, moves, height, null /*tMove?.Value*/);
+            var sortedMoves = SortMoves(board, moves, height, tMove?.Value);
 
             var movesIndex = -1;
 
@@ -226,9 +232,7 @@ namespace TheTurk.Engine
 
                 var isCaptureMove = move.CapturedPieceType() is not Piece.None;
 
-                var inCheckLazy = new Lazy<bool>(board.InCheck, false);
-
-                var importantMove = (movesIndex < 3) || depth >= 3 || move.IsPromotion() || move.IsEnPassant() || (isCapture && movesIndex < 8) || inCheckLazy.Value;
+                var importantMove = (movesIndex < 3) || depth >= 3 || move.IsPromotion() || move.IsEnPassant() || (isCapture && movesIndex < 8) || nextPosition.InCheck();
 
                 Node<Move>? line = null;
 
@@ -241,7 +245,7 @@ namespace TheTurk.Engine
 
                 if (importantMove)
                 {
-                    var r = inCheckLazy.Value || move.IsPromotion() || move.IsEnPassant() ? 0 : 1;
+                    var r = move.IsPromotion() || move.IsEnPassant() || nextPosition.InCheck() ? 0 : 1;
 
                     var pvNode = movesIndex == 0 && move.Equals(bestLine.ElementAtOrDefault(height));
                     (int score, Node<Move>? line) fullSearch(bool nullEnabled) => Search(nextPosition, -beta, -alpha, depth - r, height + 1, nullEnabled, isCaptureMove, collectPV).Negate();
@@ -290,7 +294,7 @@ namespace TheTurk.Engine
             if (movesIndex == -1)
                 return (GetCheckMateOrStaleMateScore(board, height), null);
 
-            //TranspositionTable.Store(Board.ZobristKey, depth, height, bestScore, entryType, bestMove);
+            TranspositionTable.Store(board.ZobristKey, depth, height, bestScore, entryType, bestMove);
 
             return (bestScore, variation);
         }
@@ -344,10 +348,13 @@ namespace TheTurk.Engine
             return moves.OrderByDescending(move =>
             {
 
-                int priority = move.MvvLvaScore();
+                var priority = 0;
 
-                if (tMove?.Equals(move) == true)
-                    priority += 2000;
+                if (move.CapturedPiece() is not Piece.None)
+                    priority = move.MvvLvaScore();
+
+                if (move.Equals(tMove))
+                    priority += 1600;
 
                 if (move.Equals(killer))
                     priority += 700;

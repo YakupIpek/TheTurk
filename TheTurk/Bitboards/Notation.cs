@@ -309,24 +309,26 @@ public static class Notation
         throw new ArgumentException($"Move notation {notation} could not be parsed!");
     }
 
-    private static Move SelectMove(BoardState boardCurrent, Piece moving, int toSquare, Piece promotion, char? fileOrRank = null)
+    private static Move SelectMove(BoardState board, Piece moving, int toSquare, Piece promotion, char? fileOrRank = null)
     {
 
-        foreach (var move in new MoveGen(boardCurrent).GenerateMoves())
+        foreach (var move in new MoveGen(board).GenerateMoves())
         {
-            var board = boardCurrent;
-
+            
             if (move.ToSquare != toSquare)
                 continue;
             if (move.MovingPiece() != move.NewPiece() && move.NewPiece() != promotion)
                 continue;
-            if (boardCurrent.GetPiece(move.FromSquare) != moving)
+            if (board.GetPiece(move.FromSquare) != moving)
                 continue;
             if (fileOrRank != null && !GetSquareName(move.FromSquare).Contains(fileOrRank.Value))
                 continue;
 
-            if (!board.PlayWithoutHashAndEval(board, move))
+            //make sure the move isn't illegal
+            BoardState clone = board.Clone();
+            if (!clone.PlayWithoutHashAndEval(board, move))
                 continue;
+
 
             return move; //this is the move!
         }

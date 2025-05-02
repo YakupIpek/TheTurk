@@ -12,7 +12,7 @@ public class RepetitionDetector
 
     private ulong moduloMask = Size - 1;
 
-    private SearchStack<(ulong Index, bool Cancel)> indexes = new(200);
+    public SearchStack<(ulong Index, bool Cancel)> Indexes { get; private set; } = new(200);
 
     public bool IsRepetition { get; private set; }
 
@@ -24,7 +24,7 @@ public class RepetitionDetector
 
         keys[index] = value;
 
-        indexes.Push((index, cancel));
+        Indexes.Push((index, cancel));
 
         IsRepetition = value.PreCount + value.Count > 1;
 
@@ -55,7 +55,7 @@ public class RepetitionDetector
 
     public void Remove()
     {
-        var (index, _) = indexes.Pop();
+        var (index, _) = Indexes.Pop();
 
         var info = keys[index];
 
@@ -69,11 +69,12 @@ public class RepetitionDetector
         IsRepetition = false;
     }
 
+
     public void Migrate()
     {
         var deleteMode = false;
 
-        foreach (var (index, cancel) in indexes)
+        foreach (var (index, cancel) in Indexes)
         {
 
             if (deleteMode)
@@ -94,9 +95,9 @@ public class RepetitionDetector
             keys[index] = item;
         }
 
-        var (i, _) = indexes.Peek();
+        var (i, _) = Indexes.Peek();
 
-        indexes.Clear();
+        Indexes.Clear();
 
         IsRepetition = keys[i].PreCount >= 3;
     }

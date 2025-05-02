@@ -1,4 +1,5 @@
-﻿using TheTurk.Bitboards;
+﻿using System.ComponentModel.DataAnnotations;
+using TheTurk.Bitboards;
 using TheTurk.Engine;
 
 namespace TheTurk.Tests;
@@ -24,16 +25,17 @@ public class TestPositions
     public void Test(string fen, string[] bestMoves)
     {
         var board = Notation.GetBoardState(fen);
-
+        
         var engine = new ChessEngine();
 
         var results = engine.Run(board, 10_000);
 
+        var moves = bestMoves.Select(move => Notation.GetMove(board,move)).ToArray();
         var result = results
             .ForEach(UCIProtocol.WriteOutput)
             .Take(10)
             .Skip(4)
-            .Any(result => bestMoves.Contains(result.BestLine.First().ToString()));
+            .Any(result => moves.Contains(result.BestLine.First()));
 
         Assert.IsTrue(result);
     }
