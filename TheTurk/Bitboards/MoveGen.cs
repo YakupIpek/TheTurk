@@ -181,6 +181,16 @@ public struct MoveGen
             yield return PawnMove(Piece.Black | Piece.QueenPromotion, targets, +8);
     }
 
+    public IEnumerable<Move> CollectBlackPawnPromotions(ulong oneStep)
+    {
+        // Move to first rank and under-promote
+        for (var targets = oneStep & 0x00000000000000FFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
+        {
+            yield return PawnMove(Piece.Black | Piece.RookPromotion, targets, +8);
+            yield return PawnMove(Piece.Black | Piece.BishopPromotion, targets, +8);
+            yield return PawnMove(Piece.Black | Piece.KnightPromotion, targets, +8);
+        }
+    }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IEnumerable<Move> CollectBlackQuiets()
     {
@@ -232,12 +242,9 @@ public struct MoveGen
         for (targets = oneStep & 0xFFFFFFFFFFFFFF00UL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.BlackPawn, targets, +8);
 
-        // Move to first rank and under-promote
-        for (targets = oneStep & 0x00000000000000FFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
+        foreach (var move in CollectBlackPawnPromotions(oneStep))
         {
-            yield return PawnMove(Piece.Black | Piece.RookPromotion, targets, +8);
-            yield return PawnMove(Piece.Black | Piece.BishopPromotion, targets, +8);
-            yield return PawnMove(Piece.Black | Piece.KnightPromotion, targets, +8);
+            yield return move;
         }
 
         // Move two squares down
@@ -338,6 +345,19 @@ public struct MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private IEnumerable<Move> CollectWhitePromotions(ulong oneStep)
+    {
+        var targets = 0ul;
+        // Move to last rank and under-promote  
+        for (targets = oneStep & 0xFF00000000000000UL; targets != 0; targets = Bitboard.ClearLSB(targets))
+        {
+            yield return PawnMove(Piece.White | Piece.RookPromotion, targets, -8);
+            yield return PawnMove(Piece.White | Piece.BishopPromotion, targets, -8);
+            yield return PawnMove(Piece.White | Piece.KnightPromotion, targets, -8);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IEnumerable<Move> CollectWhiteQuiets()
     {
         ulong occupied = board.Black | board.White;
@@ -384,17 +404,12 @@ public struct MoveGen
         ulong whitePawns = board.Pawns & board.White;
         ulong oneStep = (whitePawns << 8) & ~occupied;
 
+        CollectWhitePromotions(oneStep);
+
         // Move one square up  
         for (targets = oneStep & 0x00FFFFFFFFFFFFFFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.WhitePawn, targets, -8);
 
-        // Move to last rank and under-promote  
-        for (targets = oneStep & 0xFF00000000000000UL; targets != 0; targets = Bitboard.ClearLSB(targets))
-        {
-            yield return PawnMove(Piece.White | Piece.RookPromotion, targets, -8);
-            yield return PawnMove(Piece.White | Piece.BishopPromotion, targets, -8);
-            yield return PawnMove(Piece.White | Piece.KnightPromotion, targets, -8);
-        }
 
         // Move two squares up  
         ulong twoStep = (oneStep << 8) & ~occupied;

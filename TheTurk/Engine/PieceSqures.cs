@@ -1,10 +1,11 @@
 ﻿using System.Buffers.Binary;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using TheTurk.Bitboards;
 
 namespace TheTurk.Engine;
 
-public static class PieceSqures
+public static class Evaluation
 {
     // Each array has 64 values, one per square (A1 to H8)
 
@@ -80,32 +81,36 @@ public static class PieceSqures
          20,  30,  10,   0,   0,  10,  30,  20
     ];
 
-    public static int Evaluate(BoardState board)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+    public static int GetScore(BoardState board)
     {
         var score = 0;
 
-        score += Evaluate(board.White & board.Pawns, true, PawnMidgame);
-        score -= Evaluate(board.Black & board.Pawns, false, PawnMidgame);
+        score += GetScore(board.White & board.Pawns, true, PawnMidgame);
+        score -= GetScore(board.Black & board.Pawns, false, PawnMidgame);
 
-        score += Evaluate(board.White & board.Knights, true, KnightMidgame);
-        score -= Evaluate(board.Black & board.Knights, false, KnightMidgame);
+        score += GetScore(board.White & board.Knights, true, KnightMidgame);
+        score -= GetScore(board.Black & board.Knights, false, KnightMidgame);
 
-        score += Evaluate(board.White & board.Bishops, true, BishopMidgame);
-        score -= Evaluate(board.Black & board.Bishops, false, BishopMidgame);
+        score += GetScore(board.White & board.Bishops, true, BishopMidgame);
+        score -= GetScore(board.Black & board.Bishops, false, BishopMidgame);
 
-        score += Evaluate(board.White & board.Rooks, true, RookMidgame);
-        score -= Evaluate(board.Black & board.Rooks, false, RookMidgame);
+        score += GetScore(board.White & board.Rooks, true, RookMidgame);
+        score -= GetScore(board.Black & board.Rooks, false, RookMidgame);
 
-        score += Evaluate(board.White & board.Queens, true, QueenMidgame);
-        score -= Evaluate(board.Black & board.Queens, false, QueenMidgame);
+        score += GetScore(board.White & board.Queens, true, QueenMidgame);
+        score -= GetScore(board.Black & board.Queens, false, QueenMidgame);
 
-        score += Evaluate(board.White & board.Kings, true, KingMidgame);
-        score -= Evaluate(board.Black & board.Kings, false, KingMidgame);
+        score += GetScore(board.White & board.Kings, true, KingMidgame);
+        score -= GetScore(board.Black & board.Kings, false, KingMidgame);
 
         return score;
     }
 
-    public static int Evaluate(ulong bitboard, bool isWhite, int[] table)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+    public static int GetScore(ulong bitboard, bool isWhite, int[] table)
     {
         int score = 0;
 
@@ -122,5 +127,31 @@ public static class PieceSqures
         }
 
         return score;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsInsufficientMatingMaterial(BoardState board)
+    {
+        //https://support.chess.com/article/128-what-does-insufficient-mating-material-mean
+        if (Bitboard.PopCount(board.Black | board.White) > 4)
+            return false;
+
+        ulong black = board.Black & ~board.Kings;
+        ulong white = board.White & ~board.Kings;
+
+        //lone king vs two knights
+        if (white == 0 && (board.Knights & black) == black && Bitboard.PopCount(black) == 2)
+            return true;
+
+        if (black == 0 && (board.Knights & white) == white && Bitboard.PopCount(white) == 2)
+            return true;
+
+        //if both sides have any one of the following, and there are no pawns on the board: 
+        //    * lone king
+        //    * king and bishop
+        //    * king and knight
+        ulong norb = board.Knights | board.Bishops;
+        return (black == 0 || ((norb & black) == black && Bitboard.PopCount(black) == 1)) && //Black is K or K(N|B)
+               (white == 0 || ((norb & white) == white && Bitboard.PopCount(white) == 1));   //White is K or K(N|B)
     }
 }

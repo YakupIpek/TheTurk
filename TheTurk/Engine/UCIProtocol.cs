@@ -134,7 +134,7 @@ public class UCIProtocol
         }
     }
 
-    public void ApplyMoves(string[] moves)
+    public void ApplyMoves(params string[] moves)
     {
         engine.RepetitionDetector.Add(board.ZobristKey, false);
 

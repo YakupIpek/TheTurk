@@ -47,7 +47,7 @@ public class BoardState
         score += Move.GetPieceValue(Piece.Rook) * (BitOperations.PopCount(Rooks & White) - BitOperations.PopCount(Rooks & Black));
         score += Move.GetPieceValue(Piece.Queen) * (BitOperations.PopCount(Queens & White) - BitOperations.PopCount(Queens & Black));
 
-        score += PieceSqures.Evaluate(this);
+        score += Evaluation.GetScore(this);
         return score;
     }
 

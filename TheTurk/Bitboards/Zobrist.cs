@@ -10,7 +10,7 @@ public static class Zobrist
 
     static Zobrist()
     {
-        Random rnd = new Random(228126);
+        var rnd = new Random(228126);
         for (int square = 0; square < 64; square++)
         {
             //6 black pieces + 6 white pieces

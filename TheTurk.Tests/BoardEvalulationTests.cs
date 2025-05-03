@@ -15,7 +15,7 @@ public class BoardEvalulationTests
 
         var score = board.Evaulate();
 
-        var squareScore = PieceSqures.Evaluate(board);
+        var squareScore = Evaluation.GetScore(board);
 
         Console.WriteLine($"Piece value sum: {score - squareScore}");
 

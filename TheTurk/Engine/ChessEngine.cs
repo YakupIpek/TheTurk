@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 using TheTurk.Bitboards;
 
 namespace TheTurk.Engine
@@ -10,11 +11,13 @@ namespace TheTurk.Engine
     {
         public static (int score, Node<Move>? line) Negate(this (int score, Node<Move>? line) result) => (-result.score, result.line);
     }
+
     public partial class ChessEngine
     {
         public const int CheckMateValue = 1_000_000,
                          StaleMateValue = 0,
-                         Draw = 0;
+                         Draw = 0,
+                         SearchDepthLimit = 100;
 
         private KillerMoves killerMoves;
         private HistoryMoves historyMoves;
@@ -141,7 +144,11 @@ namespace TheTurk.Engine
                 if (GetCheckmateInfo(score) is { IsCheckmate: true, MateIn: var mateIn } && Math.Abs(mateIn) + 1 <= searchDepth)
                     yield break;
 
+                if (searchDepth >= SearchDepthLimit)
+                    yield break;
+
                 searchDepth++;
+
             } while (CanSearch());
         }
 
@@ -166,11 +173,14 @@ namespace TheTurk.Engine
             if (!CanSearch())
                 return (Draw, null);
 
-            //if (RepetitionDetector.IsRepetition)
-            //    return (Draw, null);
+            if (RepetitionDetector.IsRepetition)
+                return (Draw, null);
 
             var isRoot = height == 0;
             var isLeaf = depth <= 0;
+
+            if(Evaluation.IsInsufficientMatingMaterial(board) && !isRoot)
+                return (Draw, null);
 
             var isPvNode = alpha + 1 != beta;
 
@@ -244,7 +254,7 @@ namespace TheTurk.Engine
                 {
                     var r = move.IsPromotion() || move.IsEnPassant() || nextPosition.InCheck() ? 0 : 1;
 
-                    var pvNode = movesIndex == 0 && move.Equals(bestLine.ElementAtOrDefault(height));
+                    var pvNode = movesIndex == 0 &&  move.Equals(bestLine.ElementAtOrDefault(height));
                     (int score, Node<Move>? line) fullSearch(bool nullEnabled) => Search(nextPosition, -beta, -alpha, depth - r, height + 1, nullEnabled, isCaptureMove, collectPV).Negate();
 
                     if (pvNode) // Principal Variation Search in full
@@ -344,7 +354,6 @@ namespace TheTurk.Engine
 
             return moves.OrderByDescending(move =>
             {
-
                 var priority = 0;
 
                 if (move.CapturedPiece() is not Piece.None)
@@ -358,6 +367,12 @@ namespace TheTurk.Engine
 
                 if (move.Equals(bestHistoryMove))
                     priority += 650;
+
+                if(move.IsEnPassant())
+                    priority += 400;
+
+                if (move.IsPromotion())
+                    priority += 400;
 
                 return priority;
             });

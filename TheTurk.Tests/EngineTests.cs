@@ -56,13 +56,13 @@ public class EngineTests
     {
         var protocol = new UCIProtocol();
 
-        protocol.ApplyMoves(["e2e4", "e7e5", "d2d4"]);
+        protocol.ApplyMoves("e2e4", "e7e5", "d2d4");
 
         var zobrist1 = protocol.board.ZobristKey;
 
         protocol = new UCIProtocol();
 
-        protocol.ApplyMoves(["d2d4", "e7e5", "e2e4"]);
+        protocol.ApplyMoves("d2d4", "e7e5", "e2e4");
 
         Assert.AreEqual(zobrist1, protocol.board.ZobristKey);
     }
@@ -72,19 +72,18 @@ public class EngineTests
     {
         var protocol = new UCIProtocol();
 
-        var board = protocol.board;
-        protocol.ApplyMoves(["g1f3", "b8c6", "e2e4"]);
+        protocol.ApplyMoves("b1c3", "b8c6", "g1f3");
 
-        var zobrist1 = board.ZobristKey;
-        var fen = Notation.GetFen(board);
+        var zobrist1 = protocol.board.ZobristKey;
+        var fen = Notation.GetFen(protocol.board);
 
         protocol = new UCIProtocol();
 
-        protocol.ApplyMoves(["e2e4", "b8c6", "g1f3"]);
+        protocol.ApplyMoves(["g1f3", "b8c6", "b1c3"]);
 
-        Assert.AreEqual(zobrist1, board.ZobristKey);
+        Assert.AreEqual(zobrist1, protocol.board.ZobristKey);
 
-        Assert.AreNotEqual(fen, Notation.GetFen(board));
+        Assert.AreEqual(fen, Notation.GetFen(protocol.board));
     }
 
     [TestMethod]
