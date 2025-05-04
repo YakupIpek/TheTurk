@@ -21,7 +21,7 @@ public struct MoveGen
     private IEnumerable<Move> AddAll(Piece piece, int square, ulong targets)
     {
         for (; targets != 0; targets = Bitboard.ClearLSB(targets))
-           yield return Add(piece, square, Bitboard.LSB(targets));
+            yield return Add(piece, square, Bitboard.LSB(targets));
     }
 
 
@@ -404,7 +404,10 @@ public struct MoveGen
         ulong whitePawns = board.Pawns & board.White;
         ulong oneStep = (whitePawns << 8) & ~occupied;
 
-        CollectWhitePromotions(oneStep);
+        foreach (var move in CollectWhitePromotions(oneStep))
+        {
+            yield return move;
+        }
 
         // Move one square up  
         for (targets = oneStep & 0x00FFFFFFFFFFFFFFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
