@@ -37,7 +37,7 @@ public class BoardState
 
     }
 
-    public int Evaulate()
+    public int Evaluate()
     {
         var score = 0;
 

@@ -5,7 +5,7 @@ namespace TheTurk.Tests;
 
 
 [TestClass]
-public class HorizonTestPositions
+public class TestSpecialPositions
 {
     [TestMethod("Horizon issue")]
     public void Position1()
@@ -19,7 +19,22 @@ public class HorizonTestPositions
         var result = engine.Run(board, 2_000).ElementAt(1);
 
         UCIProtocol.WriteOutput(result);
-        Assert.AreEqual(result.BestLine[0].ToString(), "e6d7");
+        Assert.AreEqual("e6d7", result.BestLine[0].ToString());
+    }
+
+    [TestMethod("Horizon issue - Queen exposed to capture")]
+    public void Position3()
+    {
+        var fen = "8/2K5/8/3q4/k7/6Q1/8/8 w - - 7 10";
+
+        var board = Notation.GetBoardState(fen);
+
+        var engine = new ChessEngine();
+
+        var result = engine.Run(board, 2_000000, 3).First();
+
+        UCIProtocol.WriteOutput(result);
+        Assert.AreEqual("e6d7", result.BestLine[0].ToString());
     }
 
     [TestMethod("Insufficient material")]

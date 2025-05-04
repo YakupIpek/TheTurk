@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.SymbolStore;
+﻿using System.Data;
+using System.Diagnostics;
 using TheTurk.Bitboards;
 
 namespace TheTurk.Engine
@@ -45,11 +45,11 @@ namespace TheTurk.Engine
             RepetitionDetector = new RepetitionDetector();
         }
 
-        public IEnumerable<EngineResult> Run(BoardState board, long timeLimit)
+        public IEnumerable<EngineResult> Run(BoardState board, long timeLimit, int startDepth = 1)
         {
             try
             {
-                foreach (var result in RunInternal(board, timeLimit))
+                foreach (var result in RunInternal(board, timeLimit, startDepth))
                 {
                     yield return result;
                 }
@@ -84,7 +84,7 @@ namespace TheTurk.Engine
 
         /// <param name="timeLimit">Time limit in millisecond</param>
         /// <returns></returns>
-        private IEnumerable<EngineResult> RunInternal(BoardState board, long timeLimit)
+        private IEnumerable<EngineResult> RunInternal(BoardState board, long timeLimit, int startDepth)
         {
             this.timeLimit = timeLimit;
 
@@ -110,7 +110,7 @@ namespace TheTurk.Engine
                 yield break;
             }
 
-            searchDepth = 1;
+            searchDepth = startDepth;
 
             do
             {
@@ -191,15 +191,15 @@ namespace TheTurk.Engine
                 return (tScore, tMove);
             }
 
-            var moveGen = new MoveGen(board);
-            var moves = moveGen.GenerateMoves();
-
             if (isLeaf)
             {
                 var score = QuiescenceSearch(board, alpha, beta, height);
 
                 return (score, null);
             }
+
+            var moveGen = new MoveGen(board);
+            var moves = moveGen.GenerateMoves();
 
             if (nullMoveActive && !isPvNode && !board.InCheck() && depth > 2 && !isCapture)
             {
@@ -226,7 +226,6 @@ namespace TheTurk.Engine
 
             foreach (var move in sortedMoves)
             {
-
                 var nextPosition = new BoardState();
                 if (!nextPosition.Play(board, move))
                     continue;
@@ -269,6 +268,7 @@ namespace TheTurk.Engine
                     }
                 }
 
+
                 RepetitionDetector.Remove();
 
                 if (score > bestScore)
@@ -310,7 +310,7 @@ namespace TheTurk.Engine
         {
             nodes++;
 
-            var eval = (int)board.SideToMove * board.Evaulate();
+            var eval = (int)board.SideToMove * board.Evaluate();
 
             if (eval >= beta)
                 return eval;
@@ -332,7 +332,7 @@ namespace TheTurk.Engine
                 var score = -QuiescenceSearch(nextPosition, -beta, -alpha, depth + 1);
 
                 if (score >= beta) // The move is too good
-                    return eval;
+                    return score;
 
                 if (score > alpha)// Best move so far
                     alpha = score;
@@ -368,7 +368,7 @@ namespace TheTurk.Engine
                 if (move.Equals(bestHistoryMove))
                     priority += 650;
 
-                if(move.IsEnPassant())
+                if (move.IsEnPassant())
                     priority += 400;
 
                 if (move.IsPromotion())

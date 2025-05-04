@@ -13,7 +13,7 @@ public class BoardEvalulationTests
 
         var board = Notation.GetBoardState(fen);
 
-        var score = board.Evaulate();
+        var score = board.Evaluate();
 
         var squareScore = Evaluation.GetScore(board);
 

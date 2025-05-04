@@ -71,7 +71,6 @@ public readonly struct Move
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsWhiteMove()
     {
-        // White renk kontrolü
         return (Flags & Piece.ColorMask) == Piece.White;
     }
 

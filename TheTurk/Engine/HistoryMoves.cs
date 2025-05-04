@@ -35,7 +35,17 @@ namespace TheTurk.Engine
         }
         public int HistoryScoreOfMove(Move move)
         {
-            return historyMoves[move.Flags.HasFlag(Color.White) ? 0 : 1, move.FromSquare, move.ToSquare];
+            var color = move.IsWhiteMove() ? 0 : 1;
+
+            return historyMoves[color, move.FromSquare, move.ToSquare];
+        }
+
+        public bool IsHistoryMove(Move move)
+        {
+            var color = move.IsWhiteMove() ? WhiteBestMove : BlackBestMove;
+            var historyMove = move.IsWhiteMove() ? WhiteBestMove : BlackBestMove;
+
+            return move.Equals(historyMove);
         }
     }
 }
