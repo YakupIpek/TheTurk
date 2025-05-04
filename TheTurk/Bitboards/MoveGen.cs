@@ -81,6 +81,19 @@ public struct MoveGen
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IEnumerable<Move> GenerateQuiscenceMoves()
+    {
+        if (board.SideToMove == Color.White)
+        {
+            return CollectWhiteCaptures().Concat(CollectWhitePawnQuiets(promotionsOnly:true));
+        }
+        else
+        {
+            return CollectBlackCaptures().Concat(CollectBlackPawnQuiets(promotionsOnly: true));
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IEnumerable<Move> CollectCaptures()
     {
         if (board.SideToMove == Color.White)
@@ -224,7 +237,25 @@ public struct MoveGen
                 yield return move;
         }
 
-        // Pawns & Castling
+        foreach (var move in CollectBlackPawnQuiets(false))
+        {
+            yield return move;
+        }
+
+        // Castling
+        if (board.CanBlackCastleLong() && !board.IsAttackedByWhite(60) && !board.IsAttackedByWhite(59) /*&& !board.IsAttackedByWhite(58)*/)
+            yield return Move.BlackCastlingLong;
+
+        if (board.CanBlackCastleShort() && !board.IsAttackedByWhite(60) && !board.IsAttackedByWhite(61) /*&& !board.IsAttackedByWhite(62)*/)
+            yield return Move.BlackCastlingShort;
+    }
+
+    private IEnumerable<Move> CollectBlackPawnQuiets(bool promotionsOnly)
+    {
+        var occupied = board.Black | board.White;
+
+
+        // Pawns
         ulong targets;
         ulong blackPawns = board.Pawns & board.Black;
         ulong oneStep = (blackPawns >> 8) & ~occupied;
@@ -236,6 +267,9 @@ public struct MoveGen
             yield return PawnMove(Piece.Black | Piece.KnightPromotion, targets, +8);
         }
 
+        if(promotionsOnly)
+            yield break;
+
         // Move one square down
         for (targets = oneStep & 0xFFFFFFFFFFFFFF00UL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.BlackPawn, targets, +8);
@@ -244,13 +278,6 @@ public struct MoveGen
         ulong twoStep = (oneStep >> 8) & ~occupied;
         for (targets = twoStep & 0x000000FF00000000UL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.BlackPawn, targets, +16);
-
-        // Castling
-        if (board.CanBlackCastleLong() && !board.IsAttackedByWhite(60) && !board.IsAttackedByWhite(59) /*&& !board.IsAttackedByWhite(58)*/)
-            yield return Move.BlackCastlingLong;
-
-        if (board.CanBlackCastleShort() && !board.IsAttackedByWhite(60) && !board.IsAttackedByWhite(61) /*&& !board.IsAttackedByWhite(62)*/)
-            yield return Move.BlackCastlingShort;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -380,6 +407,23 @@ public struct MoveGen
                 yield return move;
         }
 
+        foreach (var move in CollectWhitePawnQuiets(false))
+        {
+            yield return move;
+        }
+
+        // Castling  
+        if (board.CanWhiteCastleLong() && !board.IsAttackedByBlack(4) && !board.IsAttackedByBlack(3))
+            yield return Move.WhiteCastlingLong;
+
+        if (board.CanWhiteCastleShort() && !board.IsAttackedByBlack(4) && !board.IsAttackedByBlack(5))
+            yield return Move.WhiteCastlingShort;
+    }
+
+    private IEnumerable<Move> CollectWhitePawnQuiets(bool promotionsOnly)
+    {
+        var occupied = board.Black | board.White;
+
         // Pawns  
         ulong targets;
         ulong whitePawns = board.Pawns & board.White;
@@ -392,6 +436,9 @@ public struct MoveGen
             yield return PawnMove(Piece.White | Piece.KnightPromotion, targets, -8);
         }
 
+        if (promotionsOnly)
+            yield break;
+
         // Move one square up  
         for (targets = oneStep & 0x00FFFFFFFFFFFFFFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.WhitePawn, targets, -8);
@@ -400,13 +447,6 @@ public struct MoveGen
         ulong twoStep = (oneStep << 8) & ~occupied;
         for (targets = twoStep & 0x00000000FF000000UL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.WhitePawn, targets, -16);
-
-        // Castling  
-        if (board.CanWhiteCastleLong() && !board.IsAttackedByBlack(4) && !board.IsAttackedByBlack(3))
-            yield return Move.WhiteCastlingLong;
-
-        if (board.CanWhiteCastleShort() && !board.IsAttackedByBlack(4) && !board.IsAttackedByBlack(5))
-            yield return Move.WhiteCastlingShort;
     }
 }
 

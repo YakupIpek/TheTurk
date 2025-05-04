@@ -82,7 +82,16 @@ public readonly struct Move
         //King capturing Pawn = 1 * 6 - 6 = 0
         //Pawn capturing Queen = 6 * 5 - 1 = 29  
 
-        return GetPieceValue(Target) - GetPieceValue(Flags & Piece.PieceMask);
+
+        var bonus = 0;
+
+        if (IsPromotion())
+            bonus = GetPieceValue(NewPiece());
+
+        if (IsEnPassant())
+            bonus += 3 * GetPieceValue(Piece.Pawn); // Add bonus
+
+        return bonus + GetPieceValue(Target) - GetPieceValue(MovingPieceType());
     }
 
     //Pawn = 1, Knight = 2, Bishop = 3; Rook = 4, Queen = 5, King = 6

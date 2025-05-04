@@ -320,7 +320,9 @@ namespace TheTurk.Engine
                 alpha = eval;
             }
 
-            var moves = new MoveGen(board).CollectCaptures().OrderByDescending(move => move.MvvLvaScore());
+            var moveGen = new MoveGen(board);
+
+            var moves = moveGen.GenerateQuiscenceMoves().OrderByDescending(move => move.MvvLvaScore());
 
             foreach (var move in moves)
             {
