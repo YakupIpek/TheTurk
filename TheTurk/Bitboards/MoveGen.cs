@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace TheTurk.Bitboards;
 
@@ -181,16 +182,6 @@ public struct MoveGen
             yield return PawnMove(Piece.Black | Piece.QueenPromotion, targets, +8);
     }
 
-    public IEnumerable<Move> CollectBlackPawnPromotions(ulong oneStep)
-    {
-        // Move to first rank and under-promote
-        for (var targets = oneStep & 0x00000000000000FFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
-        {
-            yield return PawnMove(Piece.Black | Piece.RookPromotion, targets, +8);
-            yield return PawnMove(Piece.Black | Piece.BishopPromotion, targets, +8);
-            yield return PawnMove(Piece.Black | Piece.KnightPromotion, targets, +8);
-        }
-    }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IEnumerable<Move> CollectBlackQuiets()
     {
@@ -238,14 +229,16 @@ public struct MoveGen
         ulong blackPawns = board.Pawns & board.Black;
         ulong oneStep = (blackPawns >> 8) & ~occupied;
 
+        for (targets = oneStep & 0x00000000000000FFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
+        {
+            yield return PawnMove(Piece.Black | Piece.RookPromotion, targets, +8);
+            yield return PawnMove(Piece.Black | Piece.BishopPromotion, targets, +8);
+            yield return PawnMove(Piece.Black | Piece.KnightPromotion, targets, +8);
+        }
+
         // Move one square down
         for (targets = oneStep & 0xFFFFFFFFFFFFFF00UL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.BlackPawn, targets, +8);
-
-        foreach (var move in CollectBlackPawnPromotions(oneStep))
-        {
-            yield return move;
-        }
 
         // Move two squares down
         ulong twoStep = (oneStep >> 8) & ~occupied;
@@ -305,7 +298,8 @@ public struct MoveGen
         // Pawns  
         ulong targets;
         ulong whitePawns = board.Pawns & board.White;
-
+        ulong oneStep = (whitePawns << 8) & ~occupied;
+        
         // Capture left  
         ulong captureLeft = ((whitePawns & 0xFEFEFEFEFEFEFEFEUL) << 7) & board.Black;
         for (targets = captureLeft & 0x00FFFFFFFFFFFFFFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
@@ -342,19 +336,6 @@ public struct MoveGen
         // Move up and promote Queen  
         for (targets = (whitePawns << 8) & ~occupied & 0xFF00000000000000UL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.White | Piece.QueenPromotion, targets, -8);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private IEnumerable<Move> CollectWhitePromotions(ulong oneStep)
-    {
-        var targets = 0ul;
-        // Move to last rank and under-promote  
-        for (targets = oneStep & 0xFF00000000000000UL; targets != 0; targets = Bitboard.ClearLSB(targets))
-        {
-            yield return PawnMove(Piece.White | Piece.RookPromotion, targets, -8);
-            yield return PawnMove(Piece.White | Piece.BishopPromotion, targets, -8);
-            yield return PawnMove(Piece.White | Piece.KnightPromotion, targets, -8);
-        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -404,15 +385,16 @@ public struct MoveGen
         ulong whitePawns = board.Pawns & board.White;
         ulong oneStep = (whitePawns << 8) & ~occupied;
 
-        foreach (var move in CollectWhitePromotions(oneStep))
+        for (targets = oneStep & 0xFF00000000000000UL; targets != 0; targets = Bitboard.ClearLSB(targets))
         {
-            yield return move;
+            yield return PawnMove(Piece.White | Piece.RookPromotion, targets, -8);
+            yield return PawnMove(Piece.White | Piece.BishopPromotion, targets, -8);
+            yield return PawnMove(Piece.White | Piece.KnightPromotion, targets, -8);
         }
 
         // Move one square up  
         for (targets = oneStep & 0x00FFFFFFFFFFFFFFUL; targets != 0; targets = Bitboard.ClearLSB(targets))
             yield return PawnMove(Piece.WhitePawn, targets, -8);
-
 
         // Move two squares up  
         ulong twoStep = (oneStep << 8) & ~occupied;
