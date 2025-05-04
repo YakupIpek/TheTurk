@@ -37,20 +37,6 @@ public class BoardState
 
     }
 
-    public int Evaluate()
-    {
-        var score = 0;
-
-        score += Move.GetPieceValue(Piece.Pawn) * (BitOperations.PopCount(Pawns & White) - BitOperations.PopCount(Pawns & Black));
-        score += Move.GetPieceValue(Piece.Knight) * (BitOperations.PopCount(Knights & White) - BitOperations.PopCount(Knights & Black));
-        score += Move.GetPieceValue(Piece.Bishop) * (BitOperations.PopCount(Bishops & White) - BitOperations.PopCount(Bishops & Black));
-        score += Move.GetPieceValue(Piece.Rook) * (BitOperations.PopCount(Rooks & White) - BitOperations.PopCount(Rooks & Black));
-        score += Move.GetPieceValue(Piece.Queen) * (BitOperations.PopCount(Queens & White) - BitOperations.PopCount(Queens & Black));
-
-        score += Evaluation.GetScore(this);
-        return score;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BoardState Clone()
     {

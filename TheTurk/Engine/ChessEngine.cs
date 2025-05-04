@@ -179,7 +179,7 @@ namespace TheTurk.Engine
             var isRoot = height == 0;
             var isLeaf = depth <= 0;
 
-            if(Evaluation.IsInsufficientMatingMaterial(board) && !isRoot)
+            if (Evaluation.IsInsufficientMatingMaterial(board) && !isRoot)
                 return (Draw, null);
 
             var isPvNode = alpha + 1 != beta;
@@ -214,8 +214,6 @@ namespace TheTurk.Engine
                     return (score, null);
             }
 
-            var sortedMoves = SortMoves(board, moves, height, tMove?.Value);
-
             var movesIndex = -1;
 
             Node<Move>? variation = null;
@@ -223,6 +221,8 @@ namespace TheTurk.Engine
 
             var entryType = HashEntryType.UpperBound;
             var bestScore = -Infinity;
+
+            var sortedMoves = SortMoves(board, moves, height, tMove?.Value);
 
             foreach (var move in sortedMoves)
             {
@@ -244,7 +244,7 @@ namespace TheTurk.Engine
 
                 if (!importantMove)// Late Move Reduction
                 {
-                    (score, line) = Search(nextPosition, -beta, -alpha, depth - 3, height + 1, true, isCapture, false).Negate();
+                    (score, line) = Search(nextPosition, -beta, -alpha, depth - 3, height + 1, true, isCaptureMove, false).Negate();
 
                     importantMove = score > alpha && score < beta;
                 }
@@ -267,7 +267,6 @@ namespace TheTurk.Engine
                             (score, line) = fullSearch(true);
                     }
                 }
-
 
                 RepetitionDetector.Remove();
 
@@ -310,14 +309,16 @@ namespace TheTurk.Engine
         {
             nodes++;
 
-            var eval = (int)board.SideToMove * board.Evaluate();
+            var standPat = (int)board.SideToMove * Evaluation.Evaluate(board);
 
-            if (eval >= beta)
-                return eval;
+            var bestScore = standPat;
 
-            if (eval > alpha)
+            if (standPat >= beta)
+                return standPat;
+
+            if (standPat > alpha)
             {
-                alpha = eval;
+                alpha = standPat;
             }
 
             var moveGen = new MoveGen(board);
@@ -336,11 +337,14 @@ namespace TheTurk.Engine
                 if (score >= beta) // The move is too good
                     return score;
 
+                if (score> bestScore)
+                    bestScore = score;
+
                 if (score > alpha)// Best move so far
                     alpha = score;
             }
 
-            return alpha;
+            return bestScore;
         }
 
 

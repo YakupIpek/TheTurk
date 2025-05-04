@@ -7,20 +7,15 @@ namespace TheTurk.Tests;
 public class BoardEvalulationTests
 {
     [TestMethod]
-    public void Eval()
+    [DataRow(Notation.STARTING_POS_FEN, 0)]
+    public void Eval(string fen, int pieceScore)
     {
-        var fen = "r2q1rk1/4bppp/p2p4/2pP4/3pP3/3Q4/PP1B1PPP/R3R1K1 w - -";
-
         var board = Notation.GetBoardState(fen);
 
-        var score = board.Evaluate();
+        var score = Evaluation.Evaluate(board);
 
-        var squareScore = Evaluation.GetScore(board);
+        var squareScore = Evaluation.GetPieceSquareScore(board);
 
-        Console.WriteLine($"Piece value sum: {score - squareScore}");
-
-        Console.WriteLine($"Piece square sum: {squareScore}");
-
-
+        Assert.AreEqual(pieceScore, score - squareScore, "The evaluation score does not match the expected value.");
     }
 }

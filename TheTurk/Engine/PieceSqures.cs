@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using TheTurk.Bitboards;
@@ -83,7 +84,7 @@ public static class Evaluation
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 
-    public static int GetScore(BoardState board)
+    public static int GetPieceSquareScore(BoardState board)
     {
         var score = 0;
 
@@ -110,6 +111,22 @@ public static class Evaluation
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
 
+    public static int Evaluate(BoardState board)
+    {
+        var score = 0;
+
+        score += Move.GetPieceValue(Piece.Pawn) * (BitOperations.PopCount(board.Pawns & board.White) - BitOperations.PopCount(board.Pawns & board.Black));
+        score += Move.GetPieceValue(Piece.Knight) * (BitOperations.PopCount(board.Knights & board.  White) - BitOperations.PopCount(board.Knights & board.Black));
+        score += Move.GetPieceValue(Piece.Bishop) * (BitOperations.PopCount(board.Bishops & board.White) - BitOperations.PopCount(board.Bishops & board.Black));
+        score += Move.GetPieceValue(Piece.Rook) * (BitOperations.PopCount(board.Rooks & board.White) - BitOperations.PopCount(board.Rooks & board.Black));
+        score += Move.GetPieceValue(Piece.Queen) * (BitOperations.PopCount(board.Queens & board.White) - BitOperations.PopCount(board.Queens & board.Black));
+
+        score += GetPieceSquareScore(board);
+
+        return score;
+    }
+
+
     public static int GetScore(ulong bitboard, bool isWhite, int[] table)
     {
         int score = 0;
@@ -118,7 +135,7 @@ public static class Evaluation
         {
             int square = BitOperations.TrailingZeroCount(bitboard);
 
-            int index = isWhite ? square : square ^ 56;
+            int index = isWhite ? square ^ 56 : square;
 
             score += table[index];
 
