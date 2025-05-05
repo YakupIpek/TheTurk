@@ -387,9 +387,7 @@ public class BoardState
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool InCheck()
     {
-        inCheck ??= SideToMove == Color.White ? IsAttackedByBlack(LSB(Kings & White)) : IsAttackedByWhite(LSB(Kings & Black));
-
-        return inCheck.Value;
+        return inCheck ??= SideToMove == Color.White ? IsAttackedByBlack(LSB(Kings & White)) : IsAttackedByWhite(LSB(Kings & Black));
     }
 
 

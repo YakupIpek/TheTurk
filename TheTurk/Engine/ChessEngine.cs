@@ -238,7 +238,7 @@ namespace TheTurk.Engine
 
                 var isCaptureMove = move.CapturedPieceType() is not Piece.None;
 
-                var importantMove = (movesIndex < 3) || depth >= 3 || move.IsPromotion() || move.IsEnPassant() || (isCapture && movesIndex < 8) || nextPosition.InCheck();
+                importantMove = (movesIndex < 3) || depth >= 3 || move.IsPromotion() || move.IsEnPassant() || (isCaptureMove && movesIndex < 6) || nextPosition.InCheck();
 
                 Node<Move>? line = null;
 
