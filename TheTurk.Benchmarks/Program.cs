@@ -9,7 +9,7 @@ Console.WriteLine("Hello, World!");
 BenchmarkRunner.Run<MyBenchmark>();
 
 [MemoryDiagnoser] // RAM kullanımı da ölçülür
-[SimpleJob(iterationCount: 1, warmupCount: 0)]
+[SimpleJob(iterationCount: 10, warmupCount: 1)]
 public class MyBenchmark
 {
 

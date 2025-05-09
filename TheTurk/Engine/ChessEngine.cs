@@ -4,7 +4,6 @@ using TheTurk.Bitboards;
 
 namespace TheTurk.Engine
 {
-    public record class Node<T>(T Value, Node<T>? Next = null);
 
 
     public static class ResultExtensions
@@ -236,15 +235,15 @@ namespace TheTurk.Engine
 
                 var score = 0;
 
-                var isCaptureMove = move.CapturedPieceType() is not Piece.None;
+                isCaptureMove = move.CapturedPieceType() is not Piece.None;
 
-                importantMove = (movesIndex < 3) || depth >= 3 || move.IsPromotion() || move.IsEnPassant() || (isCaptureMove && movesIndex < 6) || nextPosition.InCheck();
+                var importantMove = (movesIndex < 3) || depth >= 3 || move.IsPromotion() || move.IsEnPassant() || (isCaptureMove && movesIndex < 6) || nextPosition.InCheck();
 
                 Node<Move>? line = null;
 
                 if (!importantMove)// Late Move Reduction
                 {
-                    (score, line) = Search(nextPosition, -beta, -alpha, depth - 3, height + 1, true, isCaptureMove, false).Negate();
+                    (score, line) = Search(nextPosition, -beta, -alpha, depth - 3, height + 1, nullMoveActive: true, isCaptureMove, false).Negate();
 
                     importantMove = score > alpha && score < beta;
                 }
@@ -261,7 +260,7 @@ namespace TheTurk.Engine
                     else
                     {
                         //PVS null window
-                        (score, line) = Search(nextPosition, -alpha - 1, -alpha, depth - 1, height + 1, false, isCaptureMove, false).Negate();
+                        (score, line) = Search(nextPosition, -alpha - 1, -alpha, depth - 1, height + 1, nullMoveActive: true, isCaptureMove, false).Negate();
 
                         if (score > alpha && score < beta)
                             (score, line) = fullSearch(true);
