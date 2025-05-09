@@ -151,20 +151,12 @@ namespace TheTurk.Engine
             } while (CanSearch());
         }
 
-        private static IEnumerable<Move> ToEnumerable(Node<Move>? pv)
-        {
-            for (var current = pv; current?.Value != null; current = current.Next)
-            {
-                yield return current.Value;
-            }
-        }
-
         private bool CanSearch()
         {
             return HaveTime() && !ExitRequested || !bestLine.Any();
         }
 
-        (int score, Node<Move>? line) Search(BoardState board, int alpha, int beta, int depth, int height, bool nullMoveActive, bool isCapture, bool collectPV)
+        (int score, Node<Move>? line) Search(BoardState board, int alpha, int beta, int depth, int height, bool nullMoveActive, bool isCaptureMove, bool collectPV)
         {
             nodes++;
 
@@ -200,7 +192,7 @@ namespace TheTurk.Engine
             var moveGen = new MoveGen(board);
             var moves = moveGen.GenerateMoves();
 
-            if (nullMoveActive && !isPvNode && !board.InCheck() && depth > 2 && !isCapture)
+            if (nullMoveActive && !isPvNode && !board.InCheck() && depth > 2 && !isCaptureMove)
             {
                 var r = (depth > 6) ? 3 : 2; // Adaptive Null Move Reduction
 
