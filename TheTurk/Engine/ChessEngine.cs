@@ -134,7 +134,7 @@ namespace TheTurk.Engine
                 alpha = score - window; //Narrow Aspiration window
                 beta = score + window;
 
-                bestLine = ToEnumerable(pv).ToList();
+                bestLine = [.. pv!];
 
                 var result = new EngineResult(searchDepth, score, elapsedTime.ElapsedMilliseconds, nodes, bestLine);
 
