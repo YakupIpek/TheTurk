@@ -115,7 +115,7 @@ namespace TheTurk.Engine
             {
                 nodes = 0;
 
-                var (score, pv) = Search(board, alpha, beta, searchDepth, height: 0, nullMoveActive: true, isCapture: false, collectPV: true);
+                var (score, pv) = Search(board, alpha, beta, searchDepth, height: 0, nullMoveActive: true, isCaptureMove: false, collectPV: true);
 
                 if (!CanSearch())
                     yield break;
